@@ -5,7 +5,9 @@ VisualStudioVersion = 17.11.35327.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NINA.Plugin.TargetScheduler", "NINA.Plugin.TargetScheduler\NINA.Plugin.TargetScheduler.csproj", "{58F2BEE6-BA67-4E06-8392-6EE203E3E8DB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NINA.Plugin.TargetScheduler.Test", "NINA.Plugin.TargetScheduler.Test\NINA.Plugin.TargetScheduler.Test.csproj", "{FBA5C666-F14F-4261-BFBA-0A654F28F35B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NINA.Plugin.TargetScheduler.Test", "NINA.Plugin.TargetScheduler.Test\NINA.Plugin.TargetScheduler.Test.csproj", "{FBA5C666-F14F-4261-BFBA-0A654F28F35B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NINA.Plugin.TargetScheduler.Shared", "NINA.Plugin.TargetScheduler.Shared\NINA.Plugin.TargetScheduler.Shared.csproj", "{EA979EBD-3C08-4DC7-BB5F-D90539B113E8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{FBA5C666-F14F-4261-BFBA-0A654F28F35B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FBA5C666-F14F-4261-BFBA-0A654F28F35B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FBA5C666-F14F-4261-BFBA-0A654F28F35B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EA979EBD-3C08-4DC7-BB5F-D90539B113E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA979EBD-3C08-4DC7-BB5F-D90539B113E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA979EBD-3C08-4DC7-BB5F-D90539B113E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA979EBD-3C08-4DC7-BB5F-D90539B113E8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

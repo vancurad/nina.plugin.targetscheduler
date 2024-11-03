@@ -1,6 +1,7 @@
 ﻿using NINA.Core.Utility;
 using NINA.Equipment.Interfaces;
 using NINA.Plugin.Interfaces;
+using NINA.Plugin.TargetScheduler.Shared.Utility;
 using NINA.Profile;
 using NINA.Profile.Interfaces;
 using NINA.WPF.Base.Interfaces.Mediator;
@@ -8,6 +9,7 @@ using NINA.WPF.Base.Interfaces.ViewModel;
 using System;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
@@ -46,11 +48,37 @@ namespace NINA.Plugin.TargetScheduler {
         }
 
         public override Task Initialize() {
-            return base.Initialize();
+            InitPluginHome();
+
+            // TODO
+            /*
+            if (SyncEnabled(profileService)) {
+                SyncManager.Instance.Start(profileService);
+            }*/
+
+            TSLogger.Info("plugin initialized");
+            return Task.CompletedTask;
+        }
+
+        private void InitPluginHome() {
+            if (!Directory.Exists(Common.PLUGIN_HOME)) {
+                Directory.CreateDirectory(Common.PLUGIN_HOME);
+            }
+
+            // TODO
+            //SchedulerDatabaseInteraction.BackupDatabase();
         }
 
         public override Task Teardown() {
-            return base.Teardown();
+            /* TODO
+            if (SyncManager.Instance.IsRunning) {
+                SyncManager.Instance.Shutdown();
+            }*/
+
+            profileService.ProfileChanged -= ProfileService_ProfileChanged;
+            TSLogger.Info("closing log");
+            TSLogger.CloseAndFlush();
+            return Task.CompletedTask;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
