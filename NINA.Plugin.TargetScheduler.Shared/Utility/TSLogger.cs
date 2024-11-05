@@ -66,7 +66,6 @@ namespace NINA.Plugin.TargetScheduler.Shared.Utility {
             Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
             foreach (Assembly assembly in assemblies) {
                 AssemblyName name = assembly.GetName();
-                NINA.Core.Utility.Logger.Info($"ASSEMBLY: {name}");
                 if (name.Name == "NINA.Plugin.TargetScheduler") {
                     version = name.Version?.ToString();
                     break;

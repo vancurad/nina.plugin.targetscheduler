@@ -1,6 +1,8 @@
 ﻿using NINA.Core.Utility;
 using NINA.Equipment.Interfaces;
 using NINA.Plugin.Interfaces;
+using NINA.Plugin.TargetScheduler.Database;
+using NINA.Plugin.TargetScheduler.Database.Schema;
 using NINA.Plugin.TargetScheduler.Shared.Utility;
 using NINA.Profile;
 using NINA.Profile.Interfaces;
@@ -57,6 +59,10 @@ namespace NINA.Plugin.TargetScheduler {
             }*/
 
             TSLogger.Info("plugin initialized");
+
+            // TODO: tmp just to bootstrap database
+            ProfilePreference profilePreference = new SchedulerPlanLoader(profileService.ActiveProfile).GetProfilePreferences();
+
             return Task.CompletedTask;
         }
 
