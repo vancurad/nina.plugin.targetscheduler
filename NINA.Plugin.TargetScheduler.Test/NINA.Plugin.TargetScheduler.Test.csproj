@@ -51,6 +51,21 @@
 		<PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Compile Update="Properties\Settings.Designer.cs">
+	    <DesignTimeSharedInput>True</DesignTimeSharedInput>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>Settings.settings</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="Properties\Settings.settings">
+	    <Generator>SettingsSingleFileGenerator</Generator>
+	    <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+	  </None>
+	</ItemGroup>
+
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
 	  <Exec Command="   if exist &quot;$(ProjectDir)External\JPLEPH&quot; (&#xD;&#xA;   echo &quot;Copy External\JPLEPH&quot;&#xD;&#xA;   xcopy &quot;$(ProjectDir)External\JPLEPH&quot; &quot;$(TargetDir)\External\JPLEPH*&quot; /k/y&#xD;&#xA;   )&#xD;&#xA;   if exist &quot;$(ProjectDir)Database&quot; (&#xD;&#xA;   echo &quot;Copy Database&quot;&#xD;&#xA;   xcopy &quot;$(ProjectDir)Database&quot; &quot;$(TargetDir)\Database&quot; /h/i/c/k/e/r/y&#xD;&#xA;   )" />
 	</Target>
