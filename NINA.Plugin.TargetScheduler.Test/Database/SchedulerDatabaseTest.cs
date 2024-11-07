@@ -2,7 +2,9 @@
 using NINA.Plugin.TargetScheduler.Database.Schema;
 using NUnit.Framework;
 using System;
+using System.Data.Entity.Validation;
 using System.IO;
+using System.Text;
 
 namespace NINA.Plugin.TargetScheduler.Test.Database {
 
@@ -31,14 +33,38 @@ namespace NINA.Plugin.TargetScheduler.Test.Database {
         [NonParallelizable]
         public void TestLoad() {
             using (var context = db.GetContext()) {
+                var pp = context.GetProfilePreference(profileId);
+            }
+        }
+
+        [Test, Order(2)]
+        [NonParallelizable]
+        public void TestLoad2() {
+            using (var context = db.GetContext()) {
+                var pp = context.GetProfilePreference(profileId);
             }
         }
 
         private void LoadTestDatabase() {
             using (var context = db.GetContext()) {
-                ProfilePreference pp = new ProfilePreference(profileId);
-                context.ProfilePreferenceSet.Add(pp);
-                context.SaveChanges();
+                try {
+                    ProfilePreference pp = new ProfilePreference(profileId);
+                    context.ProfilePreferenceSet.Add(pp);
+                    context.SaveChanges();
+                } catch (DbEntityValidationException e) {
+                    StringBuilder sb = new StringBuilder();
+                    foreach (var eve in e.EntityValidationErrors) {
+                        foreach (var dbeve in eve.ValidationErrors) {
+                            sb.Append(dbeve.ErrorMessage).Append("\n");
+                        }
+                    }
+
+                    TestContext.Error.WriteLine($"DB VALIDATION EXCEPTION: {sb}");
+                    throw;
+                } catch (Exception e) {
+                    TestContext.Error.WriteLine($"OTHER EXCEPTION: {e.Message}\n{e}");
+                    throw;
+                }
             }
         }
     }
