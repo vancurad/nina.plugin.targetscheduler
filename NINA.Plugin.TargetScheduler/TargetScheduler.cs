@@ -62,6 +62,13 @@ namespace NINA.Plugin.TargetScheduler {
 
             // TODO: tmp just to bootstrap database
             ProfilePreference profilePreference = new SchedulerPlanLoader(profileService.ActiveProfile).GetProfilePreferences();
+            profilePreference.MaxGradingSampleSize = 1000;
+            profilePreference.RMSPixelThreshold = 1.2345;
+            SchedulerDatabaseContext context = new SchedulerDatabaseInteraction().GetContext();
+            using (context) {
+                context.ProfilePreferenceSet.Add(profilePreference);
+                context.SaveChanges();
+            }
 
             return Task.CompletedTask;
         }
