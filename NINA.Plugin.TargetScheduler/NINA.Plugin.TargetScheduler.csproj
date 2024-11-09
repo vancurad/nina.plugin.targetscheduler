@@ -26,7 +26,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-        <PackageReference Include="EntityFramework" Version="6.5.1" />
         <PackageReference Include="LinqKit" Version="1.2.4" />
         <PackageReference Include="LinqKit.Core" Version="1.2.4" />
         <PackageReference Include="Microsoft-WindowsAPICodePack-Shell" Version="1.1.5" />
@@ -52,10 +51,6 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Database\Migrate\" />
   </ItemGroup>
 
   <ItemGroup>

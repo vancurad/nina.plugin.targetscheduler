@@ -40,7 +40,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="EntityFramework" Version="6.5.1" />
 		<PackageReference Include="FluentAssertions" Version="6.12.1" />
 		<PackageReference Include="LinqKit" Version="1.2.4" />
 		<PackageReference Include="LinqKit.Core" Version="1.2.4" />
