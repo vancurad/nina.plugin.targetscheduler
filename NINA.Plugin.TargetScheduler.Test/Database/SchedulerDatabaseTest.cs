@@ -37,14 +37,6 @@ namespace NINA.Plugin.TargetScheduler.Test.Database {
             }
         }
 
-        [Test, Order(2)]
-        [NonParallelizable]
-        public void TestLoad2() {
-            using (var context = db.GetContext()) {
-                var pp = context.GetProfilePreference(profileId);
-            }
-        }
-
         private void LoadTestDatabase() {
             using (var context = db.GetContext()) {
                 try {
