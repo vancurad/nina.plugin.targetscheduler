@@ -15,13 +15,13 @@ namespace NINA.Plugin.TargetScheduler.Database {
 
     public class SchedulerDatabaseContext : DbContext {
         public DbSet<ProfilePreference> ProfilePreferenceSet { get; set; }
+        public DbSet<AcquiredImage> AcquiredImageSet { get; set; }
         /*
         public DbSet<Project> ProjectSet { get; set; }
         public DbSet<RuleWeight> RuleWeightSet { get; set; }
         public DbSet<Target> TargetSet { get; set; }
         public DbSet<ExposurePlan> ExposurePlanSet { get; set; }
         public DbSet<ExposureTemplate> ExposureTemplateSet { get; set; }
-        public DbSet<AcquiredImage> AcquiredImageSet { get; set; }
         public DbSet<FlatHistory> FlatHistorySet { get; set; }
         public DbSet<ImageData> ImageDataSet { get; set; }
         */
@@ -38,7 +38,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
             //modelBuilder.Configurations.Add(new ProjectConfiguration());
             //modelBuilder.Configurations.Add(new TargetConfiguration());
             //modelBuilder.Configurations.Add(new ExposureTemplateConfiguration());
-            //modelBuilder.Configurations.Add(new AcquiredImageConfiguration());
+            modelBuilder.Configurations.Add(new AcquiredImageConfiguration());
 
             var sqi = new CreateOrMigrateDatabaseInitializer<SchedulerDatabaseContext>();
             System.Data.Entity.Database.SetInitializer(sqi);
@@ -605,6 +605,8 @@ namespace NINA.Plugin.TargetScheduler.Database {
         public List<ExposureTemplate> GetOrphanedExposureTemplates(List<string> currentProfileIdList) {
             return ExposureTemplateSet.Where(et => !currentProfileIdList.Contains(et.profileId)).ToList();
         }
+
+        THESE TWO MOVED TO Common:
 
         public static long DateTimeToUnixSeconds(DateTime? dateTime) {
             return dateTime == null ? 0 : CoreUtil.DateTimeToUnixTimeStamp((DateTime)dateTime);

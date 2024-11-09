@@ -28,3 +28,16 @@ CREATE TABLE IF NOT EXISTS `profilepreference` (
 	`syncEventContainerTimeout`				INTEGER DEFAULT 300,
 	PRIMARY KEY(`id`)
 );
+
+CREATE TABLE IF NOT EXISTS `acquiredimage` (
+	`Id`			INTEGER NOT NULL,
+	`projectId`		INTEGER NOT NULL,
+	`targetId`		INTEGER NOT NULL,
+	`acquireddate`	INTEGER,
+	`filtername`	TEXT NOT NULL,
+	`accepted`		INTEGER NOT NULL,
+    `rejectreason`	TEXT,
+    `metadata`		TEXT NOT NULL,
+	PRIMARY KEY(`Id`)
+);
+
