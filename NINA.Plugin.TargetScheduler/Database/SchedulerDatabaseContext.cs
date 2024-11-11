@@ -1,11 +1,15 @@
-﻿using NINA.Core.Utility;
+﻿using LinqKit;
+using NINA.Core.Utility;
 using NINA.Plugin.TargetScheduler.Database.Schema;
 using NINA.Plugin.TargetScheduler.Shared.Utility;
+using NINA.Plugin.TargetScheduler.Util;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Entity;
+using System.Data.Entity.Migrations;
 using System.Data.Entity.ModelConfiguration.Conventions;
+using System.Data.Entity.Validation;
 using System.Data.SQLite;
 using System.Linq;
 using System.Reflection;
@@ -16,7 +20,6 @@ namespace NINA.Plugin.TargetScheduler.Database {
     public class SchedulerDatabaseContext : DbContext {
         public DbSet<ProfilePreference> ProfilePreferenceSet { get; set; }
         public DbSet<AcquiredImage> AcquiredImageSet { get; set; }
-        /*
         public DbSet<Project> ProjectSet { get; set; }
         public DbSet<RuleWeight> RuleWeightSet { get; set; }
         public DbSet<Target> TargetSet { get; set; }
@@ -24,7 +27,6 @@ namespace NINA.Plugin.TargetScheduler.Database {
         public DbSet<ExposureTemplate> ExposureTemplateSet { get; set; }
         public DbSet<FlatHistory> FlatHistorySet { get; set; }
         public DbSet<ImageData> ImageDataSet { get; set; }
-        */
 
         public SchedulerDatabaseContext(string connectionString) : base(new SQLiteConnection() { ConnectionString = connectionString }, true) {
             Configuration.LazyLoadingEnabled = false;
@@ -35,9 +37,9 @@ namespace NINA.Plugin.TargetScheduler.Database {
             TSLogger.Debug("Scheduler database: OnModelCreating");
 
             modelBuilder.Conventions.Remove<PluralizingTableNameConvention>();
-            //modelBuilder.Configurations.Add(new ProjectConfiguration());
-            //modelBuilder.Configurations.Add(new TargetConfiguration());
-            //modelBuilder.Configurations.Add(new ExposureTemplateConfiguration());
+            modelBuilder.Configurations.Add(new ProjectConfiguration());
+            modelBuilder.Configurations.Add(new TargetConfiguration());
+            modelBuilder.Configurations.Add(new ExposureTemplateConfiguration());
             modelBuilder.Configurations.Add(new AcquiredImageConfiguration());
 
             var sqi = new CreateOrMigrateDatabaseInitializer<SchedulerDatabaseContext>();
@@ -53,7 +55,6 @@ namespace NINA.Plugin.TargetScheduler.Database {
             return profilePreference;
         }
 
-        /*
         public List<Project> GetAllProjects() {
             return ProjectSet
                 .Include("targets.exposureplans.exposuretemplate")
@@ -153,11 +154,12 @@ namespace NINA.Plugin.TargetScheduler.Database {
             return images.ToList();
         }
 
+        /* TODO: unclear what version this was from when creating new TS ... ?
         public List<AcquiredImage> GetAcquiredImagesByExposureId(int exposurePlanId) {
             var images = AcquiredImageSet.Where(p => p.ExposurePlanId == exposurePlanId)
               .OrderByDescending(p => p.acquiredDate);
             return images.ToList();
-        }
+        }*/
 
         public List<AcquiredImage> GetAcquiredImages(int targetId) {
             var images = AcquiredImageSet.Where(p => p.TargetId == targetId)
@@ -168,7 +170,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
 
         public List<AcquiredImage> GetAcquiredImages(string profileId, DateTime newerThan) {
             var predicate = PredicateBuilder.New<AcquiredImage>();
-            long newerThanSecs = DateTimeToUnixSeconds(newerThan);
+            long newerThanSecs = Common.DateTimeToUnixSeconds(newerThan);
             predicate = predicate.And(a => a.acquiredDate > newerThanSecs);
             predicate = predicate.And(a => a.profileId == profileId);
             return AcquiredImageSet.AsNoTracking().Where(predicate).ToList();
@@ -185,7 +187,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
 
         public int GetAcquiredImagesCount(DateTime olderThan, int targetId) {
             var predicate = PredicateBuilder.New<AcquiredImage>();
-            long olderThanSecs = DateTimeToUnixSeconds(olderThan);
+            long olderThanSecs = Common.DateTimeToUnixSeconds(olderThan);
             predicate = predicate.And(a => a.acquiredDate < olderThanSecs);
             if (targetId != 0) {
                 predicate = predicate.And(a => a.TargetId == targetId);
@@ -198,7 +200,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
             using (var transaction = Database.BeginTransaction()) {
                 try {
                     var predicate = PredicateBuilder.New<AcquiredImage>();
-                    long olderThanSecs = DateTimeToUnixSeconds(olderThan);
+                    long olderThanSecs = Common.DateTimeToUnixSeconds(olderThan);
                     predicate = predicate.And(a => a.acquiredDate < olderThanSecs);
                     if (targetId != 0) {
                         predicate = predicate.And(a => a.TargetId == targetId);
@@ -231,7 +233,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
 
         public List<FlatHistory> GetFlatsHistory(DateTime lightSessionDate, string profileId) {
             var predicate = PredicateBuilder.New<FlatHistory>();
-            long lightSessionDateSecs = DateTimeToUnixSeconds(lightSessionDate);
+            long lightSessionDateSecs = Common.DateTimeToUnixSeconds(lightSessionDate);
             predicate = predicate.And(f => f.lightSessionDate == lightSessionDateSecs);
             predicate = predicate.And(f => f.profileId == profileId);
             return FlatHistorySet.AsNoTracking().Where(predicate).ToList();
@@ -606,16 +608,6 @@ namespace NINA.Plugin.TargetScheduler.Database {
             return ExposureTemplateSet.Where(et => !currentProfileIdList.Contains(et.profileId)).ToList();
         }
 
-        THESE TWO MOVED TO Common:
-
-        public static long DateTimeToUnixSeconds(DateTime? dateTime) {
-            return dateTime == null ? 0 : CoreUtil.DateTimeToUnixTimeStamp((DateTime)dateTime);
-        }
-
-        public static DateTime UnixSecondsToDateTime(long? seconds) {
-            return CoreUtil.UnixTimeStampToDateTime(seconds == null ? 0 : seconds.Value);
-        }
-
         public static void CheckValidationErrors(Exception ex) {
             try {
                 DbEntityValidationException entityValidationException = ex as DbEntityValidationException;
@@ -632,7 +624,6 @@ namespace NINA.Plugin.TargetScheduler.Database {
                 TSLogger.Error($"exception logging entity validation errors: {ex2.Message}");
             }
         }
-        */
 
         private static void RollbackTransaction(DbContextTransaction transaction) {
             try {

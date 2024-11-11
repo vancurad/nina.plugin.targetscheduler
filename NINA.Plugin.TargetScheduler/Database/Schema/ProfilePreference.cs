@@ -61,7 +61,7 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
             EccentricitySigmaFactor = 4;
 
             EnableSynchronization = false;
-            /* TODO, and enable in unit test
+            /* TODO: wait for sync
             SyncWaitTimeout = SyncManager.DEFAULT_SYNC_WAIT_TIMEOUT;
             SyncActionTimeout = SyncManager.DEFAULT_SYNC_ACTION_TIMEOUT;
             SyncSolveRotateTimeout = SyncManager.DEFAULT_SYNC_SOLVEROTATE_TIMEOUT;
