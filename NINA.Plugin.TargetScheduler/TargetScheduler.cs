@@ -1,8 +1,9 @@
 ﻿using NINA.Core.Utility;
 using NINA.Equipment.Interfaces;
 using NINA.Plugin.Interfaces;
+using NINA.Plugin.TargetScheduler.Controls.AcquiredImages;
+using NINA.Plugin.TargetScheduler.Controls.DatabaseManager;
 using NINA.Plugin.TargetScheduler.Database;
-using NINA.Plugin.TargetScheduler.Database.Schema;
 using NINA.Plugin.TargetScheduler.Shared.Utility;
 using NINA.Profile;
 using NINA.Profile.Interfaces;
@@ -59,17 +60,6 @@ namespace NINA.Plugin.TargetScheduler {
             }*/
 
             TSLogger.Info("plugin initialized");
-
-            // TODO: tmp just to bootstrap database
-            ProfilePreference profilePreference = new SchedulerPlanLoader(profileService.ActiveProfile).GetProfilePreferences();
-            profilePreference.MaxGradingSampleSize = 1000;
-            profilePreference.RMSPixelThreshold = 1.2345;
-            SchedulerDatabaseContext context = new SchedulerDatabaseInteraction().GetContext();
-            using (context) {
-                context.ProfilePreferenceSet.Add(profilePreference);
-                context.SaveChanges();
-            }
-
             return Task.CompletedTask;
         }
 
@@ -78,8 +68,79 @@ namespace NINA.Plugin.TargetScheduler {
                 Directory.CreateDirectory(Common.PLUGIN_HOME);
             }
 
-            // TODO
-            //SchedulerDatabaseInteraction.BackupDatabase();
+            SchedulerDatabaseInteraction.BackupDatabase();
+        }
+
+        private DatabaseManagerVM databaseManagerVM;
+
+        public DatabaseManagerVM DatabaseManagerVM {
+            get => databaseManagerVM;
+            set {
+                databaseManagerVM = value;
+                RaisePropertyChanged(nameof(DatabaseManagerVM));
+            }
+        }
+
+        /*
+        private PlanPreviewerViewVM planPreviewerViewVM;
+
+        public PlanPreviewerViewVM PlanPreviewerViewVM {
+            get => planPreviewerViewVM;
+            set {
+                planPreviewerViewVM = value;
+                RaisePropertyChanged(nameof(PlanPreviewerViewVM));
+            }
+        }*/
+
+        private AcquiredImagesManagerViewVM acquiredImagesManagerViewVM;
+
+        public AcquiredImagesManagerViewVM AcquiredImagesManagerViewVM {
+            get => acquiredImagesManagerViewVM;
+            set {
+                acquiredImagesManagerViewVM = value;
+                RaisePropertyChanged(nameof(AcquiredImagesManagerViewVM));
+            }
+        }
+
+        private bool databaseManagerIsExpanded = false;
+
+        public bool DatabaseManagerIsExpanded {
+            get { return databaseManagerIsExpanded; }
+            set {
+                databaseManagerIsExpanded = value;
+                if (value && DatabaseManagerVM == null) {
+                    DatabaseManagerVM = new DatabaseManagerVM(profileService, applicationMediator, framingAssistantVM, deepSkyObjectSearchVM, planetariumFactory);
+                }
+            }
+        }
+
+        /*
+        private bool planPreviewIsExpanded = false;
+
+        public bool PlanPreviewIsExpanded {
+            get { return planPreviewIsExpanded; }
+            set {
+                planPreviewIsExpanded = value;
+                if (value && PlanPreviewerViewVM == null) {
+                    PlanPreviewerViewVM = new PlanPreviewerViewVM(profileService);
+                }
+            }
+        }*/
+
+        private bool acquiredImagesManagerIsExpanded = false;
+
+        public bool AcquiredImagesManagerIsExpanded {
+            get { return acquiredImagesManagerIsExpanded; }
+            set {
+                acquiredImagesManagerIsExpanded = value;
+                if (value && AcquiredImagesManagerViewVM == null) {
+                    AcquiredImagesManagerViewVM = new AcquiredImagesManagerViewVM(profileService);
+                }
+            }
+        }
+
+        private void ProcessExited(object sender, EventArgs e) {
+            TSLogger.Warning($"process exited");
         }
 
         public override Task Teardown() {
@@ -102,13 +163,13 @@ namespace NINA.Plugin.TargetScheduler {
 
         private void ProfileService_ProfileChanged(object? sender, EventArgs e) {
             // TODO:
-            //AssistantManagerVM = new AssistantManagerVM(profileService, applicationMediator, framingAssistantVM, deepSkyObjectSearchVM, planetariumFactory);
+            DatabaseManagerVM = new DatabaseManagerVM(profileService, applicationMediator, framingAssistantVM, deepSkyObjectSearchVM, planetariumFactory);
             //PlanPreviewerViewVM = new PlanPreviewerViewVM(profileService);
-            //AcquiredImagesManagerViewVM = new AcquiredImagesManagerViewVM(profileService);
+            AcquiredImagesManagerViewVM = new AcquiredImagesManagerViewVM(profileService);
 
-            //RaisePropertyChanged(nameof(AssistantManagerVM));
+            RaisePropertyChanged(nameof(DatabaseManagerVM));
             //RaisePropertyChanged(nameof(PlanPreviewerViewVM));
-            //RaisePropertyChanged(nameof(AcquiredImagesManagerViewVM));
+            RaisePropertyChanged(nameof(AcquiredImagesManagerViewVM));
 
             if (profileService.ActiveProfile != null) {
                 profileService.ActiveProfile.AstrometrySettings.PropertyChanged -= ProfileService_ProfileChanged;

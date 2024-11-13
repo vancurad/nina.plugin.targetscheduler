@@ -34,7 +34,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
                 }
 
                 if (projects == null || projects.Count == 0) {
-                    TSLogger.Warning("Assistant: no projects are active at planning time");
+                    TSLogger.Warning("no projects are active at planning time");
                     return null;
                 }
 
@@ -59,7 +59,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
                 }
 
                 if (!haveActiveTargets) {
-                    TSLogger.Warning("Assistant: no targets with exposure plans are active for active projects at planning time");
+                    TSLogger.Warning("no targets with exposure plans are active for active projects at planning time");
                     return null;
                 }
 

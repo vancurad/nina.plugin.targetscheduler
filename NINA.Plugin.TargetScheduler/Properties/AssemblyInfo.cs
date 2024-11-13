@@ -18,7 +18,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyMetadata("MinimumApplicationVersion", "3.0.0.3005")]
 [assembly: AssemblyMetadata("License", "MPL-2.0")]
 [assembly: AssemblyMetadata("LicenseURL", "https://www.mozilla.org/en-US/MPL/2.0/")]
-[assembly: AssemblyMetadata("Repository", "https://github.com/tcpalmer/nina.plugin.assistant/")]
+[assembly: AssemblyMetadata("Repository", "https://github.com/tcpalmer/nina.plugin.targetscheduler/")]
 [assembly: AssemblyMetadata("Homepage", "https://tcpalmer.github.io/nina-scheduler/")]
 [assembly: AssemblyMetadata("Tags", "Automation,Scheduling,Sequencer")]
 [assembly: AssemblyMetadata("FeaturedImageURL", "https://raw.githubusercontent.com/tcpalmer/nina.plugin.assistant/main/NINA.Plugin.Assistant/assets/target-scheduler-logo.png?raw=true")]
