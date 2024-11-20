@@ -25,6 +25,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
         public DbSet<Target> TargetSet { get; set; }
         public DbSet<ExposurePlan> ExposurePlanSet { get; set; }
         public DbSet<ExposureTemplate> ExposureTemplateSet { get; set; }
+        public DbSet<OverrideExposureOrder> OverrideExposureOrderSet { get; set; }
         public DbSet<FlatHistory> FlatHistorySet { get; set; }
         public DbSet<ImageData> ImageDataSet { get; set; }
 
@@ -58,6 +59,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
         public List<Project> GetAllProjects() {
             return ProjectSet
                 .Include("targets.exposureplans.exposuretemplate")
+                //.Include("targets.overrideExposureOrders")
                 .Include("ruleweights")
                 .ToList();
         }
@@ -65,6 +67,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
         public List<Project> GetAllProjects(string profileId) {
             return ProjectSet
                 .Include("targets.exposureplans.exposuretemplate")
+                //.Include("targets.overrideExposureOrders")
                 .Include("ruleweights")
                 .Where(p => p.ProfileId.Equals(profileId))
                 .ToList();
@@ -73,6 +76,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
         public List<Project> GetOrphanedProjects(List<string> currentProfileIdList) {
             return ProjectSet
                 .Include("targets.exposureplans.exposuretemplate")
+                //.Include("targets.overrideExposureOrders")
                 .Include("ruleweights")
                 .Where(p => !currentProfileIdList.Contains(p.ProfileId))
                 .ToList();
@@ -81,6 +85,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
         public List<Project> GetActiveProjects(string profileId) {
             var projects = ProjectSet
                 .Include("targets.exposureplans.exposuretemplate")
+                //.Include("targets.overrideExposureOrders")
                 .Include("ruleweights")
                 .Where(p =>
                 p.ProfileId.Equals(profileId) &&
@@ -112,6 +117,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
         public Project GetProject(int projectId) {
             return ProjectSet
                 .Include("targets.exposureplans.exposuretemplate")
+                .Include("targets.overrideExposureOrders")
                 .Include("ruleweights")
                 .Where(p => p.Id == projectId)
                 .FirstOrDefault();
@@ -126,6 +132,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
         public Target GetTarget(int projectId, int targetId) {
             return TargetSet
                 .Include("exposureplans.exposuretemplate")
+                .Include("overrideExposureOrders")
                 .Where(t => t.Project.Id == projectId && t.Id == targetId)
                 .FirstOrDefault();
         }
@@ -145,6 +152,35 @@ namespace NINA.Plugin.TargetScheduler.Database {
         public ExposureTemplate GetExposureTemplate(int id) {
             return ExposureTemplateSet.Where(e => e.Id == id).FirstOrDefault();
         }
+
+        /*
+        public void SaveOverrideExposureOrders(int targetId, List<OverrideExposureOrder> rows) {
+            if (rows == null || rows.Count == 0) { return; }
+
+            if (GetOverrideExposureOrders(targetId).Count > 0) {
+                throw new Exception("must clear existing OverrideExposureOrder rows before saving new");
+            }
+
+            TSLogger.Debug($"saving OverrideExposureOrders for target Id={targetId}");
+
+            using (var transaction = Database.BeginTransaction()) {
+                try {
+                    foreach (var row in rows) { OverrideExposureOrderSet.Add(row); }
+                    SaveChanges();
+                    transaction.Commit();
+                } catch (Exception e) {
+                    TSLogger.Error($"error persisting override exposure order for target ID {targetId}: {e.Message} {e.StackTrace}");
+                    RollbackTransaction(transaction);
+                }
+            }
+        }
+
+        public List<OverrideExposureOrder> GetOverrideExposureOrders(int targetId) {
+            return OverrideExposureOrderSet
+                .Where(o => o.TargetId == targetId)
+                .OrderBy(o => o.order).ToList();
+        }
+        */
 
         public List<AcquiredImage> GetAcquiredImages(int targetId, string filterName) {
             var images = AcquiredImageSet.Where(p =>
@@ -194,6 +230,21 @@ namespace NINA.Plugin.TargetScheduler.Database {
             }
 
             return AcquiredImageSet.AsNoTracking().AsExpandable().Where(predicate).Count();
+        }
+
+        public void DeleteOverrideExposureOrders(int targetId) {
+            using (var transaction = Database.BeginTransaction()) {
+                try {
+                    var predicate = PredicateBuilder.New<OverrideExposureOrder>();
+                    predicate = predicate.And(a => a.TargetId == targetId);
+                    OverrideExposureOrderSet.RemoveRange(OverrideExposureOrderSet.Where(predicate));
+                    SaveChanges();
+                    transaction.Commit();
+                } catch (Exception e) {
+                    TSLogger.Error($"error deleting override exposure order for target Id {targetId}: {e.Message} {e.StackTrace}");
+                    RollbackTransaction(transaction);
+                }
+            }
         }
 
         public void DeleteAcquiredImages(DateTime olderThan, int targetId) {
@@ -391,10 +442,15 @@ namespace NINA.Plugin.TargetScheduler.Database {
             using (var transaction = Database.BeginTransaction()) {
                 try {
                     TargetSet.AddOrUpdate(target);
+
                     target.ExposurePlans.ForEach(plan => {
                         plan.ExposureTemplate = null; // clear this (ExposureTemplateId handles the relation)
                         ExposurePlanSet.AddOrUpdate(plan);
                         plan.ExposureTemplate = GetExposureTemplate(plan.ExposureTemplateId); // add back for UI
+                    });
+
+                    target.OverrideExposureOrders.ForEach(oeo => {
+                        OverrideExposureOrderSet.AddOrUpdate(oeo);
                     });
 
                     SaveChanges();
@@ -440,22 +496,6 @@ namespace NINA.Plugin.TargetScheduler.Database {
                     return true;
                 } catch (Exception e) {
                     TSLogger.Error($"error deleting target: {e.Message} {e.StackTrace}");
-                    RollbackTransaction(transaction);
-                    return false;
-                }
-            }
-        }
-
-        public bool SaveExposurePlan(ExposurePlan exposurePlan) {
-            TSLogger.Debug($"saving Exposure Plan Id={exposurePlan.Id}");
-            using (var transaction = Database.BeginTransaction()) {
-                try {
-                    ExposurePlanSet.AddOrUpdate(exposurePlan);
-                    SaveChanges();
-                    transaction.Commit();
-                    return true;
-                } catch (Exception e) {
-                    TSLogger.Error($"error persisting exposure plan: {e.Message} {e.StackTrace}");
                     RollbackTransaction(transaction);
                     return false;
                 }

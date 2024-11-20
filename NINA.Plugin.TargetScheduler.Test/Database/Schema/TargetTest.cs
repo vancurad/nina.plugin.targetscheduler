@@ -17,8 +17,8 @@ namespace NINA.Plugin.TargetScheduler.Test.Database.Schema {
             sut.Epoch.Should().Be(Epoch.J2000);
             sut.Rotation.Should().Be(0);
             sut.ROI.Should().Be(100);
-            sut.OverrideExposureOrder.Should().BeNull();
             sut.ExposurePlans.Count.Should().Be(0);
+            sut.OverrideExposureOrders.Count.Should().Be(0);
         }
 
         [Test]
@@ -33,8 +33,8 @@ namespace NINA.Plugin.TargetScheduler.Test.Database.Schema {
             sut.Epoch.Should().Be(Epoch.J2000);
             sut.Rotation.Should().Be(0);
             sut.ROI.Should().Be(100);
-            sut.OverrideExposureOrder.Should().BeNull();
             sut.ExposurePlans.Count.Should().Be(0);
+            sut.OverrideExposureOrders.Count.Should().Be(0);
         }
 
         [Test]

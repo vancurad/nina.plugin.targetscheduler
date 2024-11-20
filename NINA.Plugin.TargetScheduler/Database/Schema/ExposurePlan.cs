@@ -111,6 +111,7 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
         public override string ToString() {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine($"ProfileId: {ProfileId}");
+            sb.AppendLine($"TargetId: {TargetId}");
             sb.AppendLine($"ExposureTemplate: {ExposureTemplate}");
             sb.AppendLine($"Exposure: {Exposure}");
             sb.AppendLine($"Desired: {Desired}");

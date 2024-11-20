@@ -712,11 +712,6 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             using (var context = database.GetContext()) {
                 Target newTarget = context.PasteTarget(project, source);
                 if (newTarget != null) {
-                    if (!string.IsNullOrEmpty(source.OverrideExposureOrder)) {
-                        newTarget.OverrideExposureOrder = OverrideExposureOrder.Remap(source.OverrideExposureOrder, source.ExposurePlans, newTarget.ExposurePlans);
-                        context.SaveTarget(newTarget);
-                    }
-
                     TreeDataItem newTargetItem = new TreeDataItem(TreeDataType.Target, newTarget.Name, newTarget, parentItem);
                     parentItem.Items.Add(newTargetItem);
                     newTargetItem.IsSelected = true;

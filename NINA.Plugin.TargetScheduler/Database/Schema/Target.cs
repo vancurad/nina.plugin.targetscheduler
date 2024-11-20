@@ -22,12 +22,12 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
         [Required] public int epochCode { get; set; }
         public double rotation { get; set; }
         public double roi { get; set; }
-        public string overrideExposureOrder { get; set; }
 
         [ForeignKey("Project")] public int ProjectId { get; set; }
         public virtual Project Project { get; set; }
 
         public virtual List<ExposurePlan> ExposurePlans { get; set; }
+        public virtual List<OverrideExposureOrder> OverrideExposureOrders { get; set; }
 
         public Target() {
             active = true;
@@ -36,8 +36,8 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
             epochCode = (int)Epoch.J2000;
             rotation = 0;
             roi = 100;
-            overrideExposureOrder = null;
             ExposurePlans = new List<ExposurePlan>();
+            OverrideExposureOrders = new List<OverrideExposureOrder>();
         }
 
         [NotMapped]
@@ -237,15 +237,6 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
             }
         }
 
-        [NotMapped]
-        public string OverrideExposureOrder {
-            get => overrideExposureOrder;
-            set {
-                overrideExposureOrder = value;
-                RaisePropertyChanged(nameof(OverrideExposureOrder));
-            }
-        }
-
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected void RaisePropertyChanged([CallerMemberName] string propertyName = null) {
@@ -276,8 +267,8 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
             target.epochCode = epochCode;
             target.rotation = rotation;
             target.roi = roi;
-            target.overrideExposureOrder = overrideExposureOrder;
             ExposurePlans.ForEach(item => target.ExposurePlans.Add(item.GetPasteCopy(profileId)));
+            OverrideExposureOrders.ForEach(item => target.OverrideExposureOrders.Add(item.GetPasteCopy()));
 
             return target;
         }
@@ -292,7 +283,6 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
             sb.AppendLine($"Epoch: {Epoch}");
             sb.AppendLine($"Rotation: {Rotation}");
             sb.AppendLine($"ROI: {ROI}");
-            sb.AppendLine($"Override exposure order: {OverrideExposureOrder}");
 
             return sb.ToString();
         }
@@ -303,6 +293,9 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
         public TargetConfiguration() {
             HasKey(t => new { t.Id });
             HasMany(t => t.ExposurePlans)
+             .WithRequired(e => e.Target)
+             .HasForeignKey(e => e.TargetId);
+            HasMany(t => t.OverrideExposureOrders)
              .WithRequired(e => e.Target)
              .HasForeignKey(e => e.TargetId);
         }

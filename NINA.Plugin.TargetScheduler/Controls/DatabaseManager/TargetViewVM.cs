@@ -69,9 +69,10 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             OverrideExposureOrderCommand = new RelayCommand(DisplayOverrideExposureOrder);
             CancelOverrideExposureOrderCommand = new RelayCommand(CancelOverrideExposureOrder);
 
-            if (target.OverrideExposureOrder != null) {
-                OverrideExposureOrder = new OverrideExposureOrder(target.OverrideExposureOrder, target.ExposurePlans);
-            }
+            /* TODO: remove - think OverrideExposureOrderOld can go away, replaced by the OEO VM
+            if (target.OverrideExposureOrderOld != null) {
+                OverrideExposureOrderOld = new OverrideExposureOrderOld(target.OverrideExposureOrderOld, target.ExposurePlans);
+            }*/
 
             OverrideExposureOrderVM = new OverrideExposureOrderViewVM(this, profileService);
 
@@ -282,8 +283,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
 
             // If exposure plans have been added or removed, we have to clear any override exposure order
             if (TargetProxy.Proxy.ExposurePlans.Count != TargetProxy.Original.ExposurePlans.Count) {
-                OverrideExposureOrder = null;
-                TargetProxy.Proxy.OverrideExposureOrder = null;
+                TargetProxy.Proxy.OverrideExposureOrders = new List<OverrideExposureOrder>();
             }
 
             managerVM.SaveTarget(TargetProxy.Proxy);
@@ -294,9 +294,10 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             ItemEdited = false;
             ShowTargetImportView = false;
 
-            if (TargetProxy.Original.OverrideExposureOrder != null) {
-                OverrideExposureOrder = new OverrideExposureOrder(TargetProxy.Original.OverrideExposureOrder, ExposurePlans);
-                OverrideExposureOrderDisplay = GetOverrideExposureOrder();
+            if (TargetProxy.Original.OverrideExposureOrders?.Count > 0) {
+                // TODO: fix
+                // OverrideExposureOrderOld = new OverrideExposureOrderOld(TargetProxy.Original.OverrideExposureOrderOld, ExposurePlans);
+                // OverrideExposureOrderDisplay = GetOverrideExposureOrder();
             } else {
                 DefaultExposureOrder = GetDefaultExposureOrder();
             }
@@ -383,8 +384,9 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
                     exposurePlans.Add(item);
                 }
 
-                string overrideExposureOrder = OverrideExposureOrder == null ? null : OverrideExposureOrder.Serialize();
-                ExposurePlansClipboard.SetItem(exposurePlans, overrideExposureOrder);
+                // TODO: fix
+                // string overrideExposureOrder = OverrideExposureOrderOld == null ? null : OverrideExposureOrderOld.Serialize();
+                // ExposurePlansClipboard.SetItem(exposurePlans, overrideExposureOrder);
                 RaisePropertyChanged(nameof(ExposurePlansPasteEnabled));
             } else {
                 ExposurePlansClipboard.Clear();
@@ -430,21 +432,22 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             }
 
             TargetProxy.Proxy.ExposurePlans = ExposurePlans;
-            TargetProxy.Proxy.OverrideExposureOrder = srcOverrideExposureOrder;
+            //TargetProxy.Proxy.OverrideExposureOrderOld = srcOverrideExposureOrder;
 
             managerVM.SaveTarget(TargetProxy.Proxy);
             TargetProxy.OnSave();
             InitializeExposurePlans(TargetProxy.Proxy);
 
             // If the copy had an override exposure order, we need to remap it for the new exposure plan records
+            /* TODO: fix
             if (srcOverrideExposureOrder != null) {
-                TargetProxy.Proxy.OverrideExposureOrder = OverrideExposureOrder.Remap(srcOverrideExposureOrder, srcExposurePlans, TargetProxy.Proxy.ExposurePlans);
+                TargetProxy.Proxy.OverrideExposureOrderOld = OverrideExposureOrderOld.Remap(srcOverrideExposureOrder, srcExposurePlans, TargetProxy.Proxy.ExposurePlans);
                 managerVM.SaveTarget(TargetProxy.Proxy);
                 TargetProxy.OnSave();
-                OverrideExposureOrder = new OverrideExposureOrder(TargetProxy.Proxy.OverrideExposureOrder, TargetProxy.Proxy.ExposurePlans);
+                OverrideExposureOrderOld = new OverrideExposureOrderOld(TargetProxy.Proxy.OverrideExposureOrderOld, TargetProxy.Proxy.ExposurePlans);
             } else {
-                OverrideExposureOrder = null;
-            }
+                OverrideExposureOrderOld = null;
+            }*/
 
             RaisePropertyChanged(nameof(ExposurePlans));
             RaisePropertyChanged(nameof(ExposurePlansCopyEnabled));
@@ -458,7 +461,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
                 string message = "Delete all exposure plans for this target?  This cannot be undone.";
                 if (MyMessageBox.Show(message, "Delete all Exposure Plans?", MessageBoxButton.YesNo, MessageBoxResult.No) == MessageBoxResult.Yes) {
                     // Have to clear any override exposure order on deleted exposure plans
-                    TargetProxy.Original.OverrideExposureOrder = null;
+                    TargetProxy.Original.OverrideExposureOrders = new List<OverrideExposureOrder>();
 
                     Target updatedTarget = managerVM.DeleteAllExposurePlans(TargetProxy.Original);
                     if (updatedTarget != null) {
@@ -468,7 +471,8 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
                         RaisePropertyChanged(nameof(ExposurePlansDeleteEnabled));
                         TargetActive = ActiveWithActiveExposurePlans(TargetProxy.Target);
 
-                        OverrideExposureOrder = null;
+                        // TODO: fix
+                        //OverrideExposureOrderOld = null;
                         DefaultExposureOrder = GetDefaultExposureOrder();
                     }
                 }
@@ -482,7 +486,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
                 string message = $"Delete exposure plan using template '{exposurePlan.ExposureTemplate?.Name}'?  This cannot be undone.";
                 if (MyMessageBox.Show(message, "Delete Exposure Plan?", MessageBoxButton.YesNo, MessageBoxResult.No) == MessageBoxResult.Yes) {
                     // Have to clear any override exposure order on deleted exposure plan
-                    TargetProxy.Original.OverrideExposureOrder = null;
+                    TargetProxy.Original.OverrideExposureOrders = new List<OverrideExposureOrder>();
 
                     Target updatedTarget = managerVM.DeleteExposurePlan(TargetProxy.Original, exposurePlan);
                     if (updatedTarget != null) {
@@ -491,7 +495,8 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
                         RaisePropertyChanged(nameof(ExposurePlansDeleteEnabled));
                         TargetActive = ActiveWithActiveExposurePlans(TargetProxy.Target);
 
-                        OverrideExposureOrder = null;
+                        // TODO: fix
+                        //OverrideExposureOrderOld = null;
                         DefaultExposureOrder = GetDefaultExposureOrder();
                     }
                 }
@@ -544,19 +549,22 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             }
         }
 
-        private OverrideExposureOrder overrideExposureOrder;
+        /* TODO: remove
+        private OverrideExposureOrderOld overrideExposureOrderOld;
 
-        public OverrideExposureOrder OverrideExposureOrder {
-            get => overrideExposureOrder;
+        public OverrideExposureOrderOld OverrideExposureOrderOld {
+            get => overrideExposureOrderOld;
             set {
-                overrideExposureOrder = value;
+                overrideExposureOrderOld = value;
                 OverrideExposureOrderDisplay = GetOverrideExposureOrder();
-                RaisePropertyChanged(nameof(OverrideExposureOrder));
+                RaisePropertyChanged(nameof(DatabaseManager.OverrideExposureOrderOld));
                 RaisePropertyChanged(nameof(HaveOverrideExposureOrder));
             }
-        }
+        }*/
 
-        public bool HaveOverrideExposureOrder { get => OverrideExposureOrder != null; private set { } }
+        // TODO: fix
+        //public bool HaveOverrideExposureOrder { get => OverrideExposureOrderOld != null; private set { } }
+        public bool HaveOverrideExposureOrder { get => false; private set { } }
 
         private string GetDefaultExposureOrder() {
             StringBuilder sb = new StringBuilder();
@@ -590,46 +598,54 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
         }
 
         private string GetOverrideExposureOrder() {
-            if (OverrideExposureOrder == null || OverrideExposureOrder.OverrideItems.Count == 0) {
+            return "TBD";
+            /* TODO: fix
+            if (OverrideExposureOrderOld == null || OverrideExposureOrderOld.OverrideItems.Count == 0) {
                 return "";
             }
 
             StringBuilder sb = new StringBuilder();
-            foreach (var item in OverrideExposureOrder.OverrideItems) {
+            foreach (var item in OverrideExposureOrderOld.OverrideItems) {
                 sb.Append(item.Name).Append(", ");
             }
 
             return sb.ToString().TrimEnd().TrimEnd(new Char[] { ',' });
+            */
         }
 
         private void DisplayOverrideExposureOrder(object obj) {
-            if (OverrideExposureOrder == null) {
-                OverrideExposureOrderVM.OverrideExposureOrder = new OverrideExposureOrder(TargetProxy.Proxy.ExposurePlans);
+            /* TODO: fix
+            if (OverrideExposureOrderOld == null) {
+                OverrideExposureOrderVM.OverrideExposureOrderOld = new OverrideExposureOrderOld(TargetProxy.Proxy.ExposurePlans);
             } else {
                 // Clone it for popup
-                OverrideExposureOrderVM.OverrideExposureOrder = new OverrideExposureOrder(OverrideExposureOrder.Serialize(), TargetProxy.Proxy.ExposurePlans);
+                OverrideExposureOrderVM.OverrideExposureOrderOld = new OverrideExposureOrderOld(OverrideExposureOrderOld.Serialize(), TargetProxy.Proxy.ExposurePlans);
             }
+            */
 
-            ShowOverrideExposureOrderPopup = true;
+            //ShowOverrideExposureOrderPopup = true;
+            ShowOverrideExposureOrderPopup = false;
         }
 
         private void CancelOverrideExposureOrder(object obj) {
             string message = $"Clear override exposure order?  This cannot be undone.";
             if (MyMessageBox.Show(message, "Clear?", MessageBoxButton.YesNo, MessageBoxResult.No) == MessageBoxResult.Yes) {
-                TargetProxy.Proxy.OverrideExposureOrder = null;
+                TargetProxy.Proxy.OverrideExposureOrders = new List<OverrideExposureOrder>();
                 managerVM.SaveTarget(TargetProxy.Proxy);
                 TargetProxy.OnSave();
 
-                OverrideExposureOrder = null;
+                // OverrideExposureOrderOld = null;
             }
         }
 
-        public void SaveOverrideExposureOrder(OverrideExposureOrder overrideExposureOrder) {
-            TargetProxy.Proxy.OverrideExposureOrder = overrideExposureOrder.Serialize();
+        public void SaveOverrideExposureOrder(OverrideExposureOrderOld overrideExposureOrder) {
+            /* TODO: fix
+            TargetProxy.Proxy.OverrideExposureOrderOld = overrideExposureOrder.Serialize();
             managerVM.SaveTarget(TargetProxy.Proxy);
             TargetProxy.OnSave();
 
-            OverrideExposureOrder = overrideExposureOrder;
+            OverrideExposureOrderOld = overrideExposureOrder;
+            */
         }
     }
 }

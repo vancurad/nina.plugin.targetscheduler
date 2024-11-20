@@ -1,9 +1,9 @@
-﻿using NINA.Plugin.TargetScheduler.Controls.Util;
-using NINA.Plugin.TargetScheduler.Database;
-using NINA.Plugin.TargetScheduler.Database.Schema;
-using Microsoft.WindowsAPICodePack.Dialogs;
+﻿using Microsoft.WindowsAPICodePack.Dialogs;
 using NINA.Core.MyMessageBox;
 using NINA.Core.Utility;
+using NINA.Plugin.TargetScheduler.Controls.Util;
+using NINA.Plugin.TargetScheduler.Database;
+using NINA.Plugin.TargetScheduler.Database.Schema;
 using NINA.Plugin.TargetScheduler.Shared.Utility;
 using NINA.Profile;
 using NINA.Profile.Interfaces;
@@ -231,16 +231,6 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
                                 managerVM.AddTargets(project, targets, item);
                                 break;
                             }
-                        }
-                    }
-                }
-
-                // If we have a template with an override exposure order, we have to remap to new exposure plans for each target.
-                if (templateTarget?.OverrideExposureOrder != null) {
-                    using (var context = new SchedulerDatabaseInteraction().GetContext()) {
-                        foreach (Target target in targets) {
-                            target.OverrideExposureOrder = OverrideExposureOrder.Remap(templateTarget.OverrideExposureOrder, templateTarget.ExposurePlans, target.ExposurePlans);
-                            context.SaveTarget(target);
                         }
                     }
                 }

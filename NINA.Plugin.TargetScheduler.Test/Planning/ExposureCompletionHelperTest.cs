@@ -302,6 +302,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
 
     internal class TestPlanTarget : ITarget {
         public List<IExposure> ExposurePlans { get; set; }
+        public List<IOverrideExposureOrder> OverrideExposureOrders { get; set; }
         public List<IExposure> CompletedExposurePlans { get; set; }
 
         public TestPlanTarget() {
@@ -316,7 +317,6 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
         public Epoch Epoch { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public double Rotation { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public double ROI { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public string OverrideExposureOrder { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public IProject Project { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public bool Rejected { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public string RejectedReason { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }

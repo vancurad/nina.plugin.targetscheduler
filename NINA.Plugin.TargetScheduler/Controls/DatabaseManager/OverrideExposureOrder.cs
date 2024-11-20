@@ -8,23 +8,32 @@ using System.Text;
 
 namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
 
-    public class OverrideExposureOrder {
+    public class OverrideExposureOrderOld {
         public static readonly string DITHER = "Dither";
         public static readonly char SEP = '|';
 
-        private List<OverrideItem> overrideItems = new List<OverrideItem>();
+        /* What is this old code doing?
+         * - Maintains the runtime list of items - will now just be on the target
+         * - Can deserialize from DB OEO string to runtime items
+         * - Can serialize from runtime list to DB string
+         * - Does the remapping when a target is copied/pasted
+         *
+         * NONE of these are needed with new approach
+         */
 
-        public List<OverrideItem> OverrideItems {
+        private List<OverrideItemOld> overrideItems = new List<OverrideItemOld>();
+
+        public List<OverrideItemOld> OverrideItems {
             get => overrideItems; set => overrideItems = value;
         }
 
-        public OverrideExposureOrder(List<ExposurePlan> exposurePlans) {
+        public OverrideExposureOrderOld(List<ExposurePlan> exposurePlans) {
             for (int i = 0; i < exposurePlans.Count; i++) {
-                OverrideItems.Add(new OverrideItem(exposurePlans[i], exposurePlans[i].Id));
+                OverrideItems.Add(new OverrideItemOld(exposurePlans[i], exposurePlans[i].Id));
             }
         }
 
-        public OverrideExposureOrder(string serialized, List<ExposurePlan> exposurePlans) {
+        public OverrideExposureOrderOld(string serialized, List<ExposurePlan> exposurePlans) {
             if (String.IsNullOrEmpty(serialized)) {
                 return;
             }
@@ -32,13 +41,13 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             string[] items = serialized.Split(SEP);
             foreach (string item in items) {
                 if (item == DITHER) {
-                    OverrideItems.Add(new OverrideItem());
+                    OverrideItems.Add(new OverrideItemOld());
                 } else {
                     int databaseId = 0;
                     Int32.TryParse(item, out databaseId);
                     ExposurePlan ep = exposurePlans.Find(e => e.Id == databaseId);
                     if (ep != null) {
-                        OverrideItems.Add(new OverrideItem(ep, databaseId));
+                        OverrideItems.Add(new OverrideItemOld(ep, databaseId));
                     }
                 }
             }
@@ -50,15 +59,15 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             }
 
             StringBuilder sb = new StringBuilder();
-            foreach (OverrideItem item in OverrideItems) {
+            foreach (OverrideItemOld item in OverrideItems) {
                 sb.Append(item.Serialize()).Append(SEP);
             }
 
             return sb.ToString().TrimEnd(SEP);
         }
 
-        public ObservableCollection<OverrideItem> GetDisplayList() {
-            return new ObservableCollection<OverrideItem>(OverrideItems);
+        public ObservableCollection<OverrideItemOld> GetDisplayList() {
+            return new ObservableCollection<OverrideItemOld>(OverrideItems);
         }
 
         public static string Remap(string srcOverrideExposureOrder, List<ExposurePlan> srcExposurePlans, List<ExposurePlan> newExposurePlans) {
@@ -70,10 +79,10 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
                 map.Add(new Tuple<int, int>(srcExposurePlans[i].Id, newExposurePlans[i].Id));
             }
 
-            OverrideExposureOrder overrideExposureOrder = new OverrideExposureOrder(srcOverrideExposureOrder, srcExposurePlans);
+            OverrideExposureOrderOld overrideExposureOrder = new OverrideExposureOrderOld(srcOverrideExposureOrder, srcExposurePlans);
             StringBuilder sb = new StringBuilder();
 
-            foreach (OverrideItem item in overrideExposureOrder.OverrideItems) {
+            foreach (OverrideItemOld item in overrideExposureOrder.OverrideItems) {
                 if (item.IsDither) {
                     sb.Append(DITHER).Append(SEP);
                     continue;
@@ -92,25 +101,25 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
         }
     }
 
-    public class OverrideItem {
+    public class OverrideItemOld {
         public int ExposurePlanDatabaseId { get; private set; }
         public bool IsDither { get; private set; }
         public string Name { get; private set; }
 
-        public OverrideItem() {
+        public OverrideItemOld() {
             IsDither = true;
             ExposurePlanDatabaseId = -1;
-            Name = OverrideExposureOrder.DITHER;
+            Name = OverrideExposureOrderOld.DITHER;
         }
 
-        public OverrideItem(ExposurePlan exposurePlan, int exposurePlanDatabaseId) {
+        public OverrideItemOld(ExposurePlan exposurePlan, int exposurePlanDatabaseId) {
             IsDither = false;
             ExposurePlanDatabaseId = exposurePlanDatabaseId;
             Name = exposurePlan.ExposureTemplate.Name;
         }
 
-        public OverrideItem Clone() {
-            return new OverrideItem {
+        public OverrideItemOld Clone() {
+            return new OverrideItemOld {
                 IsDither = IsDither,
                 ExposurePlanDatabaseId = ExposurePlanDatabaseId,
                 Name = Name
@@ -118,7 +127,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
         }
 
         public string Serialize() {
-            return IsDither ? OverrideExposureOrder.DITHER : ExposurePlanDatabaseId.ToString();
+            return IsDither ? OverrideExposureOrderOld.DITHER : ExposurePlanDatabaseId.ToString();
         }
     }
 }

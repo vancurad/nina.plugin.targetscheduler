@@ -54,15 +54,16 @@ CREATE TABLE IF NOT EXISTS "project" (
 
 CREATE TABLE IF NOT EXISTS "ruleweight" (
 	"Id"						INTEGER NOT NULL,
+	"projectid"					INTEGER,
 	"name"						TEXT NOT NULL,
 	"weight"					REAL NOT NULL,
-	"projectid"					INTEGER,
 	PRIMARY KEY("Id"),
 	FOREIGN KEY("projectId") REFERENCES "project"("Id")
 );
 
 CREATE TABLE IF NOT EXISTS "target" (
 	"Id"						INTEGER NOT NULL,
+	"projectid"					INTEGER,
 	"name"						TEXT NOT NULL,
 	"active"					INTEGER NOT NULL,
 	"ra"						REAL,
@@ -70,8 +71,6 @@ CREATE TABLE IF NOT EXISTS "target" (
 	"epochcode"					INTEGER NOT NULL,
 	"rotation"					REAL,
 	"roi"						REAL,
-	"projectid"					INTEGER,
-	"overrideExposureOrder"		TEXT,
 	PRIMARY KEY("id"),
 	FOREIGN KEY("projectId") REFERENCES "project"("Id")
 );
@@ -79,12 +78,12 @@ CREATE TABLE IF NOT EXISTS "target" (
 CREATE TABLE IF NOT EXISTS "exposureplan" (
 	"Id"						INTEGER NOT NULL,
 	"profileId"					TEXT NOT NULL,
+	"targetid"					INTEGER,
+	"exposureTemplateId"		INTEGER,
 	"exposure"					REAL NOT NULL,
 	"desired"					INTEGER,
 	"acquired"					INTEGER,
 	"accepted"					INTEGER,
-	"targetid"					INTEGER,
-	"exposureTemplateId"		INTEGER,
 	PRIMARY KEY("Id"),
 	FOREIGN KEY("exposureTemplateId") REFERENCES "exposuretemplate"("Id"),
 	FOREIGN KEY("targetId") REFERENCES "target"("Id")
@@ -110,6 +109,16 @@ CREATE TABLE IF NOT EXISTS "exposuretemplate" (
 	"moonrelaxminaltitude"		REAL DEFAULT -15,
 	"moondownenabled"			INTEGER DEFAULT 0,
 	PRIMARY KEY("Id")
+);
+
+CREATE TABLE IF NOT EXISTS "overrideexposureorder" (
+   "Id"				INTEGER NOT NULL,
+   "targetid"		INTEGER,
+   "order"			INTEGER NOT NULL,
+   "action"			INTEGER NOT NULL,
+   "referenceIdx"	INTEGER,
+   PRIMARY KEY("Id"),
+   FOREIGN KEY("targetId") REFERENCES "target"("Id")
 );
 
 CREATE TABLE IF NOT EXISTS "acquiredimage" (

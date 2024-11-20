@@ -150,7 +150,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
         }
 
         public override string ToString() {
-            return IsDither ? OverrideExposureOrder.DITHER : PlanExposure.FilterName;
+            return IsDither ? OverrideExposureOrderOld.DITHER : PlanExposure.FilterName;
         }
     }
 }

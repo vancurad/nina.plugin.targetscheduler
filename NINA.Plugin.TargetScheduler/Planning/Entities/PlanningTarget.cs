@@ -17,9 +17,9 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
         public Epoch Epoch { get; set; }
         public double Rotation { get; set; }
         public double ROI { get; set; }
-        public string OverrideExposureOrder { get; set; }
         public List<IExposure> ExposurePlans { get; set; }
         public List<IExposure> CompletedExposurePlans { get; set; }
+        public List<IOverrideExposureOrder> OverrideExposureOrders { get; set; }
         public IProject Project { get; set; }
         public bool Rejected { get; set; }
         public string RejectedReason { get; set; }
@@ -38,7 +38,6 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
             this.Epoch = target.Epoch;
             this.Rotation = target.Rotation;
             this.ROI = target.ROI;
-            this.OverrideExposureOrder = target.OverrideExposureOrder;
             this.Project = planProject;
             this.Rejected = false;
 
@@ -55,32 +54,30 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
                     this.CompletedExposurePlans.Add(planExposure);
                 }
             }
+
+            OverrideExposureOrders = new List<IOverrideExposureOrder>(target.OverrideExposureOrders.Count);
+            target.OverrideExposureOrders.ForEach(oeo => { this.OverrideExposureOrders.Add(new PlanningOverrideExposureOrder(oeo)); });
         }
 
         public PlanningTarget() {
         } // for PlanTargetEmulator only
 
         private List<ExposurePlan> GetActiveExposurePlans(Target target) {
-            if (string.IsNullOrEmpty(target.OverrideExposureOrder)) {
+            if (target.OverrideExposureOrders.Count == 0) {
                 return target.ExposurePlans;
             }
 
             List<ExposurePlan> list = new List<ExposurePlan>();
-            string[] items = target.OverrideExposureOrder.Split(Database.Schema.OverrideExposureOrder.SEP);
-            foreach (string item in items) {
-                if (item == Database.Schema.OverrideExposureOrder.DITHER) {
-                    continue;
-                } else {
-                    int databaseId = 0;
-                    Int32.TryParse(item, out databaseId);
-
-                    ExposurePlan exposurePlan = target.ExposurePlans.Find(ep => ep.Id == databaseId);
+            foreach (OverrideExposureOrder oeo in target.OverrideExposureOrders) {
+                if (oeo.Action == OverrideExposureOrderAction.Dither) { continue; }
+                if (oeo.Action == OverrideExposureOrderAction.Exposure) {
+                    // TODO: fix this is wrong for EP idx approach
+                    ExposurePlan exposurePlan = target.ExposurePlans.Find(ep => ep.Id == oeo.ReferenceIdx);
                     if (exposurePlan != null && !list.Contains(exposurePlan)) {
                         list.Add(exposurePlan);
                     }
                 }
             }
-
             return list;
         }
 
@@ -99,7 +96,6 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
             sb.AppendLine($"Coords: {Coordinates.RAString} {Coordinates.DecString} {Epoch}");
             sb.AppendLine($"Rotation: {Rotation}");
             sb.AppendLine($"ROI: {ROI}");
-            sb.AppendLine($"Override exp order: {OverrideExposureOrder}");
             sb.AppendLine($"StartTime: {Utils.FormatDateTimeFull(StartTime)}");
             sb.AppendLine($"EndTime: {Utils.FormatDateTimeFull(EndTime)}");
             sb.AppendLine($"CulminationTime: {Utils.FormatDateTimeFull(CulminationTime)}");
