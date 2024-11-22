@@ -11,38 +11,31 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
     }
 
     public class OverrideExposureOrder : INotifyPropertyChanged {
-
-        // TODO: following OLD need to be removed
-        public static readonly string DITHER_OLD = "Dither";
-
-        public static readonly char SEP_OLD = '|';
-
         [Key] public int Id { get; set; }
 
+        [Required] public int TargetId { get; set; }
         [Required] public int order { get; set; }
         [Required] public int action { get; set; }
         public int referenceIdx { get; set; }
 
-        [ForeignKey("Target")] public int TargetId { get; set; }
-        public virtual Target Target { get; set; }
-
         public OverrideExposureOrder() {
         }
 
-        public OverrideExposureOrder(int order, int action, int referenceIdx) {
+        public OverrideExposureOrder(int targetId, int order, int action, int referenceIdx) {
+            this.TargetId = targetId;
             this.order = order;
             this.action = action;
             this.referenceIdx = referenceIdx;
         }
 
-        public OverrideExposureOrder(int order, int action)
-            : this(order, action, -1) { }
+        public OverrideExposureOrder(int targetId, int order, int action)
+            : this(targetId, order, action, -1) { }
 
-        public OverrideExposureOrder(int order, OverrideExposureOrderAction action, int referenceIdx)
-            : this(order, (int)action, referenceIdx) { }
+        public OverrideExposureOrder(int targetId, int order, OverrideExposureOrderAction action, int referenceIdx)
+            : this(targetId, order, (int)action, referenceIdx) { }
 
-        public OverrideExposureOrder(int order, OverrideExposureOrderAction action)
-            : this(order, (int)action, -1) { }
+        public OverrideExposureOrder(int targetId, int order, OverrideExposureOrderAction action)
+            : this(targetId, order, (int)action, -1) { }
 
         [NotMapped]
         public int Order {
@@ -71,8 +64,9 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
             }
         }
 
-        public OverrideExposureOrder GetPasteCopy() {
+        public OverrideExposureOrder GetPasteCopy(int targetId) {
             OverrideExposureOrder copy = new OverrideExposureOrder();
+            copy.TargetId = targetId;
             copy.order = order;
             copy.action = action;
             copy.referenceIdx = referenceIdx;

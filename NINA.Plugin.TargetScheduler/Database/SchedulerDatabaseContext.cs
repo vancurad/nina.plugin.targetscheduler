@@ -7,6 +7,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Entity;
+using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
 using System.Data.Entity.Migrations;
 using System.Data.Entity.ModelConfiguration.Conventions;
 using System.Data.Entity.Validation;
@@ -47,6 +48,10 @@ namespace NINA.Plugin.TargetScheduler.Database {
             System.Data.Entity.Database.SetInitializer(sqi);
         }
 
+        /* You can add the following to write generated SQL to the console.  Don't leave it active ...
+         *   Database.Log = Console.Write;
+         */
+
         public ProfilePreference GetProfilePreference(string profileId, bool createDefault = false) {
             ProfilePreference profilePreference = ProfilePreferenceSet.Where(p => p.ProfileId.Equals(profileId)).FirstOrDefault();
             if (profilePreference == null && createDefault) {
@@ -59,7 +64,6 @@ namespace NINA.Plugin.TargetScheduler.Database {
         public List<Project> GetAllProjects() {
             return ProjectSet
                 .Include("targets.exposureplans.exposuretemplate")
-                //.Include("targets.overrideExposureOrders")
                 .Include("ruleweights")
                 .ToList();
         }
@@ -67,7 +71,6 @@ namespace NINA.Plugin.TargetScheduler.Database {
         public List<Project> GetAllProjects(string profileId) {
             return ProjectSet
                 .Include("targets.exposureplans.exposuretemplate")
-                //.Include("targets.overrideExposureOrders")
                 .Include("ruleweights")
                 .Where(p => p.ProfileId.Equals(profileId))
                 .ToList();
@@ -76,7 +79,6 @@ namespace NINA.Plugin.TargetScheduler.Database {
         public List<Project> GetOrphanedProjects(List<string> currentProfileIdList) {
             return ProjectSet
                 .Include("targets.exposureplans.exposuretemplate")
-                //.Include("targets.overrideExposureOrders")
                 .Include("ruleweights")
                 .Where(p => !currentProfileIdList.Contains(p.ProfileId))
                 .ToList();
@@ -85,7 +87,6 @@ namespace NINA.Plugin.TargetScheduler.Database {
         public List<Project> GetActiveProjects(string profileId) {
             var projects = ProjectSet
                 .Include("targets.exposureplans.exposuretemplate")
-                //.Include("targets.overrideExposureOrders")
                 .Include("ruleweights")
                 .Where(p =>
                 p.ProfileId.Equals(profileId) &&
@@ -115,12 +116,14 @@ namespace NINA.Plugin.TargetScheduler.Database {
         }
 
         public Project GetProject(int projectId) {
-            return ProjectSet
+            Project project = ProjectSet
                 .Include("targets.exposureplans.exposuretemplate")
-                .Include("targets.overrideExposureOrders")
                 .Include("ruleweights")
                 .Where(p => p.Id == projectId)
-                .FirstOrDefault();
+            .FirstOrDefault();
+
+            project.Targets.ForEach(t => t.OverrideExposureOrders = GetOverrideExposureOrders(t.Id));
+            return project;
         }
 
         public Target GetTargetOnly(int targetId) {
@@ -130,16 +133,19 @@ namespace NINA.Plugin.TargetScheduler.Database {
         }
 
         public Target GetTarget(int projectId, int targetId) {
-            return TargetSet
+            Target target = TargetSet
                 .Include("exposureplans.exposuretemplate")
-                .Include("overrideExposureOrders")
                 .Where(t => t.Project.Id == projectId && t.Id == targetId)
                 .FirstOrDefault();
+            target.OverrideExposureOrders = GetOverrideExposureOrders(targetId);
+            return target;
         }
 
         public Target GetTargetByProject(int projectId, int targetId) {
             Project project = GetProject(projectId);
-            return project.Targets.Where(t => t.Id == targetId).FirstOrDefault();
+            Target target = project.Targets.Where(t => t.Id == targetId).FirstOrDefault();
+            target.OverrideExposureOrders = GetOverrideExposureOrders(targetId);
+            return target;
         }
 
         public ExposurePlan GetExposurePlan(int id) {
@@ -153,34 +159,26 @@ namespace NINA.Plugin.TargetScheduler.Database {
             return ExposureTemplateSet.Where(e => e.Id == id).FirstOrDefault();
         }
 
-        /*
-        public void SaveOverrideExposureOrders(int targetId, List<OverrideExposureOrder> rows) {
-            if (rows == null || rows.Count == 0) { return; }
-
-            if (GetOverrideExposureOrders(targetId).Count > 0) {
-                throw new Exception("must clear existing OverrideExposureOrder rows before saving new");
-            }
-
-            TSLogger.Debug($"saving OverrideExposureOrders for target Id={targetId}");
-
-            using (var transaction = Database.BeginTransaction()) {
-                try {
-                    foreach (var row in rows) { OverrideExposureOrderSet.Add(row); }
-                    SaveChanges();
-                    transaction.Commit();
-                } catch (Exception e) {
-                    TSLogger.Error($"error persisting override exposure order for target ID {targetId}: {e.Message} {e.StackTrace}");
-                    RollbackTransaction(transaction);
-                }
-            }
-        }
-
         public List<OverrideExposureOrder> GetOverrideExposureOrders(int targetId) {
             return OverrideExposureOrderSet
                 .Where(o => o.TargetId == targetId)
                 .OrderBy(o => o.order).ToList();
         }
-        */
+
+        public void ClearExistingOverrideExposureOrders(int targetId) {
+            using (var transaction = Database.BeginTransaction()) {
+                try {
+                    var predicate = PredicateBuilder.New<OverrideExposureOrder>();
+                    predicate = predicate.And(oeo => oeo.TargetId == targetId);
+                    OverrideExposureOrderSet.RemoveRange(OverrideExposureOrderSet.Where(predicate));
+                    SaveChanges();
+                    transaction.Commit();
+                } catch (Exception e) {
+                    TSLogger.Error($"error clearing override exposure order for target ID {targetId}: {e.Message} {e.StackTrace}");
+                    RollbackTransaction(transaction);
+                }
+            }
+        }
 
         public List<AcquiredImage> GetAcquiredImages(int targetId, string filterName) {
             var images = AcquiredImageSet.Where(p =>
@@ -424,8 +422,9 @@ namespace NINA.Plugin.TargetScheduler.Database {
 
                     List<string> currentNames = project.Targets.Select(t => t.Name).ToList();
                     target.Name = Utils.MakeUniqueName(currentNames, target.Name);
-
+                    OverrideExposureOrderSet.AddRange(target.OverrideExposureOrders);
                     project.Targets.Add(target);
+
                     SaveChanges();
                     transaction.Commit();
                     return GetTarget(target.Project.Id, target.Id);
@@ -439,6 +438,8 @@ namespace NINA.Plugin.TargetScheduler.Database {
 
         public Target SaveTarget(Target target) {
             TSLogger.Debug($"saving Target Id={target.Id} Name={target.Name}");
+            ClearExistingOverrideExposureOrders(target.Id);
+
             using (var transaction = Database.BeginTransaction()) {
                 try {
                     TargetSet.AddOrUpdate(target);
@@ -449,6 +450,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
                         plan.ExposureTemplate = GetExposureTemplate(plan.ExposureTemplateId); // add back for UI
                     });
 
+                    OverrideExposureOrderSet.AddRange(target.OverrideExposureOrders);
                     target.OverrideExposureOrders.ForEach(oeo => {
                         OverrideExposureOrderSet.AddOrUpdate(oeo);
                     });
@@ -470,6 +472,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
                     Target target = source.GetPasteCopy(project.ProfileId);
                     project = GetProject(project.Id);
                     project.Targets.Add(target);
+                    OverrideExposureOrderSet.AddRange(target.OverrideExposureOrders);
                     SaveChanges();
                     transaction.Commit();
                     return GetTarget(project.Id, target.Id);
@@ -482,6 +485,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
         }
 
         public bool DeleteTarget(Target target) {
+            ClearExistingOverrideExposureOrders(target.Id);
             using (var transaction = Database.BeginTransaction()) {
                 try {
                     target = GetTarget(target.ProjectId, target.Id);
@@ -503,6 +507,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
         }
 
         public Target DeleteExposurePlan(Target target, ExposurePlan exposurePlan) {
+            ClearExistingOverrideExposureOrders(target.Id);
             using (var transaction = Database.BeginTransaction()) {
                 try {
                     TargetSet.AddOrUpdate(target);
@@ -541,6 +546,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
         }
 
         public Target DeleteAllExposurePlans(Target target) {
+            ClearExistingOverrideExposureOrders(target.Id);
             using (var transaction = Database.BeginTransaction()) {
                 try {
                     TargetSet.AddOrUpdate(target);

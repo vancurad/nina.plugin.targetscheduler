@@ -86,7 +86,7 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                     dithered.Add(exposureOrder[i]);
                 }
 
-                dithered.Add(OverrideExposureOrder.DITHER_OLD);
+                dithered.Add(OverrideExposureOrderAction.Dither.ToString());
                 pos = ditherPos;
             }
 

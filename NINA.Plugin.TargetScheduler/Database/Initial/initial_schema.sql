@@ -113,16 +113,16 @@ CREATE TABLE IF NOT EXISTS "exposuretemplate" (
 
 CREATE TABLE IF NOT EXISTS "overrideexposureorder" (
    "Id"				INTEGER NOT NULL,
-   "targetid"		INTEGER,
+   "targetid"		INTEGER NOT NULL,
    "order"			INTEGER NOT NULL,
    "action"			INTEGER NOT NULL,
    "referenceIdx"	INTEGER,
-   PRIMARY KEY("Id"),
-   FOREIGN KEY("targetId") REFERENCES "target"("Id")
+   PRIMARY KEY("Id")
 );
 
 CREATE TABLE IF NOT EXISTS "acquiredimage" (
 	"Id"			INTEGER NOT NULL,
+	"profileId"		TEXT,
 	"projectId"		INTEGER NOT NULL,
 	"targetId"		INTEGER NOT NULL,
 	"acquireddate"	INTEGER,

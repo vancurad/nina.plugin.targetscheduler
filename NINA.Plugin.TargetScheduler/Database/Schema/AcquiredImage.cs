@@ -23,9 +23,7 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
         [NotMapped]
         public string ProfileId {
             get { return profileId == null ? "" : profileId; }
-            set {
-                profileId = value;
-            }
+            set { profileId = value; }
         }
 
         [NotMapped]
@@ -37,17 +35,13 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
         [NotMapped]
         public bool Accepted {
             get { return accepted == 1; }
-            set {
-                accepted = value ? 1 : 0;
-            }
+            set { accepted = value ? 1 : 0; }
         }
 
         [NotMapped]
         public string RejectReason {
             get { return rejectreason == null ? "" : rejectreason; }
-            set {
-                rejectreason = value;
-            }
+            set { rejectreason = value; }
         }
 
         [NotMapped]

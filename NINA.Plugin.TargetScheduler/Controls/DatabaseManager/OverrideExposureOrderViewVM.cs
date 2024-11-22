@@ -1,6 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.Input;
+using NINA.Plugin.TargetScheduler.Database.Schema;
 using NINA.Profile.Interfaces;
 using NINA.WPF.Base.ViewModel;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 
@@ -12,6 +14,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
 
         public OverrideExposureOrderViewVM(TargetViewVM targetViewVM, IProfileService profileService) : base(profileService) {
             this.targetViewVM = targetViewVM;
+            displayOverrideExposureOrder = SetOverrideItems(targetViewVM.TargetProxy.Target);
 
             MoveItemUpCommand = new RelayCommand<object>(MoveItemUp);
             MoveItemDownCommand = new RelayCommand<object>(MoveItemDown);
@@ -32,20 +35,9 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
         public ICommand SaveCommand { get; private set; }
         public ICommand CancelCommand { get; private set; }
 
-        private OverrideExposureOrderOld overrideExposureOrderOld;
+        private ObservableCollection<OverrideItem> displayOverrideExposureOrder;
 
-        public OverrideExposureOrderOld OverrideExposureOrderOld {
-            get => overrideExposureOrderOld;
-            set {
-                overrideExposureOrderOld = value;
-                DisplayOverrideExposureOrder = overrideExposureOrderOld.GetDisplayList();
-                RaisePropertyChanged(nameof(OverrideExposureOrderOld));
-            }
-        }
-
-        private ObservableCollection<OverrideItemOld> displayOverrideExposureOrder;
-
-        public ObservableCollection<OverrideItemOld> DisplayOverrideExposureOrder {
+        public ObservableCollection<OverrideItem> DisplayOverrideExposureOrder {
             get => displayOverrideExposureOrder;
             set {
                 displayOverrideExposureOrder = value;
@@ -54,80 +46,136 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
         }
 
         private void MoveItemUp(object obj) {
-            OverrideItemOld item = obj as OverrideItemOld;
+            OverrideItem item = obj as OverrideItem;
             lock (lockObj) {
                 int idx = GetItemIndex(item);
-                OverrideExposureOrderOld.OverrideItems.RemoveAt(idx);
+                DisplayOverrideExposureOrder.RemoveAt(idx);
 
                 if (idx == 0) {
-                    OverrideExposureOrderOld.OverrideItems.Add(item);
+                    DisplayOverrideExposureOrder.Add(item);
                 } else {
-                    OverrideExposureOrderOld.OverrideItems.Insert(idx - 1, item);
+                    DisplayOverrideExposureOrder.Insert(idx - 1, item);
                 }
-
-                DisplayOverrideExposureOrder = OverrideExposureOrderOld.GetDisplayList();
             }
         }
 
         private void MoveItemDown(object obj) {
-            OverrideItemOld item = obj as OverrideItemOld;
+            OverrideItem item = obj as OverrideItem;
             lock (lockObj) {
                 int idx = GetItemIndex(item);
 
-                if (idx == OverrideExposureOrderOld.OverrideItems.Count - 1) {
-                    OverrideExposureOrderOld.OverrideItems.RemoveAt(idx);
-                    OverrideExposureOrderOld.OverrideItems.Insert(0, item);
+                if (idx == DisplayOverrideExposureOrder.Count - 1) {
+                    DisplayOverrideExposureOrder.RemoveAt(idx);
+                    DisplayOverrideExposureOrder.Insert(0, item);
                 } else {
-                    OverrideExposureOrderOld.OverrideItems.RemoveAt(idx);
-                    OverrideExposureOrderOld.OverrideItems.Insert(idx + 1, item);
+                    DisplayOverrideExposureOrder.RemoveAt(idx);
+                    DisplayOverrideExposureOrder.Insert(idx + 1, item);
                 }
-
-                DisplayOverrideExposureOrder = OverrideExposureOrderOld.GetDisplayList();
             }
         }
 
         private void CopyItem(object obj) {
-            OverrideItemOld item = obj as OverrideItemOld;
+            OverrideItem item = obj as OverrideItem;
             lock (lockObj) {
-                OverrideExposureOrderOld.OverrideItems.Insert(GetItemIndex(item) + 1, item.Clone());
-                DisplayOverrideExposureOrder = OverrideExposureOrderOld.GetDisplayList();
+                DisplayOverrideExposureOrder.Insert(GetItemIndex(item) + 1, item.Clone());
             }
         }
 
         private void DeleteItem(object obj) {
-            OverrideItemOld item = obj as OverrideItemOld;
+            OverrideItem item = obj as OverrideItem;
             lock (lockObj) {
-                OverrideExposureOrderOld.OverrideItems.RemoveAt(GetItemIndex(item));
-                DisplayOverrideExposureOrder = OverrideExposureOrderOld.GetDisplayList();
+                DisplayOverrideExposureOrder.RemoveAt(GetItemIndex(item));
             }
         }
 
         private void InsertDither(object obj) {
             if (obj != null) {
-                OverrideItemOld current = obj as OverrideItemOld;
+                OverrideItem current = obj as OverrideItem;
                 lock (lockObj) {
-                    OverrideExposureOrderOld.OverrideItems.Insert(GetItemIndex(current) + 1, new OverrideItemOld());
-                    DisplayOverrideExposureOrder = OverrideExposureOrderOld.GetDisplayList();
+                    DisplayOverrideExposureOrder.Insert(GetItemIndex(current) + 1, new OverrideItem());
                 }
             } else {
                 lock (lockObj) {
-                    OverrideExposureOrderOld.OverrideItems.Add(new OverrideItemOld());
-                    DisplayOverrideExposureOrder = OverrideExposureOrderOld.GetDisplayList();
+                    DisplayOverrideExposureOrder.Add(new OverrideItem());
                 }
             }
         }
 
-        private int GetItemIndex(OverrideItemOld find) {
-            return OverrideExposureOrderOld.OverrideItems.IndexOf(find);
+        private int GetItemIndex(OverrideItem find) {
+            return DisplayOverrideExposureOrder.IndexOf(find);
         }
 
         private void Save() {
-            targetViewVM.SaveOverrideExposureOrder(OverrideExposureOrderOld);
+            List<OverrideExposureOrder> overrideExposureOrders = new List<OverrideExposureOrder>();
+            if (DisplayOverrideExposureOrder?.Count > 0) {
+                int targetId = targetViewVM.TargetProxy.Target.Id;
+                int order = 1;
+                foreach (var item in DisplayOverrideExposureOrder) {
+                    if (item.IsDither) {
+                        overrideExposureOrders.Add(new OverrideExposureOrder(targetId, order, OverrideExposureOrderAction.Dither));
+                    } else {
+                        overrideExposureOrders.Add(new OverrideExposureOrder(targetId, order, OverrideExposureOrderAction.Exposure, item.ExposurePlanIdx));
+                    }
+
+                    order++;
+                }
+            }
+
+            targetViewVM.SaveOverrideExposureOrder(overrideExposureOrders);
             targetViewVM.ShowOverrideExposureOrderPopup = false;
         }
 
         private void Cancel() {
             targetViewVM.ShowOverrideExposureOrderPopup = false;
+        }
+
+        private ObservableCollection<OverrideItem> SetOverrideItems(Target target) {
+            ObservableCollection<OverrideItem> items = new ObservableCollection<OverrideItem>();
+            if (target.OverrideExposureOrders?.Count > 0) {
+                foreach (var oeo in target.OverrideExposureOrders) {
+                    if (oeo.Action == OverrideExposureOrderAction.Exposure) {
+                        string name = target.ExposurePlans[oeo.ReferenceIdx].ExposureTemplate.Name;
+                        items.Add(new OverrideItem(name, oeo.ReferenceIdx));
+                    } else {
+                        items.Add(new OverrideItem());
+                    }
+                }
+            } else {
+                // The default is just exposures in order
+                int idx = 0;
+                foreach (var ep in target.ExposurePlans) {
+                    string name = ep.ExposureTemplate.Name;
+                    items.Add(new OverrideItem(name, idx++));
+                }
+            }
+
+            return items;
+        }
+    }
+
+    public class OverrideItem {
+        public string Name { get; private set; }
+        public int ExposurePlanIdx { get; private set; }
+        public bool IsDither { get; private set; }
+
+        public OverrideItem() {
+            Name = OverrideExposureOrderAction.Dither.ToString();
+            ExposurePlanIdx = -1;
+            IsDither = true;
+        }
+
+        public OverrideItem(string name, int exposurePlanIdx) {
+            Name = name;
+            ExposurePlanIdx = exposurePlanIdx;
+            IsDither = false;
+        }
+
+        public OverrideItem Clone() {
+            return new OverrideItem {
+                Name = Name,
+                ExposurePlanIdx = ExposurePlanIdx,
+                IsDither = IsDither
+            };
         }
     }
 }

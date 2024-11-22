@@ -210,13 +210,14 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
                     return Task.FromResult(true);
                 }
 
-                // If have a target template, grab EPs from that and clone for each target
+                // If we have a target template, grab EPs and override exposure order from that and clone for each target
                 Target templateTarget = null;
                 if (SelectedTargetId != -1) {
                     templateTarget = targetsDict.Where(d => d.Key.Id == SelectedTargetId).FirstOrDefault().Key;
                     TSLogger.Info($"applying exposure plans from target '{templateTarget.Name}' to imported targets");
                     foreach (Target target in targets) {
                         target.ExposurePlans = CloneTemplateExposurePlans(templateTarget.ExposurePlans);
+                        target.OverrideExposureOrders = CloneOverrideExposureOrders(target.Id, templateTarget.OverrideExposureOrders);
                     }
                 }
 
@@ -265,10 +266,17 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
                 return list;
             }
 
-            foreach (ExposurePlan ep in exposurePlans) {
-                list.Add(ep.GetPasteCopy(ep.ProfileId));
+            exposurePlans.ForEach(ep => list.Add(ep.GetPasteCopy(ep.ProfileId)));
+            return list;
+        }
+
+        private List<OverrideExposureOrder> CloneOverrideExposureOrders(int targetId, List<OverrideExposureOrder> overrideExposureOrders) {
+            List<OverrideExposureOrder> list = new List<OverrideExposureOrder>(overrideExposureOrders.Count);
+            if (overrideExposureOrders?.Count == 0) {
+                return list;
             }
 
+            overrideExposureOrders.ForEach(oeo => list.Add(oeo.GetPasteCopy(targetId)));
             return list;
         }
     }

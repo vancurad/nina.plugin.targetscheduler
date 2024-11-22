@@ -422,6 +422,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
 
                         List<Target> targetList = project.Targets;
                         foreach (Target target in targetList) {
+                            target.OverrideExposureOrders = context.GetOverrideExposureOrders(target.Id);
                             TreeDataItem targetItem = new TreeDataItem(TreeDataType.Target, target.Name, target, projectItem);
                             projectItem.Items.Add(targetItem);
                         }
@@ -1179,9 +1180,9 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             return Instance.item != null;
         }
 
-        public static void SetItem(List<ExposurePlan> exposurePlans, string overrideExposureOrder) {
+        public static void SetItem(List<ExposurePlan> exposurePlans, List<OverrideExposureOrder> overrideExposureOrders) {
             if (exposurePlans?.Count > 0) {
-                Instance.item = new ExposurePlansSpec(exposurePlans, overrideExposureOrder);
+                Instance.item = new ExposurePlansSpec(exposurePlans, overrideExposureOrders);
             }
         }
 
@@ -1226,11 +1227,11 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
 
     public class ExposurePlansSpec {
         public List<ExposurePlan> ExposurePlans { get; private set; }
-        public string OverrideExposureOrder { get; private set; }
+        public List<OverrideExposureOrder> OverrideExposureOrders { get; private set; }
 
-        public ExposurePlansSpec(List<ExposurePlan> exposurePlans, string overrideExposureOrder) {
+        public ExposurePlansSpec(List<ExposurePlan> exposurePlans, List<OverrideExposureOrder> overrideExposureOrders) {
             ExposurePlans = exposurePlans;
-            OverrideExposureOrder = overrideExposureOrder;
+            OverrideExposureOrders = overrideExposureOrders;
         }
     }
 }

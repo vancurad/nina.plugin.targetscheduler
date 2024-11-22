@@ -9,12 +9,20 @@ namespace NINA.Plugin.TargetScheduler.Test.Database.Schema {
 
         [Test]
         public void TestDefaults() {
-            var sut = new OverrideExposureOrder(1, OverrideExposureOrderAction.Exposure, 202);
+            var sut = new OverrideExposureOrder(101, 1, OverrideExposureOrderAction.Exposure, 202);
+            sut.TargetId.Should().Be(101);
             sut.Order.Should().Be(1);
             sut.Action.Should().Be(OverrideExposureOrderAction.Exposure);
             sut.ReferenceIdx.Should().Be(202);
 
-            sut = new OverrideExposureOrder(2, OverrideExposureOrderAction.Dither);
+            sut = new OverrideExposureOrder(202, 2, OverrideExposureOrderAction.Dither);
+            sut.TargetId.Should().Be(202);
+            sut.Order.Should().Be(2);
+            sut.Action.Should().Be(OverrideExposureOrderAction.Dither);
+            sut.ReferenceIdx.Should().Be(-1);
+
+            sut = sut.GetPasteCopy(303);
+            sut.TargetId.Should().Be(303);
             sut.Order.Should().Be(2);
             sut.Action.Should().Be(OverrideExposureOrderAction.Dither);
             sut.ReferenceIdx.Should().Be(-1);

@@ -1,4 +1,4 @@
-﻿using NINA.Plugin.TargetScheduler.Controls.DatabaseManager;
+﻿using NINA.Plugin.TargetScheduler.Database.Schema;
 using NINA.Plugin.TargetScheduler.Planning.Interfaces;
 using NINA.Plugin.TargetScheduler.Util;
 using System;
@@ -150,7 +150,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
         }
 
         public override string ToString() {
-            return IsDither ? OverrideExposureOrderOld.DITHER : PlanExposure.FilterName;
+            return IsDither ? OverrideExposureOrderAction.Dither.ToString() : PlanExposure.FilterName;
         }
     }
 }
