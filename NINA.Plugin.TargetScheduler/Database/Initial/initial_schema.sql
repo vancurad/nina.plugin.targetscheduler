@@ -120,6 +120,16 @@ CREATE TABLE IF NOT EXISTS "overrideexposureorder" (
    PRIMARY KEY("Id")
 );
 
+CREATE TABLE IF NOT EXISTS "filtercadence" (
+   "Id"				INTEGER NOT NULL,
+   "targetid"		INTEGER NOT NULL,
+   "order"			INTEGER NOT NULL,
+   "next"			INTEGER,
+   "action"			INTEGER NOT NULL,
+   "referenceIdx"	INTEGER,
+   PRIMARY KEY("Id")
+);
+
 CREATE TABLE IF NOT EXISTS "acquiredimage" (
 	"Id"			INTEGER NOT NULL,
 	"profileId"		TEXT,

@@ -27,6 +27,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
         public DbSet<ExposurePlan> ExposurePlanSet { get; set; }
         public DbSet<ExposureTemplate> ExposureTemplateSet { get; set; }
         public DbSet<OverrideExposureOrder> OverrideExposureOrderSet { get; set; }
+        public DbSet<FilterCadence> FilterCadenceSet { get; set; }
         public DbSet<FlatHistory> FlatHistorySet { get; set; }
         public DbSet<ImageData> ImageDataSet { get; set; }
 
@@ -123,6 +124,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
             .FirstOrDefault();
 
             project.Targets.ForEach(t => t.OverrideExposureOrders = GetOverrideExposureOrders(t.Id));
+            project.Targets.ForEach(t => t.FilterCadences = GetFilterCadences(t.Id));
             return project;
         }
 
@@ -138,6 +140,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
                 .Where(t => t.Project.Id == projectId && t.Id == targetId)
                 .FirstOrDefault();
             target.OverrideExposureOrders = GetOverrideExposureOrders(targetId);
+            target.FilterCadences = GetFilterCadences(targetId);
             return target;
         }
 
@@ -145,6 +148,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
             Project project = GetProject(projectId);
             Target target = project.Targets.Where(t => t.Id == targetId).FirstOrDefault();
             target.OverrideExposureOrders = GetOverrideExposureOrders(targetId);
+            target.FilterCadences = GetFilterCadences(targetId);
             return target;
         }
 
@@ -175,6 +179,27 @@ namespace NINA.Plugin.TargetScheduler.Database {
                     transaction.Commit();
                 } catch (Exception e) {
                     TSLogger.Error($"error clearing override exposure order for target ID {targetId}: {e.Message} {e.StackTrace}");
+                    RollbackTransaction(transaction);
+                }
+            }
+        }
+
+        public List<FilterCadence> GetFilterCadences(int targetId) {
+            return FilterCadenceSet
+                .Where(o => o.TargetId == targetId)
+                .OrderBy(o => o.order).ToList();
+        }
+
+        public void ClearExistingFilterCadences(int targetId) {
+            using (var transaction = Database.BeginTransaction()) {
+                try {
+                    var predicate = PredicateBuilder.New<FilterCadence>();
+                    predicate = predicate.And(oeo => oeo.TargetId == targetId);
+                    FilterCadenceSet.RemoveRange(FilterCadenceSet.Where(predicate));
+                    SaveChanges();
+                    transaction.Commit();
+                } catch (Exception e) {
+                    TSLogger.Error($"error clearing filter cadence for target ID {targetId}: {e.Message} {e.StackTrace}");
                     RollbackTransaction(transaction);
                 }
             }
@@ -486,6 +511,8 @@ namespace NINA.Plugin.TargetScheduler.Database {
 
         public bool DeleteTarget(Target target) {
             ClearExistingOverrideExposureOrders(target.Id);
+            ClearExistingFilterCadences(target.Id);
+
             using (var transaction = Database.BeginTransaction()) {
                 try {
                     target = GetTarget(target.ProjectId, target.Id);
@@ -508,6 +535,8 @@ namespace NINA.Plugin.TargetScheduler.Database {
 
         public Target DeleteExposurePlan(Target target, ExposurePlan exposurePlan) {
             ClearExistingOverrideExposureOrders(target.Id);
+            ClearExistingFilterCadences(target.Id);
+
             using (var transaction = Database.BeginTransaction()) {
                 try {
                     TargetSet.AddOrUpdate(target);
@@ -547,6 +576,8 @@ namespace NINA.Plugin.TargetScheduler.Database {
 
         public Target DeleteAllExposurePlans(Target target) {
             ClearExistingOverrideExposureOrders(target.Id);
+            ClearExistingFilterCadences(target.Id);
+
             using (var transaction = Database.BeginTransaction()) {
                 try {
                     TargetSet.AddOrUpdate(target);
