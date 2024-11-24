@@ -24,6 +24,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
 
         public int MinimumTime { get; set; }
         public double MinimumAltitude { get; set; }
+        public double MaximumAltitude { get; set; }
         public bool UseCustomHorizon { get; set; }
         public double HorizonOffset { get; set; }
         public int MeridianWindow { get; set; }
@@ -54,6 +55,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
 
             this.MinimumTime = project.MinimumTime;
             this.MinimumAltitude = project.MinimumAltitude;
+            this.MaximumAltitude = project.MaximumAltitude;
             this.UseCustomHorizon = project.UseCustomHorizon;
             this.HorizonOffset = project.HorizonOffset;
             this.MeridianWindow = project.MeridianWindow;
@@ -96,6 +98,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
 
             sb.AppendLine($"MinimumTime: {MinimumTime}");
             sb.AppendLine($"MinimumAltitude: {MinimumAltitude}");
+            sb.AppendLine($"MaximumAltitude: {MaximumAltitude}");
             sb.AppendLine($"UseCustomHorizon: {UseCustomHorizon}");
             sb.AppendLine($"HorizonOffset: {HorizonOffset}");
             sb.AppendLine($"MeridianWindow: {MeridianWindow}");

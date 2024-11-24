@@ -5,10 +5,11 @@ using System.Windows.Data;
 namespace NINA.Plugin.TargetScheduler.Controls.Converters {
 
     public class AltitudeChoicesConverter : IValueConverter {
+        public const string OFF = "Off";
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
             double d = (double)value;
-            return $"{d}°";
+            return d == 0 ? OFF : $"{d}°";
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
@@ -17,7 +18,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.Converters {
             }
 
             string s = (string)value;
-            return double.Parse(s.TrimEnd('°'));
+            return s == OFF ? 0 : double.Parse(s.TrimEnd('°'));
         }
     }
 }

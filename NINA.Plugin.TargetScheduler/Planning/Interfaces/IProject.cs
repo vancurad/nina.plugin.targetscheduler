@@ -19,6 +19,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Interfaces {
 
         int MinimumTime { get; set; }
         double MinimumAltitude { get; set; }
+        double MaximumAltitude { get; set; }
         bool UseCustomHorizon { get; set; }
         double HorizonOffset { get; set; }
         int MeridianWindow { get; set; }

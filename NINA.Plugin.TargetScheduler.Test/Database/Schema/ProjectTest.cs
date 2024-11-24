@@ -15,6 +15,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Database.Schema {
             var sut = new Project("123");
             sut.MinimumTime.Should().Be(30);
             sut.MinimumAltitude.Should().BeApproximately(0, 0.0001);
+            sut.MaximumAltitude.Should().BeApproximately(0, 0.0001);
             sut.UseCustomHorizon.Should().BeFalse();
             sut.HorizonOffset.Should().BeApproximately(0, 0.0001);
             sut.DitherEvery.Should().Be(0);
@@ -32,6 +33,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Database.Schema {
             p1.Priority = ProjectPriority.High;
             p1.State = ProjectState.Inactive;
             p1.MinimumAltitude = 10;
+            p1.MaximumAltitude = 80;
             p1.MinimumTime = 90;
             p1.UseCustomHorizon = true;
             p1.MeridianWindow = 60;
@@ -43,7 +45,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Database.Schema {
                         {new RuleWeight("b", .2) },
                     };
 
-            Project p2 = (Project)p1.GetPasteCopy("profileId2");
+            Project p2 = p1.GetPasteCopy("profileId2");
 
             p1.RuleWeights.Clear();
             p1.RuleWeights.Add(new RuleWeight("c", .3));
@@ -56,6 +58,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Database.Schema {
             p2.Priority.Should().Be(ProjectPriority.High);
             p2.State.Should().Be(ProjectState.Inactive);
             p2.MinimumAltitude.Should().Be(10);
+            p2.MaximumAltitude.Should().Be(80);
             p2.MinimumTime.Should().Be(90);
             p2.UseCustomHorizon.Should().Be(true);
             p2.MeridianWindow.Should().Be(60);

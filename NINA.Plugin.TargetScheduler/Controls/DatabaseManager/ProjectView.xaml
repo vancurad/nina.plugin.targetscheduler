@@ -183,11 +183,11 @@
         </UniformGrid>
 
         <UniformGrid Width="280"
-                     Height="222"
+                     Height="244"
                      Margin="12,12,0,6"
                      HorizontalAlignment="Left"
                      Columns="2"
-                     Rows="10">
+                     Rows="11">
             <TextBlock VerticalAlignment="Center"
                        FontWeight="Bold"
                        Text="Minimum Time"
@@ -212,7 +212,20 @@
             <TextBlock MaxHeight="20"
                        Margin="3,3,0,0"
                        IsEnabled="{Binding ProjectProxy.Project.UseCustomHorizon, Converter={StaticResource InverseBooleanConverter}}"
-                       Text="{Binding ProjectProxy.Project.MinimumAltitude, Converter={StaticResource DegreesDisplayConverter}}"
+                       Text="{Binding ProjectProxy.Project.MinimumAltitude, Converter={StaticResource AltitudeChoicesConverter}}"
+                       Visibility="{Binding ShowEditView, Converter={StaticResource InverseBooleanToVisibilityCollapsedConverter}}" />
+
+            <TextBlock VerticalAlignment="Center"
+                       FontWeight="Bold"
+                       Text="Maximum Altitude"
+                       ToolTip="Maximum altitude for project targets" />
+            <ComboBox MaxHeight="20"
+                      ItemsSource="{Binding MaximumAltitudeChoices}"
+                      SelectedValue="{Binding ProjectProxy.Project.MaximumAltitude, Mode=TwoWay, Converter={StaticResource AltitudeChoicesConverter}}"
+                      Visibility="{Binding ShowEditView, Converter={StaticResource BooleanToVisibilityCollapsedConverter}}" />
+            <TextBlock MaxHeight="20"
+                       Margin="3,3,0,0"
+                       Text="{Binding ProjectProxy.Project.MaximumAltitude, Converter={StaticResource AltitudeChoicesConverter}}"
                        Visibility="{Binding ShowEditView, Converter={StaticResource InverseBooleanToVisibilityCollapsedConverter}}" />
 
             <TextBlock VerticalAlignment="Center"

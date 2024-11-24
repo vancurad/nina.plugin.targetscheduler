@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS "project" (
 	"flatsHandling"				INTEGER NOT NULL DEFAULT 0,
 	"minimumtime"				INTEGER,
 	"minimumaltitude"			REAL,
+	"maximumaltitude"			REAL DEFAULT 0,
 	"usecustomhorizon"			INTEGER,
 	"horizonoffset"				REAL,
 	"meridianwindow"			INTEGER,

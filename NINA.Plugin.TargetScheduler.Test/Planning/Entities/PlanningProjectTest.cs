@@ -22,6 +22,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Entities {
             project.CreateDate = create;
             project.MinimumTime = 30;
             project.MinimumAltitude = 25;
+            project.MaximumAltitude = 80;
             project.HorizonOffset = 3;
             project.MeridianWindow = 120;
             project.FilterSwitchFrequency = 4;
@@ -38,6 +39,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Entities {
             sut.CreateDate.Should().Be(create);
             sut.MinimumTime.Should().Be(30);
             sut.MinimumAltitude.Should().Be(25);
+            sut.MaximumAltitude.Should().Be(80);
             sut.UseCustomHorizon.Should().BeFalse();
             sut.HorizonOffset.Should().Be(3);
             sut.MeridianWindow.Should().Be(120);

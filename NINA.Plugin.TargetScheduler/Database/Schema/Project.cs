@@ -39,6 +39,7 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
 
         public int minimumTime { get; set; }
         public double minimumAltitude { get; set; }
+        public double maximumAltitude { get; set; }
         public int useCustomHorizon { get; set; }
         public double horizonOffset { get; set; }
         public int meridianWindow { get; set; }
@@ -60,6 +61,7 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
 
             MinimumTime = 30;
             MinimumAltitude = 0;
+            MaximumAltitude = 0;
             UseCustomHorizon = false;
             HorizonOffset = 0;
             MeridianWindow = 0;
@@ -180,6 +182,15 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
         }
 
         [NotMapped]
+        public double MaximumAltitude {
+            get => maximumAltitude;
+            set {
+                maximumAltitude = value;
+                RaisePropertyChanged(nameof(MaximumAltitude));
+            }
+        }
+
+        [NotMapped]
         public bool UseCustomHorizon {
             get { return useCustomHorizon == 1; }
             set {
@@ -277,6 +288,7 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
             project.inactiveDate = inactiveDate;
             project.minimumTime = minimumTime;
             project.minimumAltitude = minimumAltitude;
+            project.maximumAltitude = maximumAltitude;
             project.useCustomHorizon = useCustomHorizon;
             project.horizonOffset = horizonOffset;
             project.meridianWindow = meridianWindow;
@@ -306,6 +318,7 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
             sb.AppendLine($"InactiveDate: {InactiveDate}");
             sb.AppendLine($"MinimumTime: {MinimumTime}");
             sb.AppendLine($"MinimumAltitude: {MinimumAltitude}");
+            sb.AppendLine($"MaximumAltitude: {MaximumAltitude}");
             sb.AppendLine($"UseCustomHorizon: {UseCustomHorizon}");
             sb.AppendLine($"HorizonOffset: {HorizonOffset}");
             sb.AppendLine($"MeridianWindow: {MeridianWindow}");

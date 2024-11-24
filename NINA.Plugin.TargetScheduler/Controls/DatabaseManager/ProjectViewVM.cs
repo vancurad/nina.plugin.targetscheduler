@@ -1,6 +1,7 @@
 ﻿using NINA.Astrometry;
 using NINA.Core.MyMessageBox;
 using NINA.Core.Utility;
+using NINA.Plugin.TargetScheduler.Controls.Converters;
 using NINA.Plugin.TargetScheduler.Database.Schema;
 using NINA.Plugin.TargetScheduler.Planning;
 using NINA.Plugin.TargetScheduler.Planning.Interfaces;
@@ -120,8 +121,15 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             }
 
             MinimumAltitudeChoices = new List<string>();
-            for (int i = 0; i <= 60; i += 5) {
+            MinimumAltitudeChoices.Add(AltitudeChoicesConverter.OFF);
+            for (int i = 5; i <= 60; i += 5) {
                 MinimumAltitudeChoices.Add(i + "°");
+            }
+
+            MaximumAltitudeChoices = new List<string>();
+            MaximumAltitudeChoices.Add(AltitudeChoicesConverter.OFF);
+            for (int i = 50; i <= 85; i += 5) {
+                MaximumAltitudeChoices.Add(i + "°");
             }
 
             FlatsHandlingChoices = new List<string> {
@@ -161,6 +169,18 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             set {
                 _minimumAltitudeChoices = value;
                 RaisePropertyChanged(nameof(MinimumAltitudeChoices));
+            }
+        }
+
+        private List<string> _maximumAltitudeChoices;
+
+        public List<string> MaximumAltitudeChoices {
+            get {
+                return _maximumAltitudeChoices;
+            }
+            set {
+                _maximumAltitudeChoices = value;
+                RaisePropertyChanged(nameof(MaximumAltitudeChoices));
             }
         }
 
