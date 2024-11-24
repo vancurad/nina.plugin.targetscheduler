@@ -52,6 +52,7 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
             EnableGradeFWHM = false;
             EnableGradeEccentricity = false;
             EnableMoveRejected = false;
+            DelayGrading = 0;
             AcceptImprovement = true;
             MaxGradingSampleSize = 10;
             RMSPixelThreshold = 8;

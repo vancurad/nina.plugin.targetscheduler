@@ -1,8 +1,7 @@
-﻿<ResourceDictionary
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:ac="clr-namespace:NINA.Plugin.TargetScheduler.Controls.Converters"
-    xmlns:nc="clr-namespace:NINA.Core.Utility.Converters;assembly=NINA.Core">
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:ac="clr-namespace:NINA.Plugin.TargetScheduler.Controls.Converters"
+                    xmlns:nc="clr-namespace:NINA.Core.Utility.Converters;assembly=NINA.Core">
 
     <ac:AllowEmptyConverter x:Key="AllowEmptyConverter" />
     <ac:ImagingMinutesConverter x:Key="ImagingMinutesConverter" />
@@ -14,6 +13,7 @@
     <nc:MinusOneToEmptyStringConverter x:Key="MinusOneToEmptyStringConverter" />
     <ac:DegreesDisplayConverter x:Key="DegreesDisplayConverter" />
     <ac:PercentDisplayConverter x:Key="PercentDisplayConverter" />
+    <ac:PercentWithOffDisplayConverter x:Key="PercentWithOffDisplayConverter" />
     <ac:MinutesToHMConverter x:Key="MinutesToHMConverter" />
     <ac:StatusConverter x:Key="StatusConverter" />
     <ac:StatusMarkColorConverter x:Key="StatusMarkColorConverter" />
