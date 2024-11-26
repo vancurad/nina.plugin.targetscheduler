@@ -44,6 +44,20 @@ namespace NINA.Plugin.TargetScheduler.Astrometry {
         }
 
         /// <summary>
+        /// Return the transit (meridian crossing) time for the coordinates at the specific location and time.
+        /// </summary>
+        /// <param name="location"></param>
+        /// <param name="coordinates"></param>
+        /// <param name="atTime"></param>
+        /// <returns></returns>
+        public static DateTime GetTransitTime(ObserverInfo location, Coordinates coordinates, DateTime atTime) {
+            DateTime forDate = atTime.Date;
+            double siderealTime = AstroUtil.GetLocalSiderealTime(forDate, location.Longitude);
+            double hourAngle = AstroUtil.GetHourAngle(siderealTime, coordinates.RA);
+            return forDate.AddHours(24 - hourAngle);
+        }
+
+        /// <summary>
         /// Get the moon illumination fraction at time.  Code was copied from NINA AstroUtils.CalculateMoonIllumination
         /// which is private.
         /// </summary>

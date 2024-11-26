@@ -31,7 +31,6 @@ namespace NINA.Plugin.TargetScheduler.Test.Database {
                 File.Delete(testDatabasePath);
             }
 
-            TestContext.WriteLine($"TEST DB: {testDatabasePath}");
             db = new SchedulerDatabaseInteraction(string.Format(@"Data Source={0};", testDatabasePath));
             Assert.That(db, Is.Not.Null);
             LoadTestDatabase();
@@ -254,7 +253,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Database {
                 Project p2 = projects[1];
 
                 Target p2t1 = p2.Targets.First();
-                TestContext.WriteLine($"P2T1: {p2t1}");
+                //TestContext.WriteLine($"P2T1: {p2t1}");
 
                 Project pasted = context.PasteProject("abcd-9876", p2);
                 pasted.Should().NotBeNull();
@@ -265,7 +264,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Database {
 
                 Project pasted2 = context.PasteProject("abcd-9876", pasted);
                 Target pasted2t1 = pasted2.Targets.First();
-                TestContext.WriteLine($"PS2T1: {pasted2t1}");
+                //TestContext.WriteLine($"PS2T1: {pasted2t1}");
             }
         }
 

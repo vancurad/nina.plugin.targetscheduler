@@ -7,7 +7,7 @@ using System.IO;
 namespace NINA.Plugin.TargetScheduler.Test.Astrometry {
 
     public class TestData {
-        public static readonly ObserverInfo TEST_LOCATION_1, TEST_LOCATION_2, TEST_LOCATION_3, TEST_LOCATION_4, TEST_LOCATION_5, TEST_LOCATION_6, TEST_LOCATION_7;
+        public static readonly ObserverInfo North_Mid_Lat, South_Mid_Lat, North_Artic, Pittsboro_NC, Waskaganish_QC, Sanikiluaq_NU, North_Upper_Lat, Chapel_Hill_NC, North_Artic_80;
 
         public static readonly Coordinates BETELGEUSE = new Coordinates(AstroUtil.HMSToDegrees("5:55:11"), AstroUtil.DMSToDegrees("7:24:30"), Epoch.J2000, Coordinates.RAType.Degrees);
 
@@ -31,48 +31,60 @@ namespace NINA.Plugin.TargetScheduler.Test.Astrometry {
 
         static TestData() {
             // Northern hemisphere
-            TEST_LOCATION_1 = new ObserverInfo();
-            TEST_LOCATION_1.Latitude = 35;
-            TEST_LOCATION_1.Longitude = -79;
-            TEST_LOCATION_1.Elevation = 165;
+            North_Mid_Lat = new ObserverInfo();
+            North_Mid_Lat.Latitude = 35;
+            North_Mid_Lat.Longitude = -79;
+            North_Mid_Lat.Elevation = 165;
 
             // Southern hemisphere
-            TEST_LOCATION_2 = new ObserverInfo();
-            TEST_LOCATION_2.Latitude = -35;
-            TEST_LOCATION_2.Longitude = -80;
-            TEST_LOCATION_2.Elevation = 165;
+            South_Mid_Lat = new ObserverInfo();
+            South_Mid_Lat.Latitude = -35;
+            South_Mid_Lat.Longitude = -80;
+            South_Mid_Lat.Elevation = 165;
 
             // Northern hemisphere, above artic circle
-            TEST_LOCATION_3 = new ObserverInfo();
-            TEST_LOCATION_3.Latitude = 67;
-            TEST_LOCATION_3.Longitude = -80;
-            TEST_LOCATION_3.Elevation = 165;
+            North_Artic = new ObserverInfo();
+            North_Artic.Latitude = 67;
+            North_Artic.Longitude = -80;
+            North_Artic.Elevation = 165;
 
             // Northern hemisphere, Pittsboro
-            TEST_LOCATION_4 = new ObserverInfo();
-            TEST_LOCATION_4.Latitude = 35.72027778;
-            TEST_LOCATION_4.Longitude = -79.17638889;
-            TEST_LOCATION_4.Elevation = 0;
+            Pittsboro_NC = new ObserverInfo();
+            Pittsboro_NC.Latitude = 35.72027778;
+            Pittsboro_NC.Longitude = -79.17638889;
+            Pittsboro_NC.Elevation = 0;
 
             // Northern hemisphere, high latitude (Waskaganish, Que, ET)
             //
-            TEST_LOCATION_5 = new ObserverInfo();
-            TEST_LOCATION_5.Latitude = 51.48;
-            TEST_LOCATION_5.Longitude = -78.75;
-            TEST_LOCATION_5.Elevation = 0;
+            Waskaganish_QC = new ObserverInfo();
+            Waskaganish_QC.Latitude = 51.48;
+            Waskaganish_QC.Longitude = -78.75;
+            Waskaganish_QC.Elevation = 0;
 
             // Northern hemisphere, high latitude (Sanikiluaq, Nunavut, ET)
             // https://www.timeanddate.com/sun/canada/sanikiluaq
-            TEST_LOCATION_6 = new ObserverInfo();
-            TEST_LOCATION_6.Latitude = 56.54277778;
-            TEST_LOCATION_6.Longitude = -79.225;
-            TEST_LOCATION_6.Elevation = 0;
+            Sanikiluaq_NU = new ObserverInfo();
+            Sanikiluaq_NU.Latitude = 56.54277778;
+            Sanikiluaq_NU.Longitude = -79.225;
+            Sanikiluaq_NU.Elevation = 0;
 
             // Northern hemisphere, mid latitude
-            TEST_LOCATION_7 = new ObserverInfo();
-            TEST_LOCATION_7.Latitude = 47.7;
-            TEST_LOCATION_7.Longitude = -79.225;
-            TEST_LOCATION_7.Elevation = 0;
+            North_Upper_Lat = new ObserverInfo();
+            North_Upper_Lat.Latitude = 47.7;
+            North_Upper_Lat.Longitude = -79.225;
+            North_Upper_Lat.Elevation = 0;
+
+            // Chapel Hill, NC
+            Chapel_Hill_NC = new ObserverInfo();
+            Chapel_Hill_NC.Latitude = 35.927222;
+            Chapel_Hill_NC.Longitude = -79.039167;
+            Chapel_Hill_NC.Elevation = 0;
+
+            // Northern hemisphere, way above artic circle
+            North_Artic_80 = new ObserverInfo();
+            North_Artic_80.Latitude = 80;
+            North_Artic_80.Longitude = -80;
+            North_Artic_80.Elevation = 165;
         }
 
         public static CustomHorizon GetTestHorizon(int num) {

@@ -20,7 +20,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Database {
 
         private SchedulerDatabaseInteraction GetDatabase() {
             var testDbPath = Path.Combine(TestContext.CurrentContext.TestDirectory, @"schedulerdb.sqlite");
-            TestContext.WriteLine($"DB PATH: {testDbPath}");
+            //TestContext.WriteLine($"DB PATH: {testDbPath}");
             return new SchedulerDatabaseInteraction(string.Format(@"Data Source={0};", testDbPath));
         }
     }

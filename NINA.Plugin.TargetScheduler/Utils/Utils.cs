@@ -98,6 +98,10 @@ namespace NINA.Plugin.TargetScheduler.Util {
             return coordinates == null ? "n/a" : $"{coordinates.RAString} {coordinates.DecString}";
         }
 
+        public static string FormatDegrees(double degrees) {
+            return AstroUtil.DegreesToDMS(degrees);
+        }
+
         public static async void TestWait(int seconds) {
             TSLogger.Debug($"********** TESTING: waiting for {seconds}s ...");
             Thread.Sleep(seconds * 1000);

@@ -6,7 +6,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
 
     public class Assertions {
 
-        public static void AssertTime(DateTime expected, DateTime? actual, int hours, int minutes, int seconds) {
+        public static void AssertTime(DateTime? actual, DateTime expected, int hours, int minutes, int seconds) {
             actual.Should().NotBeNull();
 
             DateTime edt = expected.Date.AddHours(hours).AddMinutes(minutes).AddSeconds(seconds);
@@ -15,7 +15,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
 
             bool cond = (edt == adt);
             if (!cond) {
-                TestContext.WriteLine($"assertTime failed:");
+                TestContext.WriteLine($"AssertTime failed:");
                 TestContext.WriteLine($"  expected: {edt}");
                 TestContext.WriteLine($"  actual:   {adt}");
             }
