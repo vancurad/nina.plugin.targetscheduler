@@ -439,6 +439,58 @@ namespace NINA.Plugin.TargetScheduler.Test.Database {
             }
         }
 
+        [Test, Order(10)]
+        [NonParallelizable]
+        public void TestOverrideExposureOrder() {
+            using (var context = db.GetContext()) {
+                OverrideExposureOrder oeo1 = new(2, 1, OverrideExposureOrderAction.Exposure, 0);
+                OverrideExposureOrder oeo2 = new(2, 2, OverrideExposureOrderAction.Dither, -1);
+                context.OverrideExposureOrderSet.Add(oeo1);
+                context.OverrideExposureOrderSet.Add(oeo2);
+                context.SaveChanges();
+
+                Target t1 = context.GetTarget(1, 1);
+                t1.OverrideExposureOrders.Count.Should().Be(0);
+
+                Target t2 = context.GetTarget(2, 2);
+                t2.OverrideExposureOrders.Count.Should().Be(2);
+                oeo1.Equals(t2.OverrideExposureOrders[0]).Should().BeTrue();
+                oeo2.Equals(t2.OverrideExposureOrders[1]).Should().BeTrue();
+
+                context.ClearExistingOverrideExposureOrders(2);
+                context.SaveChanges();
+
+                t2 = context.GetTarget(2, 2);
+                t2.OverrideExposureOrders.Count.Should().Be(0);
+            }
+        }
+
+        [Test, Order(11)]
+        [NonParallelizable]
+        public void TestFilterCadence() {
+            using (var context = db.GetContext()) {
+                FilterCadence fc1 = new(2, 1, true, FilterCadenceAction.Exposure, 1);
+                FilterCadence fc2 = new(2, 2, false, FilterCadenceAction.Dither, -1);
+                context.FilterCadenceSet.Add(fc1);
+                context.FilterCadenceSet.Add(fc2);
+                context.SaveChanges();
+
+                Target t1 = context.GetTarget(1, 1);
+                t1.FilterCadences.Count.Should().Be(0);
+
+                Target t2 = context.GetTarget(2, 2);
+                t2.FilterCadences.Count.Should().Be(2);
+                fc1.Equals(t2.FilterCadences[0]).Should().BeTrue();
+                fc2.Equals(t2.FilterCadences[1]).Should().BeTrue();
+
+                context.ClearExistingFilterCadences(2);
+                context.SaveChanges();
+
+                t2 = context.GetTarget(2, 2);
+                t2.FilterCadences.Count.Should().Be(0);
+            }
+        }
+
         private void LoadTestDatabase() {
             using (var context = db.GetContext()) {
                 try {

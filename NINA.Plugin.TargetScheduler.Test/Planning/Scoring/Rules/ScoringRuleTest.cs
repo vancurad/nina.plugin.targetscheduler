@@ -4,7 +4,7 @@ using NINA.Plugin.TargetScheduler.Planning.Scoring.Rules;
 using NUnit.Framework;
 using System.Collections.Generic;
 
-namespace NINA.Plugin.TargetScheduler.Test.Plan.Scoring.Rules {
+namespace NINA.Plugin.TargetScheduler.Test.Planning.Scoring.Rules {
 
     [TestFixture]
     public class ScoringRuleTest {

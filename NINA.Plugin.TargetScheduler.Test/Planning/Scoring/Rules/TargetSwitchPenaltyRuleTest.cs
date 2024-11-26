@@ -3,10 +3,9 @@ using Moq;
 using NINA.Plugin.TargetScheduler.Planning.Interfaces;
 using NINA.Plugin.TargetScheduler.Planning.Scoring.Rules;
 using NINA.Plugin.TargetScheduler.Test.Astrometry;
-using NINA.Plugin.TargetScheduler.Test.Planning;
 using NUnit.Framework;
 
-namespace NINA.Plugin.TargetScheduler.Test.Plan.Scoring.Rules {
+namespace NINA.Plugin.TargetScheduler.Test.Planning.Scoring.Rules {
 
     [TestFixture]
     public class TargetSwitchPenaltyRuleTest {

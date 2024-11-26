@@ -7,13 +7,12 @@ using NINA.Plugin.TargetScheduler.Planning.Interfaces;
 using NINA.Plugin.TargetScheduler.Planning.Scoring;
 using NINA.Plugin.TargetScheduler.Planning.Scoring.Rules;
 using NINA.Plugin.TargetScheduler.Test.Astrometry;
-using NINA.Plugin.TargetScheduler.Test.Planning;
 using NINA.Profile.Interfaces;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 
-namespace NINA.Plugin.TargetScheduler.Test.Plan.Scoring {
+namespace NINA.Plugin.TargetScheduler.Test.Planning.Scoring {
 
     [TestFixture]
     public class ScoringEngineTest {

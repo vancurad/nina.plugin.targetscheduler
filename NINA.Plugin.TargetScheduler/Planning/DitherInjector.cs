@@ -6,13 +6,13 @@ using System.Collections.Generic;
 namespace NINA.Plugin.TargetScheduler.Planning {
 
     public class DitherInjector {
-        private List<IPlanningInstruction> instructions;
+        private List<IningInstruction> instructions;
         private List<string> exposureOrder;
         private int ditherEvery;
 
         private List<string> uniqueFilters;
 
-        public DitherInjector(List<IPlanningInstruction> instructions, int ditherEvery) {
+        public DitherInjector(List<IningInstruction> instructions, int ditherEvery) {
             this.instructions = instructions;
             this.ditherEvery = ditherEvery;
         }
@@ -22,7 +22,7 @@ namespace NINA.Plugin.TargetScheduler.Planning {
             this.ditherEvery = ditherEvery;
         }
 
-        public List<IPlanningInstruction> Inject() {
+        public List<IningInstruction> Inject() {
             if (ditherEvery == 0) {
                 return instructions;
             }
@@ -32,7 +32,7 @@ namespace NINA.Plugin.TargetScheduler.Planning {
             }
 
             uniqueFilters = GetUniqueFilters();
-            List<IPlanningInstruction> dithered = new List<IPlanningInstruction>();
+            List<IningInstruction> dithered = new List<IningInstruction>();
 
             int pos = 0;
             while (pos < instructions.Count) {
@@ -134,7 +134,7 @@ namespace NINA.Plugin.TargetScheduler.Planning {
 
         private List<string> GetUniqueFilters() {
             List<string> filters = new List<string>();
-            foreach (IPlanningInstruction instruction in instructions) {
+            foreach (IningInstruction instruction in instructions) {
                 if (instruction is PlanTakeExposure) {
                     string filterName = ((PlanTakeExposure)instruction).planExposure.FilterName;
                     if (!filters.Contains(filterName)) {

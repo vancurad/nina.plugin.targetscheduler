@@ -91,5 +91,18 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
 
             return sb.ToString();
         }
+
+        public override bool Equals(object obj) {
+            if ((obj == null) || !this.GetType().Equals(obj.GetType())) {
+                return false;
+            }
+
+            FilterCadence other = obj as FilterCadence;
+            return TargetId == other.TargetId &&
+                Order == other.Order &&
+                Next == other.Next &&
+                Action == other.Action &&
+                ReferenceIdx == other.ReferenceIdx;
+        }
     }
 }

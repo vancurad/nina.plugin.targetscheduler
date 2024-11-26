@@ -94,6 +94,38 @@ namespace NINA.Plugin.TargetScheduler.Astrometry {
             }
         }
 
+        public static TwilightCircumstances AdjustTwilightCircumstances(ObserverInfo observerInfo, DateTime atTime) {
+            TwilightCircumstances twilightCircumstances = new TwilightCircumstances(observerInfo, atTime);
+            DateTime? CivilTwilightStart = twilightCircumstances.CivilTwilightStart;
+            DateTime? CivilTwilightEnd = twilightCircumstances.CivilTwilightEnd;
+            DateTime noon = atTime.Date.AddHours(12);
+            DateTime midnight = atTime.Date.AddHours(24);
+
+            if (!CivilTwilightStart.HasValue || !CivilTwilightEnd.HasValue) {
+                throw new ArgumentException("Oops!  Need to fix AdjustNighttimeCircumstances!");
+            }
+
+            // If atTime is between noon and civil start, return next dusk/following dawn
+            if (noon <= atTime && atTime < CivilTwilightStart) {
+                return twilightCircumstances;
+            }
+
+            // If atTime is between civil start/end and atTime is before midnight, return next dusk/following dawn
+            if (CivilTwilightStart <= atTime && atTime < CivilTwilightEnd && atTime < midnight) {
+                return twilightCircumstances;
+            }
+
+            // If atTime is after the previous dawn and before noon, return next dusk/following dawn
+            TwilightCircumstances previous = new TwilightCircumstances(observerInfo, atTime.AddDays(-1));
+            CivilTwilightEnd = previous.CivilTwilightEnd;
+            if (CivilTwilightEnd <= atTime && atTime < noon) {
+                return twilightCircumstances;
+            }
+
+            // Otherwise, we want NighttimeCircumstances for the previous day
+            return previous;
+        }
+
         private void Calculate() {
             var civil = new Daytime(OnDate, observerInfo.Latitude, observerInfo.Longitude);
             CivilTwilightStart = civil.Start;

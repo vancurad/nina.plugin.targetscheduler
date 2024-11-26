@@ -1,6 +1,6 @@
 ﻿namespace NINA.Plugin.TargetScheduler.Planning.Interfaces {
 
-    public interface IPlanningInstruction {
+    public interface IningInstruction {
         IExposure planExposure { get; set; }
     }
 }

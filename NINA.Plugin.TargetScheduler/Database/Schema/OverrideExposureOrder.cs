@@ -88,5 +88,17 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
 
             return sb.ToString();
         }
+
+        public override bool Equals(object obj) {
+            if ((obj == null) || !this.GetType().Equals(obj.GetType())) {
+                return false;
+            }
+
+            OverrideExposureOrder other = obj as OverrideExposureOrder;
+            return TargetId == other.TargetId &&
+                Order == other.Order &&
+                Action == other.Action &&
+                ReferenceIdx == other.ReferenceIdx;
+        }
     }
 }

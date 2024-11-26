@@ -1,5 +1,11 @@
 ﻿using NINA.Plugin.TargetScheduler.Database.Schema;
+using NINA.Plugin.TargetScheduler.Planning;
+using NINA.Plugin.TargetScheduler.Planning.Entities;
+using NINA.Plugin.TargetScheduler.Planning.Interfaces;
+using NINA.Plugin.TargetScheduler.Shared.Utility;
 using NINA.Profile.Interfaces;
+using System;
+using System.Collections.Generic;
 
 namespace NINA.Plugin.TargetScheduler.Database {
 
@@ -22,15 +28,14 @@ namespace NINA.Plugin.TargetScheduler.Database {
             }
         }
 
-        /* TODO
-        public List<IPlanProject> LoadActiveProjects(SchedulerDatabaseContext context) {
+        public List<IProject> LoadActiveProjects(SchedulerDatabaseContext context) {
             List<Project> projects = null;
 
             using (context) {
                 try {
                     projects = context.GetActiveProjects(profileId);
                 } catch (Exception ex) {
-                    throw ex; // let the caller decide how to handle
+                    throw; // let the caller decide how to handle
                 }
 
                 if (projects == null || projects.Count == 0) {
@@ -63,15 +68,15 @@ namespace NINA.Plugin.TargetScheduler.Database {
                     return null;
                 }
 
-                List<IPlanProject> planProjects = new List<IPlanProject>();
+                List<IProject> planProjects = new List<IProject>();
                 foreach (Project project in projects) {
                     ExposureCompletionHelper helper = new ExposureCompletionHelper(project.EnableGrader, profilePreference.ExposureThrottle);
-                    PlanProject planProject = new PlanProject(activeProfile, project, helper);
+                    PlanningProject planProject = new PlanningProject(activeProfile, project, helper);
                     planProjects.Add(planProject);
                 }
 
                 return planProjects;
             }
-        }*/
+        }
     }
 }
