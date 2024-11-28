@@ -360,6 +360,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
         public double MoonRelaxMaxAltitude { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public double MoonRelaxMinAltitude { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public bool MoonDownEnabled { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public double MoonAvoidanceScore { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public double MaximumHumidity { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public bool Rejected { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public string RejectedReason { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }

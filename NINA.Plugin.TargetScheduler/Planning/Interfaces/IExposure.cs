@@ -23,6 +23,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Interfaces {
         double MoonRelaxMaxAltitude { get; set; }
         double MoonRelaxMinAltitude { get; set; }
         bool MoonDownEnabled { get; set; }
+        double MoonAvoidanceScore { get; set; }
         double MaximumHumidity { get; set; }
 
         bool Rejected { get; set; }

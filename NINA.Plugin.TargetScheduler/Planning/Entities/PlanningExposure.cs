@@ -30,6 +30,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
         public double MoonRelaxMaxAltitude { get; set; }
         public double MoonRelaxMinAltitude { get; set; }
         public bool MoonDownEnabled { get; set; }
+        public double MoonAvoidanceScore { get; set; }
 
         public double MaximumHumidity { get; set; }
 
@@ -61,6 +62,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
             this.MoonRelaxMaxAltitude = exposureTemplate.MoonRelaxMaxAltitude;
             this.MoonRelaxMinAltitude = exposureTemplate.MoonRelaxMinAltitude;
             this.MoonDownEnabled = exposureTemplate.MoonDownEnabled;
+            this.MoonAvoidanceScore = MoonAvoidanceExpert.SCORE_OFF;
 
             this.MaximumHumidity = exposureTemplate.MaximumHumidity;
 

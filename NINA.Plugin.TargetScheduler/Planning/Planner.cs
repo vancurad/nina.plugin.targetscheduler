@@ -59,6 +59,7 @@ namespace NINA.Plugin.TargetScheduler.Planning {
 
                     projects = FilterForIncomplete(projects);
                     projects = FilterForVisibility(projects);
+                    projects = FilterForMoonAvoidance(projects);
 
                     return null; // FIXME
                 } catch (Exception ex) {
@@ -198,6 +199,35 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                     planTarget.StartTime = targetStartTime;
                     planTarget.EndTime = targetEndTime;
                     planTarget.CulminationTime = targetTransitTime;
+                }
+            }
+
+            return PropagateRejections(projects);
+        }
+
+        /// <summary>
+        /// Review each project and the list of associated targets.  For each filter plan where moon avoidance is enabled,
+        /// calculate the avoidance criteria and reject as needed.
+        /// </summary>
+        /// <param name="projects"></param>
+        /// <returns></returns>
+        public List<IProject> FilterForMoonAvoidance(List<IProject> projects) {
+            if (NoProjects(projects)) { return null; }
+            MoonAvoidanceExpert expert = new MoonAvoidanceExpert(observerInfo);
+
+            foreach (IProject planProject in projects) {
+                if (planProject.Rejected) { continue; }
+
+                foreach (ITarget planTarget in planProject.Targets) {
+                    if (planTarget.Rejected && planTarget.RejectedReason != Reasons.TargetNotYetVisible) { continue; }
+
+                    foreach (IExposure planExposure in planTarget.ExposurePlans) {
+                        if (planExposure.IsIncomplete()) {
+                            if (expert.IsRejected(atTime, planTarget, planExposure)) {
+                                SetRejected(planExposure, Reasons.FilterMoonAvoidance);
+                            }
+                        }
+                    }
                 }
             }
 
