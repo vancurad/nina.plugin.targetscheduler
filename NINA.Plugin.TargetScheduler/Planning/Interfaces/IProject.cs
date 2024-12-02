@@ -1,5 +1,6 @@
 ﻿using NINA.Plugin.TargetScheduler.Astrometry;
 using NINA.Plugin.TargetScheduler.Database.Schema;
+using NINA.Plugin.TargetScheduler.Planning.Exposures;
 using System;
 using System.Collections.Generic;
 
@@ -25,8 +26,9 @@ namespace NINA.Plugin.TargetScheduler.Planning.Interfaces {
         int MeridianWindow { get; set; }
         int FilterSwitchFrequency { get; set; }
         int DitherEvery { get; set; }
-        bool EnableGrader { get; set; }
         bool IsMosaic { get; set; }
+        bool EnableGrader { get; set; }
+        bool SmartExposureOrder { get; set; }
         int FlatsHandling { get; set; }
         Dictionary<string, double> RuleWeights { get; set; }
 

@@ -3,7 +3,7 @@ using NINA.Plugin.TargetScheduler.Planning.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace NINA.Plugin.TargetScheduler.Planning {
+namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
 
     public class ExposureCompletionHelper {
         private bool imageGradingEnabled;

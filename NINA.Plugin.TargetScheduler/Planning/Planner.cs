@@ -5,6 +5,7 @@ using NINA.Plugin.TargetScheduler.Astrometry;
 using NINA.Plugin.TargetScheduler.Database;
 using NINA.Plugin.TargetScheduler.Database.Schema;
 using NINA.Plugin.TargetScheduler.Planning.Interfaces;
+using NINA.Plugin.TargetScheduler.Planning.Scoring;
 using NINA.Plugin.TargetScheduler.Shared.Utility;
 using NINA.Plugin.TargetScheduler.Util;
 using NINA.Profile.Interfaces;
@@ -14,6 +15,8 @@ using System.Collections.Generic;
 namespace NINA.Plugin.TargetScheduler.Planning {
 
     public class Planner {
+        private const int TARGET_VISIBILITY_SAMPLE_INTERVAL = 10;
+
         private bool checkCondition = false;
         private DateTime atTime;
         private IProfile activeProfile;
@@ -61,6 +64,31 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                     projects = FilterForVisibility(projects);
                     projects = FilterForMoonAvoidance(projects);
 
+                    // See if one or more targets are ready to image now
+                    List<ITarget> readyTargets = GetTargetsReadyNow(projects);
+                    if (readyTargets.Count > 0) {
+                        SelectTargetExposure(readyTargets);
+
+                        // If only one ready target, no need to run scoring engine
+                        ITarget selectedTarget;
+                        if (readyTargets.Count == 1) {
+                            selectedTarget = readyTargets[0];
+                        } else {
+                            ScoringEngine scoringEngine = new ScoringEngine(activeProfile, profilePreferences, atTime, previousTarget);
+                            selectedTarget = SelectTargetByScore(projects, scoringEngine);
+                            // TODO: generate instructions for the selected target
+                        }
+                    } else {
+                        /* Determine if we can wait for a target:
+                         * - For each remaining target:
+                         *   - For each visibility span:
+                         *     - At X second intervals over the span, check if any filters pass moon avoidance.  If so, that's
+                         *       the effective start time for this project.  Don't forget meridian clipping!
+                         * - The soonest effective start time over all targets is our wait time.
+                         * - Otherwise, we're done - nothing else available tonight.
+                         */
+                    }
+
                     return null; // FIXME
                 } catch (Exception ex) {
                     if (ex is SequenceEntityFailedException) {
@@ -72,17 +100,6 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                 } finally {
                     TSLogger.Info($"-- END {title} -----------------------------------------------------");
                 }
-            }
-        }
-
-        private List<IProject> GetProjects() {
-            try {
-                SchedulerDatabaseInteraction database = new SchedulerDatabaseInteraction();
-                SchedulerPlanLoader loader = new SchedulerPlanLoader(activeProfile);
-                return loader.LoadActiveProjects(database.GetContext());
-            } catch (Exception ex) {
-                TSLogger.Error($"exception reading database: {ex.StackTrace}");
-                throw new SequenceEntityFailedException($"Scheduler: exception reading database: {ex.Message}", ex);
             }
         }
 
@@ -145,7 +162,8 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                         observerInfo,
                         nighttimeCircumstances.OnDate,
                         nighttimeCircumstances.Sunset,
-                        nighttimeCircumstances.Sunrise);
+                        nighttimeCircumstances.Sunrise,
+                        TARGET_VISIBILITY_SAMPLE_INTERVAL);
 
                     if (!targetVisibility.ImagingPossible) {
                         TSLogger.Debug($"Target not visible at all {planProject.Name}/{planTarget.Name} on {Utils.FormatDateTimeFull(atTime)} at latitude {observerInfo.Latitude}");
@@ -232,6 +250,129 @@ namespace NINA.Plugin.TargetScheduler.Planning {
             }
 
             return PropagateRejections(projects);
+        }
+
+        /// <summary>
+        /// Return the list of targets that are imagable now.
+        /// </summary>
+        /// <param name="projects"></param>
+        /// <returns></returns>
+        public List<ITarget> GetTargetsReadyNow(List<IProject> projects) {
+            List<ITarget> targets = new List<ITarget>();
+
+            if (NoProjects(projects)) {
+                return targets;
+            }
+
+            foreach (IProject planProject in projects) {
+                if (planProject.Rejected) { continue; }
+
+                foreach (ITarget planTarget in planProject.Targets) {
+                    if (planTarget.Rejected) { continue; }
+
+                    TimeSpan diff = atTime - planTarget.StartTime;
+                    if (Math.Abs(diff.TotalSeconds) <= TARGET_VISIBILITY_SAMPLE_INTERVAL * 2) {
+                        targets.Add(planTarget);
+                    }
+                }
+            }
+
+            return targets;
+        }
+
+        /// <summary>
+        /// Select the best exposure plan now for each potential target.
+        /// </summary>
+        /// <param name="readyTargets"></param>
+        public void SelectTargetExposure(List<ITarget> readyTargets) {
+            foreach (ITarget planTarget in readyTargets) {
+                List<IExposure> potentials = new List<IExposure>();
+                foreach (IExposure planExposure in planTarget.ExposurePlans) {
+                    if (planExposure.Rejected) { continue; }
+                    // check twilight allowed
+
+                    // planTarget.selectedExposure = planExposure;
+                }
+            }
+
+            //
+
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Run the scoring engine, applying the weighted rules to determine the target with the highest score.
+        /// </summary>
+        /// <param name="projects"></param>
+        /// <param name="scoringEngine"></param>
+        /// <returns></returns>
+        public ITarget SelectTargetByScore(List<IProject> projects, IScoringEngine scoringEngine) {
+            // TODO: can we not just use the list of targets already determined (with selected exposure)?
+            // But we need the project rule weights ...
+
+            ITarget highScoreTarget = null;
+            double highScore = double.MinValue;
+
+            foreach (IProject planProject in projects) {
+                if (planProject.Rejected) { continue; }
+                scoringEngine.RuleWeights = planProject.RuleWeights;
+
+                foreach (ITarget planTarget in planProject.Targets) {
+                    if (planTarget.Rejected) { continue; }
+
+                    TSLogger.Trace($"running scoring engine for project/target {planProject.Name}/{planTarget.Name}");
+                    double score = scoringEngine.ScoreTarget(planTarget);
+                    if (score > highScore) {
+                        highScoreTarget = planTarget;
+                        highScore = score;
+                    }
+                }
+            }
+
+            // Mark losing targets rejected
+            foreach (IProject planProject in projects) {
+                if (planProject.Rejected) { continue; }
+
+                foreach (ITarget planTarget in planProject.Targets) {
+                    if (planTarget.Rejected) { continue; }
+
+                    if (planTarget != highScoreTarget) {
+                        planTarget.Rejected = true;
+                        planTarget.RejectedReason = Reasons.TargetLowerScore;
+                    }
+                }
+            }
+
+            return highScoreTarget;
+        }
+
+        private List<IProject> GetProjects() {
+            try {
+                SchedulerDatabaseInteraction database = new SchedulerDatabaseInteraction();
+                SchedulerPlanLoader loader = new SchedulerPlanLoader(activeProfile);
+                return loader.LoadActiveProjects(database.GetContext());
+            } catch (Exception ex) {
+                TSLogger.Error($"exception reading database: {ex.StackTrace}");
+                throw new SequenceEntityFailedException($"Scheduler: exception reading database: {ex.Message}", ex);
+            }
+        }
+
+        private List<ITarget> GetActiveTargets(List<IProject> projects) {
+            List<ITarget> targets = new List<ITarget>();
+
+            if (NoProjects(projects)) {
+                return targets;
+            }
+
+            foreach (IProject planProject in projects) {
+                if (planProject.Rejected) { continue; }
+                foreach (ITarget planTarget in planProject.Targets) {
+                    if (planTarget.Rejected) { continue; }
+                    targets.Add(planTarget);
+                }
+            }
+
+            return targets;
         }
 
         private bool NoProjects(List<IProject> projects) {

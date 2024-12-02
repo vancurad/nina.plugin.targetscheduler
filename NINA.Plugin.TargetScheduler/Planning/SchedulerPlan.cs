@@ -10,12 +10,12 @@ namespace NINA.Plugin.TargetScheduler.Planning {
         //public List<IProject> Projects { get; private set; }
         public ITarget PlanTarget { get; private set; }
 
-        public List<IningInstruction> PlanInstructions { get; private set; }
+        public List<IInstruction> PlanInstructions { get; private set; }
         public DateTime? WaitForNextTargetTime { get; private set; }
         public bool IsEmulator { get; set; }
         public string DetailsLog { get; private set; }
 
-        public SchedulerPlan(DateTime planTime, ITarget planTarget, List<IningInstruction> planInstructions, bool logPlan) {
+        public SchedulerPlan(DateTime planTime, ITarget planTarget, List<IInstruction> planInstructions, bool logPlan) {
             this.PlanTime = planTime;
             //this.Projects = projects;
             this.PlanTarget = planTarget;

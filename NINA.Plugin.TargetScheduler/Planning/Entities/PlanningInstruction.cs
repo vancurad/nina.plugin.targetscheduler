@@ -7,21 +7,21 @@ using System.Text;
 
 namespace NINA.Plugin.TargetScheduler.Planning.Entities {
 
-    public class PlanningInstruction : IningInstruction {
+    public class PlanningInstruction : IInstruction {
         public IExposure planExposure { get; set; }
 
         public PlanningInstruction(IExposure planExposure) {
             this.planExposure = planExposure;
         }
 
-        public static string InstructionsSummary(List<IningInstruction> instructions) {
+        public static string InstructionsSummary(List<IInstruction> instructions) {
             if (instructions?.Count == 0) {
                 return "";
             }
 
             Dictionary<string, int> exposures = new Dictionary<string, int>();
             StringBuilder order = new StringBuilder();
-            foreach (IningInstruction instruction in instructions) {
+            foreach (IInstruction instruction in instructions) {
                 if (instruction is PlanTakeExposure) {
                     string filterName = instruction.planExposure.FilterName;
                     order.Append(filterName);
@@ -39,7 +39,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
                 sb.AppendLine($"{entry.Key}: {entry.Value}");
             }
 
-            foreach (IningInstruction instruction in instructions) {
+            foreach (IInstruction instruction in instructions) {
                 if (instruction is PlanWait) {
                     sb.AppendLine($"Wait until {Utils.FormatDateTimeFull(((PlanWait)instruction).waitForTime)}");
                 }

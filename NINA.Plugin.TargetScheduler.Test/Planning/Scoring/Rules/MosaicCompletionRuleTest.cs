@@ -1,7 +1,7 @@
 ﻿using FluentAssertions;
 using Moq;
 using NINA.Plugin.TargetScheduler.Database.Schema;
-using NINA.Plugin.TargetScheduler.Planning;
+using NINA.Plugin.TargetScheduler.Planning.Exposures;
 using NINA.Plugin.TargetScheduler.Planning.Interfaces;
 using NINA.Plugin.TargetScheduler.Planning.Scoring.Rules;
 using NINA.Plugin.TargetScheduler.Test.Astrometry;

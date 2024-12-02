@@ -45,6 +45,7 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
         public int meridianWindow { get; set; }
         public int filterSwitchFrequency { get; set; }
         public int ditherEvery { get; set; }
+        public int smartexposureorder { get; set; }
         public int enableGrader { get; set; }
 
         public virtual List<RuleWeight> ruleWeights { get; set; }
@@ -67,6 +68,7 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
             MeridianWindow = 0;
             FilterSwitchFrequency = 0;
             DitherEvery = 0;
+            SmartExposureOrder = false;
             EnableGrader = true;
             IsMosaic = false;
             FlatsHandling = FLATS_HANDLING_OFF;
@@ -236,6 +238,15 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
         }
 
         [NotMapped]
+        public bool SmartExposureOrder {
+            get { return smartexposureorder == 1; }
+            set {
+                smartexposureorder = value ? 1 : 0;
+                RaisePropertyChanged(nameof(SmartExposureOrder));
+            }
+        }
+
+        [NotMapped]
         public bool EnableGrader {
             get { return enableGrader == 1; }
             set {
@@ -294,6 +305,7 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
             project.meridianWindow = meridianWindow;
             project.filterSwitchFrequency = filterSwitchFrequency;
             project.ditherEvery = ditherEvery;
+            project.smartexposureorder = smartexposureorder;
             project.enableGrader = enableGrader;
             project.isMosaic = isMosaic;
             project.flatsHandling = flatsHandling;
@@ -324,6 +336,7 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
             sb.AppendLine($"MeridianWindow: {MeridianWindow}");
             sb.AppendLine($"FilterSwitchFrequency: {FilterSwitchFrequency}");
             sb.AppendLine($"DitherEvery: {DitherEvery}");
+            sb.AppendLine($"SmartExposureOrder: {SmartExposureOrder}");
             sb.AppendLine($"EnableGrader: {EnableGrader}");
             sb.AppendLine($"IsMosaic: {IsMosaic}");
             sb.AppendLine($"FlatsHandling: {FlatsHandling}");

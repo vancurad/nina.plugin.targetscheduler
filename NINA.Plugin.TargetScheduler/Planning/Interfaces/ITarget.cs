@@ -16,9 +16,11 @@ namespace NINA.Plugin.TargetScheduler.Planning.Interfaces {
         List<IExposure> ExposurePlans { get; set; }
         List<IExposure> CompletedExposurePlans { get; set; }
         List<IOverrideExposureOrder> OverrideExposureOrders { get; set; }
+        List<IFilterCadence> FilterCadences { get; set; }
         IProject Project { get; set; }
         bool Rejected { get; set; }
         string RejectedReason { get; set; }
+        IExposure SelectedExposure { get; set; }
         ScoringResults ScoringResults { get; set; }
         DateTime StartTime { get; set; }
         DateTime EndTime { get; set; }

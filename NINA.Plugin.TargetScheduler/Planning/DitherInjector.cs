@@ -6,14 +6,16 @@ using System.Collections.Generic;
 namespace NINA.Plugin.TargetScheduler.Planning {
 
     public class DitherInjector {
-        private List<IningInstruction> instructions;
+        private List<IFilterCadence> filterCadences;
+        private List<IExposure> exposuresPlans;
         private List<string> exposureOrder;
         private int ditherEvery;
 
         private List<string> uniqueFilters;
 
-        public DitherInjector(List<IningInstruction> instructions, int ditherEvery) {
-            this.instructions = instructions;
+        public DitherInjector(List<IFilterCadence> filterCadences, List<IExposure> exposuresPlans, int ditherEvery) {
+            this.filterCadences = filterCadences;
+            this.exposuresPlans = exposuresPlans;
             this.ditherEvery = ditherEvery;
         }
 
@@ -22,34 +24,37 @@ namespace NINA.Plugin.TargetScheduler.Planning {
             this.ditherEvery = ditherEvery;
         }
 
-        public List<IningInstruction> Inject() {
+        public List<IFilterCadence> Inject() {
             if (ditherEvery == 0) {
-                return instructions;
+                return filterCadences;
             }
 
-            if (instructions is null || instructions.Count == 0) {
-                return instructions;
+            if (filterCadences is null || filterCadences.Count == 0) {
+                return filterCadences;
             }
 
             uniqueFilters = GetUniqueFilters();
-            List<IningInstruction> dithered = new List<IningInstruction>();
+            List<IFilterCadence> dithered = new List<IFilterCadence>();
 
             int pos = 0;
-            while (pos < instructions.Count) {
+            int order = 1;
+            while (pos < filterCadences.Count) {
                 int ditherPos = FindNextDither(pos);
                 if (ditherPos < 0) {
-                    for (int i = pos; i < instructions.Count; i++) {
-                        dithered.Add(instructions[i]);
+                    for (int i = pos; i < filterCadences.Count; i++) {
+                        ((PlanningFilterCadence)filterCadences[i]).Order = order++;
+                        dithered.Add(filterCadences[i]);
                     }
 
                     break;
                 }
 
                 for (int i = pos; i < ditherPos; i++) {
-                    dithered.Add(instructions[i]);
+                    ((PlanningFilterCadence)filterCadences[i]).Order = order++;
+                    dithered.Add(filterCadences[i]);
                 }
 
-                dithered.Add(new PlanDither());
+                dithered.Add(new PlanningFilterCadence(order++, false, FilterCadenceAction.Dither, -1));
                 pos = ditherPos;
             }
 
@@ -101,9 +106,9 @@ namespace NINA.Plugin.TargetScheduler.Planning {
 
             // Walk the list, incrementing when each filter occurs.  Injection point is when a filter is seen ditherEvery+1 times.
             int pos = -1;
-            for (int i = start; i < instructions.Count; i++) {
-                if (instructions[i] is PlanTakeExposure) {
-                    string filterName = ((PlanTakeExposure)instructions[i]).planExposure.FilterName;
+            for (int i = start; i < filterCadences.Count; i++) {
+                if (filterCadences[i].Action is FilterCadenceAction.Exposure) {
+                    string filterName = exposuresPlans[filterCadences[i].ReferenceIdx].FilterName;
                     filterCounts[filterName]++;
                     if (filterCounts[filterName] == ditherEvery + 1) {
                         pos = i;
@@ -134,9 +139,9 @@ namespace NINA.Plugin.TargetScheduler.Planning {
 
         private List<string> GetUniqueFilters() {
             List<string> filters = new List<string>();
-            foreach (IningInstruction instruction in instructions) {
-                if (instruction is PlanTakeExposure) {
-                    string filterName = ((PlanTakeExposure)instruction).planExposure.FilterName;
+            foreach (IFilterCadence fc in filterCadences) {
+                if (fc.Action is FilterCadenceAction.Exposure) {
+                    string filterName = exposuresPlans[fc.ReferenceIdx].FilterName;
                     if (!filters.Contains(filterName)) {
                         filters.Add(filterName);
                     }

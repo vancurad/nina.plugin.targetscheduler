@@ -1,6 +1,7 @@
 ﻿using NINA.Plugin.TargetScheduler.Astrometry;
 using NINA.Plugin.TargetScheduler.Database.Schema;
 using NINA.Plugin.TargetScheduler.Flats;
+using NINA.Plugin.TargetScheduler.Planning.Exposures;
 using NINA.Plugin.TargetScheduler.Planning.Interfaces;
 using NINA.Plugin.TargetScheduler.Shared.Utility;
 using NINA.Profile.Interfaces;
@@ -30,6 +31,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
         public int MeridianWindow { get; set; }
         public int FilterSwitchFrequency { get; set; }
         public int DitherEvery { get; set; }
+        public bool SmartExposureOrder { get; set; }
         public bool EnableGrader { get; set; }
         public bool IsMosaic { get; set; }
         public int FlatsHandling { get; set; }
@@ -61,6 +63,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
             this.MeridianWindow = project.MeridianWindow;
             this.FilterSwitchFrequency = project.FilterSwitchFrequency;
             this.DitherEvery = project.DitherEvery;
+            this.SmartExposureOrder = project.SmartExposureOrder;
             this.EnableGrader = project.EnableGrader;
             this.IsMosaic = project.IsMosaic;
             this.FlatsHandling = project.FlatsHandling;
@@ -104,6 +107,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
             sb.AppendLine($"MeridianWindow: {MeridianWindow}");
             sb.AppendLine($"FilterSwitchFrequency: {FilterSwitchFrequency}");
             sb.AppendLine($"DitherEvery: {DitherEvery}");
+            sb.AppendLine($"SmartExposureOrder: {SmartExposureOrder}");
             sb.AppendLine($"EnableGrader: {EnableGrader}");
             sb.AppendLine($"IsMosaic: {IsMosaic}");
             sb.AppendLine($"FlatsHandling: {FlatsHandling}");

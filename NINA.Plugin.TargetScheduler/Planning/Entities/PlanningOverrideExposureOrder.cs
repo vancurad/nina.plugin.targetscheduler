@@ -13,5 +13,15 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
             Action = oeo.Action;
             ReferenceIdx = oeo.ReferenceIdx;
         }
+
+        public PlanningOverrideExposureOrder(int order, OverrideExposureOrderAction action, int referenceIdx) {
+            Order = order;
+            Action = action;
+            ReferenceIdx = referenceIdx;
+        }
+
+        public override string ToString() {
+            return $"order={Order}, action={Action}, refIdx={ReferenceIdx}";
+        }
     }
 }

@@ -1,8 +1,8 @@
 ﻿using FluentAssertions;
 using Moq;
 using NINA.Plugin.TargetScheduler.Database.Schema;
-using NINA.Plugin.TargetScheduler.Planning;
 using NINA.Plugin.TargetScheduler.Planning.Entities;
+using NINA.Plugin.TargetScheduler.Planning.Exposures;
 using NINA.Profile.Interfaces;
 using NUnit.Framework;
 using System;
@@ -27,6 +27,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Entities {
             project.MeridianWindow = 120;
             project.FilterSwitchFrequency = 4;
             project.DitherEvery = 6;
+            project.SmartExposureOrder = true;
             project.FlatsHandling = Project.FLATS_HANDLING_TARGET_COMPLETION;
 
             PlanningProject sut = new PlanningProject(profileMock.Object, project, new ExposureCompletionHelper(false, 0));
@@ -45,6 +46,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Entities {
             sut.MeridianWindow.Should().Be(120);
             sut.FilterSwitchFrequency.Should().Be(4);
             sut.DitherEvery.Should().Be(6);
+            sut.SmartExposureOrder.Should().BeTrue();
             sut.EnableGrader.Should().BeTrue();
             sut.IsMosaic.Should().BeFalse();
             sut.FlatsHandling.Should().Be(Project.FLATS_HANDLING_TARGET_COMPLETION);

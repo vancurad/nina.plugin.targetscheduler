@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS "project" (
 	"meridianwindow"			INTEGER,
 	"filterswitchfrequency"		INTEGER,
 	"ditherevery"				INTEGER,
+	"smartexposureorder"		INTEGER NOT NULL DEFAULT 0,
 	"enablegrader"				INTEGER,
 	PRIMARY KEY("id")
 );

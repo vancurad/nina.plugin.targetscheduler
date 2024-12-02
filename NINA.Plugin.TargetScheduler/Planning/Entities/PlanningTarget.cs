@@ -1,5 +1,6 @@
 ﻿using NINA.Astrometry;
 using NINA.Plugin.TargetScheduler.Database.Schema;
+using NINA.Plugin.TargetScheduler.Planning.Exposures;
 using NINA.Plugin.TargetScheduler.Planning.Interfaces;
 using NINA.Plugin.TargetScheduler.Planning.Scoring.Rules;
 using NINA.Plugin.TargetScheduler.Util;
@@ -20,9 +21,11 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
         public List<IExposure> ExposurePlans { get; set; }
         public List<IExposure> CompletedExposurePlans { get; set; }
         public List<IOverrideExposureOrder> OverrideExposureOrders { get; set; }
+        public List<IFilterCadence> FilterCadences { get; set; }
         public IProject Project { get; set; }
         public bool Rejected { get; set; }
         public string RejectedReason { get; set; }
+        public IExposure SelectedExposure { get; set; }
         public ScoringResults ScoringResults { get; set; }
 
         public DateTime StartTime { get; set; }
@@ -57,6 +60,8 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
 
             OverrideExposureOrders = new List<IOverrideExposureOrder>(target.OverrideExposureOrders.Count);
             target.OverrideExposureOrders.ForEach(oeo => { this.OverrideExposureOrders.Add(new PlanningOverrideExposureOrder(oeo)); });
+            FilterCadences = new List<IFilterCadence>(target.FilterCadences.Count);
+            target.FilterCadences.ForEach(fc => { this.FilterCadences.Add(new PlanningFilterCadence(fc)); });
         }
 
         public PlanningTarget() {

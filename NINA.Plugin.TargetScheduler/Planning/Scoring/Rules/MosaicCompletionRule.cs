@@ -1,4 +1,5 @@
-﻿using NINA.Plugin.TargetScheduler.Planning.Interfaces;
+﻿using NINA.Plugin.TargetScheduler.Planning.Exposures;
+using NINA.Plugin.TargetScheduler.Planning.Interfaces;
 
 namespace NINA.Plugin.TargetScheduler.Planning.Scoring.Rules {
 

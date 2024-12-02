@@ -4,6 +4,7 @@ using NINA.Core.Model.Equipment;
 using NINA.Plugin.TargetScheduler.Astrometry;
 using NINA.Plugin.TargetScheduler.Database.Schema;
 using NINA.Plugin.TargetScheduler.Planning;
+using NINA.Plugin.TargetScheduler.Planning.Exposures;
 using NINA.Plugin.TargetScheduler.Planning.Interfaces;
 using NINA.Plugin.TargetScheduler.Planning.Scoring.Rules;
 using NUnit.Framework;
@@ -302,8 +303,9 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
 
     internal class TestPlanTarget : ITarget {
         public List<IExposure> ExposurePlans { get; set; }
-        public List<IOverrideExposureOrder> OverrideExposureOrders { get; set; }
         public List<IExposure> CompletedExposurePlans { get; set; }
+        public List<IOverrideExposureOrder> OverrideExposureOrders { get; set; }
+        public List<IFilterCadence> FilterCadences { get; set; }
 
         public TestPlanTarget() {
             ExposurePlans = new List<IExposure>();
@@ -320,6 +322,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
         public IProject Project { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public bool Rejected { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public string RejectedReason { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public IExposure SelectedExposure { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public ScoringResults ScoringResults { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public DateTime StartTime { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public DateTime EndTime { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
