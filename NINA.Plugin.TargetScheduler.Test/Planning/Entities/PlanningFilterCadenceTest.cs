@@ -33,6 +33,18 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Entities {
             sut.Action.Should().Be(FilterCadenceAction.Dither);
             sut.Next.Should().BeFalse();
             sut.ReferenceIdx.Should().Be(-1);
+
+            sut = new PlanningFilterCadence(3, false, FilterCadenceAction.Exposure, 22);
+            sut.Order.Should().Be(3);
+            sut.Next.Should().BeFalse();
+            sut.Action.Should().Be(FilterCadenceAction.Exposure);
+            sut.ReferenceIdx.Should().Be(22);
+
+            sut = new PlanningFilterCadence(sut, 8, true);
+            sut.Order.Should().Be(8);
+            sut.Next.Should().BeTrue();
+            sut.Action.Should().Be(FilterCadenceAction.Exposure);
+            sut.ReferenceIdx.Should().Be(22);
         }
     }
 }

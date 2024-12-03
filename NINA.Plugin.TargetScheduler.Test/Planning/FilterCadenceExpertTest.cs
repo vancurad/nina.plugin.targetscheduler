@@ -87,16 +87,16 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
 
         [Test]
         public void testAutoDither() {
-            Mock<IProject> pp1 = PlanMocks.GetMockPlanProject("pp1", ProjectState.Active);
+            Mock<IProject> pp = PlanMocks.GetMockPlanProject("pp1", ProjectState.Active);
             Mock<ITarget> pt = PlanMocks.GetMockPlanTarget("IC1805", TestData.IC1805);
             SetEPs(pt);
-            PlanMocks.AddMockPlanTarget(pp1, pt);
+            PlanMocks.AddMockPlanTarget(pp, pt);
 
-            pp1.SetupProperty(m => m.FilterSwitchFrequency, 2);
-            pp1.SetupProperty(m => m.DitherEvery, 1);
-            pp1.SetupProperty(m => m.SmartExposureOrder, false);
-            FilterCadenceExpert sut = new FilterCadenceExpert(pp1.Object, pt.Object);
-            var list = sut.GenerateInitial();
+            pp.SetupProperty(m => m.FilterSwitchFrequency, 2);
+            pp.SetupProperty(m => m.DitherEvery, 1);
+            pp.SetupProperty(m => m.SmartExposureOrder, false);
+            FilterCadenceExpert sut = new FilterCadenceExpert(pp.Object, pt.Object);
+            var list = pt.Object.FilterCadences;
 
             // LLRRGGBB => LdLRdRGdGBdB
             list.Should().HaveCount(12);
@@ -112,6 +112,31 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
             AssertFilterCadence(list[9], 10, false, FilterCadenceAction.Exposure, 3);
             AssertFilterCadence(list[10], 11, false, FilterCadenceAction.Dither, -1);
             AssertFilterCadence(list[11], 12, false, FilterCadenceAction.Exposure, 3);
+
+            pp.SetupProperty(p => p.FilterSwitchFrequency, 3);
+            pp.SetupProperty(p => p.DitherEvery, 2);
+            pt.SetupProperty(t => t.FilterCadences, new List<IFilterCadence>());
+            sut = new FilterCadenceExpert(pp.Object, pt.Object);
+            list = pt.Object.FilterCadences;
+
+            // LLLRRRGGGBBB => LLdLRRdRGGdGBBdB
+            list.Should().HaveCount(16);
+            AssertFilterCadence(list[0], 1, true, FilterCadenceAction.Exposure, 0);
+            AssertFilterCadence(list[1], 2, false, FilterCadenceAction.Exposure, 0);
+            AssertFilterCadence(list[2], 3, false, FilterCadenceAction.Dither, -1);
+            AssertFilterCadence(list[3], 4, false, FilterCadenceAction.Exposure, 0);
+            AssertFilterCadence(list[4], 5, false, FilterCadenceAction.Exposure, 1);
+            AssertFilterCadence(list[5], 6, false, FilterCadenceAction.Exposure, 1);
+            AssertFilterCadence(list[6], 7, false, FilterCadenceAction.Dither, -1);
+            AssertFilterCadence(list[7], 8, false, FilterCadenceAction.Exposure, 1);
+            AssertFilterCadence(list[8], 9, false, FilterCadenceAction.Exposure, 2);
+            AssertFilterCadence(list[9], 10, false, FilterCadenceAction.Exposure, 2);
+            AssertFilterCadence(list[10], 11, false, FilterCadenceAction.Dither, -1);
+            AssertFilterCadence(list[11], 12, false, FilterCadenceAction.Exposure, 2);
+            AssertFilterCadence(list[12], 13, false, FilterCadenceAction.Exposure, 3);
+            AssertFilterCadence(list[13], 14, false, FilterCadenceAction.Exposure, 3);
+            AssertFilterCadence(list[14], 15, false, FilterCadenceAction.Dither, -1);
+            AssertFilterCadence(list[15], 16, false, FilterCadenceAction.Exposure, 3);
         }
 
         [Test]

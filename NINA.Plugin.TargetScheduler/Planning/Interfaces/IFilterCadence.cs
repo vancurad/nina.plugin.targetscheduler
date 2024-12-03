@@ -3,9 +3,9 @@
 namespace NINA.Plugin.TargetScheduler.Planning.Interfaces {
 
     public interface IFilterCadence {
-        int Order { get; }
-        bool Next { get; }
-        FilterCadenceAction Action { get; }
-        int ReferenceIdx { get; }
+        int Order { get; set; }
+        bool Next { get; set; }
+        FilterCadenceAction Action { get; set; }
+        int ReferenceIdx { get; set; }
     }
 }

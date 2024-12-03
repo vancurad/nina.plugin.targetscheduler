@@ -23,6 +23,13 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
             ReferenceIdx = referenceIdx;
         }
 
+        public PlanningFilterCadence(IFilterCadence filterCadence, int order, bool next) {
+            Order = order;
+            Next = next;
+            Action = filterCadence.Action;
+            ReferenceIdx = filterCadence.ReferenceIdx;
+        }
+
         public override string ToString() {
             return $"order={Order}, next={Next}, action={Action}, refIdx={ReferenceIdx}";
         }

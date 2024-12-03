@@ -14,7 +14,7 @@ namespace NINA.Plugin.TargetScheduler.Planning {
         private List<string> uniqueFilters;
 
         public DitherInjector(List<IFilterCadence> filterCadences, List<IExposure> exposuresPlans, int ditherEvery) {
-            this.filterCadences = filterCadences;
+            this.filterCadences = ShallowCopy(filterCadences);
             this.exposuresPlans = exposuresPlans;
             this.ditherEvery = ditherEvery;
         }
@@ -24,6 +24,10 @@ namespace NINA.Plugin.TargetScheduler.Planning {
             this.ditherEvery = ditherEvery;
         }
 
+        /// <summary>
+        /// Insert fixed dithers using filter cadence list for filter switch frequency and dither every > 0.
+        /// </summary>
+        /// <returns></returns>
         public List<IFilterCadence> Inject() {
             if (ditherEvery == 0) {
                 return filterCadences;
@@ -36,13 +40,16 @@ namespace NINA.Plugin.TargetScheduler.Planning {
             uniqueFilters = GetUniqueFilters();
             List<IFilterCadence> dithered = new List<IFilterCadence>();
 
+            // Add first filter to the end to mimic a cycle and capture a final dither if needed
+            filterCadences.Add(new PlanningFilterCadence(filterCadences[0], filterCadences[filterCadences.Count - 1].Order + 1, false));
+
             int pos = 0;
             int order = 1;
             while (pos < filterCadences.Count) {
                 int ditherPos = FindNextDither(pos);
                 if (ditherPos < 0) {
                     for (int i = pos; i < filterCadences.Count; i++) {
-                        ((PlanningFilterCadence)filterCadences[i]).Order = order++;
+                        filterCadences[i].Order = order++;
                         dithered.Add(filterCadences[i]);
                     }
 
@@ -50,7 +57,7 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                 }
 
                 for (int i = pos; i < ditherPos; i++) {
-                    ((PlanningFilterCadence)filterCadences[i]).Order = order++;
+                    filterCadences[i].Order = order++;
                     dithered.Add(filterCadences[i]);
                 }
 
@@ -58,9 +65,16 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                 pos = ditherPos;
             }
 
+            // Remove duplicate first item from the end that we added above
+            dithered.RemoveAt(dithered.Count - 1);
+
             return dithered;
         }
 
+        /// <summary>
+        /// Insert dithers for UI display.
+        /// </summary>
+        /// <returns></returns>
         public List<string> ExposureOrderInject() {
             if (ditherEvery == 0) {
                 return exposureOrder;
@@ -99,6 +113,12 @@ namespace NINA.Plugin.TargetScheduler.Planning {
             dithered.RemoveAt(dithered.Count - 1);
 
             return dithered;
+        }
+
+        private List<IFilterCadence> ShallowCopy(List<IFilterCadence> filterCadences) {
+            return filterCadences is null
+                ? new List<IFilterCadence>()
+                : new List<IFilterCadence>(filterCadences);
         }
 
         private int FindNextDither(int start) {
