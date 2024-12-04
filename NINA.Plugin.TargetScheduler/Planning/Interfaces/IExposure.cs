@@ -26,6 +26,8 @@ namespace NINA.Plugin.TargetScheduler.Planning.Interfaces {
         double MoonAvoidanceScore { get; set; }
         double MaximumHumidity { get; set; }
 
+        bool PreDither { get; set; }
+
         bool Rejected { get; set; }
         string RejectedReason { get; set; }
         int PlannedExposures { get; set; }

@@ -34,6 +34,8 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
 
         public double MaximumHumidity { get; set; }
 
+        public bool PreDither { get; set; }
+
         public bool Rejected { get; set; }
         public string RejectedReason { get; set; }
 
@@ -66,6 +68,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
 
             this.MaximumHumidity = exposureTemplate.MaximumHumidity;
 
+            this.PreDither = false;
             this.Rejected = false;
             this.PlannedExposures = 0;
         }
@@ -91,6 +94,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
             sb.AppendLine($"Acquired: {Acquired}");
             sb.AppendLine($"Accepted: {Accepted}");
             sb.AppendLine($"PlannedExposures: {PlannedExposures}");
+            sb.AppendLine($"Pre-dither: {PreDither}");
             sb.AppendLine($"Rejected: {Rejected}");
             sb.AppendLine($"RejectedReason: {RejectedReason}");
             return sb.ToString();

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 namespace NINA.Plugin.TargetScheduler.Planning {
 
     public class FilterCadenceExpert {
+        private object lockObj = new object();
         private IProject project;
         private ITarget target;
 
@@ -36,11 +37,18 @@ namespace NINA.Plugin.TargetScheduler.Planning {
         }
 
         public IFilterCadence GetNext() {
+            // TODO: Rewrite for circular access
             foreach (IFilterCadence filterCadence in target.FilterCadences) {
                 if (filterCadence.Next) return filterCadence;
             }
 
             return null;
+        }
+
+        public void Advance() {
+            lock (lockObj) {
+                int nextIdx = target.FilterCadences.FindIndex(fc => fc.Next);
+            }
         }
 
         public IExposure GetExposurePlanForFilterCadence(IFilterCadence filterCadence) {
