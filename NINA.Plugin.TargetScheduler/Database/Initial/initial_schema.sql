@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS "exposuretemplate" (
 	PRIMARY KEY("Id")
 );
 
-CREATE TABLE IF NOT EXISTS "overrideexposureorder" (
+CREATE TABLE IF NOT EXISTS "overrideexposureorderitem" (
    "Id"				INTEGER NOT NULL,
    "targetid"		INTEGER NOT NULL,
    "order"			INTEGER NOT NULL,
@@ -122,7 +122,7 @@ CREATE TABLE IF NOT EXISTS "overrideexposureorder" (
    PRIMARY KEY("Id")
 );
 
-CREATE TABLE IF NOT EXISTS "filtercadence" (
+CREATE TABLE IF NOT EXISTS "filtercadenceitem" (
    "Id"				INTEGER NOT NULL,
    "targetid"		INTEGER NOT NULL,
    "order"			INTEGER NOT NULL,

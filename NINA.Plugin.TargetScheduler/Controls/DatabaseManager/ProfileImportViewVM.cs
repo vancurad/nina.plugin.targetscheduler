@@ -270,8 +270,8 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             return list;
         }
 
-        private List<OverrideExposureOrder> CloneOverrideExposureOrders(int targetId, List<OverrideExposureOrder> overrideExposureOrders) {
-            List<OverrideExposureOrder> list = new List<OverrideExposureOrder>(overrideExposureOrders.Count);
+        private List<OverrideExposureOrderItem> CloneOverrideExposureOrders(int targetId, List<OverrideExposureOrderItem> overrideExposureOrders) {
+            List<OverrideExposureOrderItem> list = new List<OverrideExposureOrderItem>(overrideExposureOrders.Count);
             if (overrideExposureOrders?.Count == 0) {
                 return list;
             }

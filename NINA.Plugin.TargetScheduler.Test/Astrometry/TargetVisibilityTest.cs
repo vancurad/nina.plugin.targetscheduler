@@ -79,7 +79,6 @@ namespace NINA.Plugin.TargetScheduler.Test.Astrometry {
             viz.IsVisible.Should().BeFalse();
 
             viz = sut.NextVisibleInterval(imagingInterval.StartTime.AddSeconds(-1), imagingInterval, hd);
-            //TestContext.WriteLine(viz);
             viz.IsVisible.Should().BeTrue();
         }
 

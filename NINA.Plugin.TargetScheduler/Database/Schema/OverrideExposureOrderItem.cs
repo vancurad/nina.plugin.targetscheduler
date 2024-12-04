@@ -10,7 +10,7 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
         Exposure = 0, Dither = 1,
     }
 
-    public class OverrideExposureOrder : INotifyPropertyChanged {
+    public class OverrideExposureOrderItem : INotifyPropertyChanged {
         [Key] public int Id { get; set; }
 
         [Required] public int TargetId { get; set; }
@@ -18,23 +18,23 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
         [Required] public int action { get; set; }
         public int referenceIdx { get; set; }
 
-        public OverrideExposureOrder() {
+        public OverrideExposureOrderItem() {
         }
 
-        public OverrideExposureOrder(int targetId, int order, int action, int referenceIdx) {
+        public OverrideExposureOrderItem(int targetId, int order, int action, int referenceIdx) {
             this.TargetId = targetId;
             this.order = order;
             this.action = action;
             this.referenceIdx = referenceIdx;
         }
 
-        public OverrideExposureOrder(int targetId, int order, int action)
+        public OverrideExposureOrderItem(int targetId, int order, int action)
             : this(targetId, order, action, -1) { }
 
-        public OverrideExposureOrder(int targetId, int order, OverrideExposureOrderAction action, int referenceIdx)
+        public OverrideExposureOrderItem(int targetId, int order, OverrideExposureOrderAction action, int referenceIdx)
             : this(targetId, order, (int)action, referenceIdx) { }
 
-        public OverrideExposureOrder(int targetId, int order, OverrideExposureOrderAction action)
+        public OverrideExposureOrderItem(int targetId, int order, OverrideExposureOrderAction action)
             : this(targetId, order, (int)action, -1) { }
 
         [NotMapped]
@@ -64,8 +64,8 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
             }
         }
 
-        public OverrideExposureOrder GetPasteCopy(int targetId) {
-            OverrideExposureOrder copy = new OverrideExposureOrder();
+        public OverrideExposureOrderItem GetPasteCopy(int targetId) {
+            OverrideExposureOrderItem copy = new OverrideExposureOrderItem();
             copy.TargetId = targetId;
             copy.order = order;
             copy.action = action;
@@ -94,11 +94,15 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
                 return false;
             }
 
-            OverrideExposureOrder other = obj as OverrideExposureOrder;
+            OverrideExposureOrderItem other = obj as OverrideExposureOrderItem;
             return TargetId == other.TargetId &&
                 Order == other.Order &&
                 Action == other.Action &&
                 ReferenceIdx == other.ReferenceIdx;
+        }
+
+        public override int GetHashCode() {
+            return base.GetHashCode();
         }
     }
 }

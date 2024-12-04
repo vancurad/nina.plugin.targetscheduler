@@ -27,8 +27,8 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
         public virtual Project Project { get; set; }
 
         public virtual List<ExposurePlan> ExposurePlans { get; set; }
-        public virtual List<OverrideExposureOrder> OverrideExposureOrders { get; set; }
-        public virtual List<FilterCadence> FilterCadences { get; set; }
+        public virtual List<OverrideExposureOrderItem> OverrideExposureOrders { get; set; }
+        public virtual List<FilterCadenceItem> FilterCadences { get; set; }
 
         public Target() {
             active = true;
@@ -38,8 +38,8 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
             rotation = 0;
             roi = 100;
             ExposurePlans = new List<ExposurePlan>();
-            OverrideExposureOrders = new List<OverrideExposureOrder>();
-            FilterCadences = new List<FilterCadence>();
+            OverrideExposureOrders = new List<OverrideExposureOrderItem>();
+            FilterCadences = new List<FilterCadenceItem>();
         }
 
         [NotMapped]

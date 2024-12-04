@@ -1180,7 +1180,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             return Instance.item != null;
         }
 
-        public static void SetItem(List<ExposurePlan> exposurePlans, List<OverrideExposureOrder> overrideExposureOrders) {
+        public static void SetItem(List<ExposurePlan> exposurePlans, List<OverrideExposureOrderItem> overrideExposureOrders) {
             if (exposurePlans?.Count > 0) {
                 Instance.item = new ExposurePlansSpec(exposurePlans, overrideExposureOrders);
             }
@@ -1227,9 +1227,9 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
 
     public class ExposurePlansSpec {
         public List<ExposurePlan> ExposurePlans { get; private set; }
-        public List<OverrideExposureOrder> OverrideExposureOrders { get; private set; }
+        public List<OverrideExposureOrderItem> OverrideExposureOrders { get; private set; }
 
-        public ExposurePlansSpec(List<ExposurePlan> exposurePlans, List<OverrideExposureOrder> overrideExposureOrders) {
+        public ExposurePlansSpec(List<ExposurePlan> exposurePlans, List<OverrideExposureOrderItem> overrideExposureOrders) {
             ExposurePlans = exposurePlans;
             OverrideExposureOrders = overrideExposureOrders;
         }

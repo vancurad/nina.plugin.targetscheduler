@@ -2,7 +2,7 @@
 
 namespace NINA.Plugin.TargetScheduler.Planning.Interfaces {
 
-    public interface IOverrideExposureOrder {
+    public interface IOverrideExposureOrderItem {
         int Order { get; }
         OverrideExposureOrderAction Action { get; }
         int ReferenceIdx { get; }

@@ -10,7 +10,7 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
         Exposure = 0, Dither = 1,
     }
 
-    public class FilterCadence : INotifyPropertyChanged {
+    public class FilterCadenceItem : INotifyPropertyChanged {
         [Key] public int Id { get; set; }
 
         [Required] public int TargetId { get; set; }
@@ -19,10 +19,10 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
         [Required] public int action { get; set; }
         public int referenceIdx { get; set; }
 
-        public FilterCadence() {
+        public FilterCadenceItem() {
         }
 
-        public FilterCadence(int targetId, int order, bool next, int action, int referenceIdx) {
+        public FilterCadenceItem(int targetId, int order, bool next, int action, int referenceIdx) {
             this.TargetId = targetId;
             this.order = order;
             this.next = next;
@@ -30,13 +30,13 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
             this.referenceIdx = referenceIdx;
         }
 
-        public FilterCadence(int targetId, int order, bool next, int action)
+        public FilterCadenceItem(int targetId, int order, bool next, int action)
             : this(targetId, order, next, action, -1) { }
 
-        public FilterCadence(int targetId, int order, bool next, FilterCadenceAction action, int referenceIdx)
+        public FilterCadenceItem(int targetId, int order, bool next, FilterCadenceAction action, int referenceIdx)
             : this(targetId, order, next, (int)action, referenceIdx) { }
 
-        public FilterCadence(int targetId, int order, bool next, FilterCadenceAction action)
+        public FilterCadenceItem(int targetId, int order, bool next, FilterCadenceAction action)
             : this(targetId, order, next, (int)action, -1) { }
 
         [NotMapped]
@@ -97,12 +97,16 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
                 return false;
             }
 
-            FilterCadence other = obj as FilterCadence;
+            FilterCadenceItem other = obj as FilterCadenceItem;
             return TargetId == other.TargetId &&
                 Order == other.Order &&
                 Next == other.Next &&
                 Action == other.Action &&
                 ReferenceIdx == other.ReferenceIdx;
+        }
+
+        public override int GetHashCode() {
+            return base.GetHashCode();
         }
     }
 }

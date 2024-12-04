@@ -10,7 +10,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Entities {
 
         [Test]
         public void TestOverrideExposureOrder() {
-            OverrideExposureOrder oeo = new OverrideExposureOrder();
+            OverrideExposureOrderItem oeo = new OverrideExposureOrderItem();
             oeo.Order = 1;
             oeo.Action = OverrideExposureOrderAction.Exposure;
             oeo.ReferenceIdx = 2;
@@ -20,7 +20,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Entities {
             sut.Action.Should().Be(OverrideExposureOrderAction.Exposure);
             sut.ReferenceIdx.Should().Be(2);
 
-            oeo = new OverrideExposureOrder();
+            oeo = new OverrideExposureOrderItem();
             oeo.TargetId = 202;
             oeo.Order = 2;
             oeo.Action = OverrideExposureOrderAction.Dither;

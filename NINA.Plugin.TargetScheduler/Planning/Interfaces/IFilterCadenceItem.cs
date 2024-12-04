@@ -2,7 +2,7 @@
 
 namespace NINA.Plugin.TargetScheduler.Planning.Interfaces {
 
-    public interface IFilterCadence {
+    public interface IFilterCadenceItem {
         int Order { get; set; }
         bool Next { get; set; }
         FilterCadenceAction Action { get; set; }

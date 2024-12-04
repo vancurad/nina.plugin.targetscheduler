@@ -10,7 +10,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Entities {
 
         [Test]
         public void TestFilterCadence() {
-            FilterCadence filterCadence = new FilterCadence();
+            FilterCadenceItem filterCadence = new FilterCadenceItem();
             filterCadence.Order = 1;
             filterCadence.Action = FilterCadenceAction.Exposure;
             filterCadence.Next = true;
@@ -22,7 +22,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Entities {
             sut.Next.Should().BeTrue();
             sut.ReferenceIdx.Should().Be(2);
 
-            filterCadence = new FilterCadence();
+            filterCadence = new FilterCadenceItem();
             filterCadence.Order = 2;
             filterCadence.Action = FilterCadenceAction.Dither;
             filterCadence.Next = false;

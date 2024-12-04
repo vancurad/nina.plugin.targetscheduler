@@ -26,8 +26,8 @@ namespace NINA.Plugin.TargetScheduler.Database {
         public DbSet<Target> TargetSet { get; set; }
         public DbSet<ExposurePlan> ExposurePlanSet { get; set; }
         public DbSet<ExposureTemplate> ExposureTemplateSet { get; set; }
-        public DbSet<OverrideExposureOrder> OverrideExposureOrderSet { get; set; }
-        public DbSet<FilterCadence> FilterCadenceSet { get; set; }
+        public DbSet<OverrideExposureOrderItem> OverrideExposureOrderSet { get; set; }
+        public DbSet<FilterCadenceItem> FilterCadenceSet { get; set; }
         public DbSet<FlatHistory> FlatHistorySet { get; set; }
         public DbSet<ImageData> ImageDataSet { get; set; }
 
@@ -163,7 +163,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
             return ExposureTemplateSet.Where(e => e.Id == id).FirstOrDefault();
         }
 
-        public List<OverrideExposureOrder> GetOverrideExposureOrders(int targetId) {
+        public List<OverrideExposureOrderItem> GetOverrideExposureOrders(int targetId) {
             return OverrideExposureOrderSet
                 .Where(o => o.TargetId == targetId)
                 .OrderBy(o => o.order).ToList();
@@ -172,7 +172,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
         public void ClearExistingOverrideExposureOrders(int targetId) {
             using (var transaction = Database.BeginTransaction()) {
                 try {
-                    var predicate = PredicateBuilder.New<OverrideExposureOrder>();
+                    var predicate = PredicateBuilder.New<OverrideExposureOrderItem>();
                     predicate = predicate.And(oeo => oeo.TargetId == targetId);
                     OverrideExposureOrderSet.RemoveRange(OverrideExposureOrderSet.Where(predicate));
                     SaveChanges();
@@ -184,7 +184,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
             }
         }
 
-        public List<FilterCadence> GetFilterCadences(int targetId) {
+        public List<FilterCadenceItem> GetFilterCadences(int targetId) {
             return FilterCadenceSet
                 .Where(o => o.TargetId == targetId)
                 .OrderBy(o => o.order).ToList();
@@ -193,7 +193,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
         public void ClearExistingFilterCadences(int targetId) {
             using (var transaction = Database.BeginTransaction()) {
                 try {
-                    var predicate = PredicateBuilder.New<FilterCadence>();
+                    var predicate = PredicateBuilder.New<FilterCadenceItem>();
                     predicate = predicate.And(oeo => oeo.TargetId == targetId);
                     FilterCadenceSet.RemoveRange(FilterCadenceSet.Where(predicate));
                     SaveChanges();
@@ -258,7 +258,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
         public void DeleteOverrideExposureOrders(int targetId) {
             using (var transaction = Database.BeginTransaction()) {
                 try {
-                    var predicate = PredicateBuilder.New<OverrideExposureOrder>();
+                    var predicate = PredicateBuilder.New<OverrideExposureOrderItem>();
                     predicate = predicate.And(a => a.TargetId == targetId);
                     OverrideExposureOrderSet.RemoveRange(OverrideExposureOrderSet.Where(predicate));
                     SaveChanges();

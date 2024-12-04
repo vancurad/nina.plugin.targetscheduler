@@ -278,7 +278,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
 
             // If exposure plans have been added or removed, we have to clear any override exposure order
             if (TargetProxy.Proxy.ExposurePlans.Count != TargetProxy.Original.ExposurePlans.Count) {
-                TargetProxy.Proxy.OverrideExposureOrders = new List<OverrideExposureOrder>();
+                TargetProxy.Proxy.OverrideExposureOrders = new List<OverrideExposureOrderItem>();
             }
 
             managerVM.SaveTarget(TargetProxy.Proxy);
@@ -369,7 +369,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             if (ExposurePlans?.Count > 0) {
                 List<ExposurePlan> exposurePlans = new List<ExposurePlan>(ExposurePlans.Count);
                 ExposurePlans.ForEach(ep => exposurePlans.Add(ep));
-                List<OverrideExposureOrder> overrideExposureOrders = new List<OverrideExposureOrder>();
+                List<OverrideExposureOrderItem> overrideExposureOrders = new List<OverrideExposureOrderItem>();
                 TargetProxy.Target.OverrideExposureOrders.ForEach(oeo => overrideExposureOrders.Add(oeo));
                 ExposurePlansClipboard.SetItem(exposurePlans, overrideExposureOrders);
                 RaisePropertyChanged(nameof(ExposurePlansPasteEnabled));
@@ -387,7 +387,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
                 return;
             }
 
-            List<OverrideExposureOrder> srcOverrideExposureOrders = new List<OverrideExposureOrder>();
+            List<OverrideExposureOrderItem> srcOverrideExposureOrders = new List<OverrideExposureOrderItem>();
             source.OverrideExposureOrders.ForEach(oeo => srcOverrideExposureOrders.Add(oeo.GetPasteCopy(TargetProxy.Proxy.Id)));
 
             ExposureTemplate exposureTemplate = null;
@@ -567,14 +567,14 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
         private void CancelOverrideExposureOrder(object obj) {
             string message = $"Clear override exposure order?  This cannot be undone.";
             if (MyMessageBox.Show(message, "Clear?", MessageBoxButton.YesNo, MessageBoxResult.No) == MessageBoxResult.Yes) {
-                TargetProxy.Proxy.OverrideExposureOrders = new List<OverrideExposureOrder>();
+                TargetProxy.Proxy.OverrideExposureOrders = new List<OverrideExposureOrderItem>();
                 managerVM.SaveTarget(TargetProxy.Proxy);
                 TargetProxy.OnSave();
                 SetExposureOrderDisplay();
             }
         }
 
-        public void SaveOverrideExposureOrder(List<OverrideExposureOrder> overrideExposureOrders) {
+        public void SaveOverrideExposureOrder(List<OverrideExposureOrderItem> overrideExposureOrders) {
             TargetProxy.Target.OverrideExposureOrders = overrideExposureOrders;
             managerVM.SaveTarget(TargetProxy.Proxy);
             TargetProxy.OnSave();

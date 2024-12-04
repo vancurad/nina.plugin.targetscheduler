@@ -106,15 +106,15 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
         }
 
         private void Save() {
-            List<OverrideExposureOrder> overrideExposureOrders = new List<OverrideExposureOrder>();
+            List<OverrideExposureOrderItem> overrideExposureOrders = new List<OverrideExposureOrderItem>();
             if (DisplayOverrideExposureOrder?.Count > 0) {
                 int targetId = targetViewVM.TargetProxy.Target.Id;
                 int order = 1;
                 foreach (var item in DisplayOverrideExposureOrder) {
                     if (item.IsDither) {
-                        overrideExposureOrders.Add(new OverrideExposureOrder(targetId, order, OverrideExposureOrderAction.Dither));
+                        overrideExposureOrders.Add(new OverrideExposureOrderItem(targetId, order, OverrideExposureOrderAction.Dither));
                     } else {
-                        overrideExposureOrders.Add(new OverrideExposureOrder(targetId, order, OverrideExposureOrderAction.Exposure, item.ExposurePlanIdx));
+                        overrideExposureOrders.Add(new OverrideExposureOrderItem(targetId, order, OverrideExposureOrderAction.Exposure, item.ExposurePlanIdx));
                     }
 
                     order++;

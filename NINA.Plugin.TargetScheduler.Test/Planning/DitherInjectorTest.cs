@@ -29,14 +29,14 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
         [TestCase("HHHH", "HHdHHd", 2)]
         [TestCase("H", "Hd", 1)]
         public void testFromFilterCadences(string seq, string expected, int ditherEvery) {
-            (List<IExposure> eps, List<IFilterCadence> fcs) = GetTestLists(seq);
+            (List<IExposure> eps, List<IFilterCadenceItem> fcs) = GetTestLists(seq);
             var dithered = new DitherInjector(fcs, eps, ditherEvery).Inject();
             GetCompare(dithered, eps).Should().Be(expected);
         }
 
-        private (List<IExposure>, List<IFilterCadence>) GetTestLists(string seq) {
+        private (List<IExposure>, List<IFilterCadenceItem>) GetTestLists(string seq) {
             List<IExposure> eps = new List<IExposure>();
-            List<IFilterCadence> fcs = new List<IFilterCadence>();
+            List<IFilterCadenceItem> fcs = new List<IFilterCadenceItem>();
 
             char[] chars = seq.ToCharArray();
             foreach (char c in chars) {
@@ -57,7 +57,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
             return (eps, fcs);
         }
 
-        private string GetCompare(List<IFilterCadence> fcs, List<IExposure> eps) {
+        private string GetCompare(List<IFilterCadenceItem> fcs, List<IExposure> eps) {
             StringBuilder dithered = new StringBuilder();
             fcs.ForEach(fc => {
                 string s = fc.Action == FilterCadenceAction.Exposure
@@ -76,8 +76,8 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
             return e.Object;
         }
 
-        private IFilterCadence GetMockFilterCadence(int order, bool next, FilterCadenceAction action, int refIdx) {
-            Mock<IFilterCadence> f = new Mock<IFilterCadence>();
+        private IFilterCadenceItem GetMockFilterCadence(int order, bool next, FilterCadenceAction action, int refIdx) {
+            Mock<IFilterCadenceItem> f = new Mock<IFilterCadenceItem>();
             f.SetupAllProperties();
             f.SetupProperty(f => f.Order, order);
             f.SetupProperty(f => f.Next, next);

@@ -443,8 +443,8 @@ namespace NINA.Plugin.TargetScheduler.Test.Database {
         [NonParallelizable]
         public void TestOverrideExposureOrder() {
             using (var context = db.GetContext()) {
-                OverrideExposureOrder oeo1 = new(2, 1, OverrideExposureOrderAction.Exposure, 0);
-                OverrideExposureOrder oeo2 = new(2, 2, OverrideExposureOrderAction.Dither, -1);
+                OverrideExposureOrderItem oeo1 = new(2, 1, OverrideExposureOrderAction.Exposure, 0);
+                OverrideExposureOrderItem oeo2 = new(2, 2, OverrideExposureOrderAction.Dither, -1);
                 context.OverrideExposureOrderSet.Add(oeo1);
                 context.OverrideExposureOrderSet.Add(oeo2);
                 context.SaveChanges();
@@ -469,8 +469,8 @@ namespace NINA.Plugin.TargetScheduler.Test.Database {
         [NonParallelizable]
         public void TestFilterCadence() {
             using (var context = db.GetContext()) {
-                FilterCadence fc1 = new(2, 1, true, FilterCadenceAction.Exposure, 1);
-                FilterCadence fc2 = new(2, 2, false, FilterCadenceAction.Dither, -1);
+                FilterCadenceItem fc1 = new(2, 1, true, FilterCadenceAction.Exposure, 1);
+                FilterCadenceItem fc2 = new(2, 2, false, FilterCadenceAction.Dither, -1);
                 context.FilterCadenceSet.Add(fc1);
                 context.FilterCadenceSet.Add(fc2);
                 context.SaveChanges();

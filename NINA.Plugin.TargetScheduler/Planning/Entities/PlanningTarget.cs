@@ -20,8 +20,8 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
         public double ROI { get; set; }
         public List<IExposure> ExposurePlans { get; set; }
         public List<IExposure> CompletedExposurePlans { get; set; }
-        public List<IOverrideExposureOrder> OverrideExposureOrders { get; set; }
-        public List<IFilterCadence> FilterCadences { get; set; }
+        public List<IOverrideExposureOrderItem> OverrideExposureOrders { get; set; }
+        public FilterCadence FilterCadence { get; set; }
         public IProject Project { get; set; }
         public bool Rejected { get; set; }
         public string RejectedReason { get; set; }
@@ -58,10 +58,12 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
                 }
             }
 
-            OverrideExposureOrders = new List<IOverrideExposureOrder>(target.OverrideExposureOrders.Count);
+            OverrideExposureOrders = new List<IOverrideExposureOrderItem>(target.OverrideExposureOrders.Count);
             target.OverrideExposureOrders.ForEach(oeo => { this.OverrideExposureOrders.Add(new PlanningOverrideExposureOrder(oeo)); });
-            FilterCadences = new List<IFilterCadence>(target.FilterCadences.Count);
-            target.FilterCadences.ForEach(fc => { this.FilterCadences.Add(new PlanningFilterCadence(fc)); });
+
+            List<IFilterCadenceItem> filterCadences = new List<IFilterCadenceItem>(target.FilterCadences.Count);
+            target.FilterCadences.ForEach(fc => { filterCadences.Add(new PlanningFilterCadence(fc)); });
+            this.FilterCadence = new FilterCadence(filterCadences);
         }
 
         public PlanningTarget() {
@@ -73,7 +75,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
             }
 
             List<ExposurePlan> list = new List<ExposurePlan>();
-            foreach (OverrideExposureOrder oeo in target.OverrideExposureOrders) {
+            foreach (OverrideExposureOrderItem oeo in target.OverrideExposureOrders) {
                 if (oeo.Action == OverrideExposureOrderAction.Dither) { continue; }
                 if (oeo.Action == OverrideExposureOrderAction.Exposure) {
                     // TODO: fix this is wrong for EP idx approach

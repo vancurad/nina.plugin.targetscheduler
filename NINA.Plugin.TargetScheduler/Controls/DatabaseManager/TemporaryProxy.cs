@@ -143,10 +143,10 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             });
 
             // Deepen the copy for the OverrideExposureOrder list
-            copy.OverrideExposureOrders = new List<OverrideExposureOrder>(source.OverrideExposureOrders.Count);
+            copy.OverrideExposureOrders = new List<OverrideExposureOrderItem>(source.OverrideExposureOrders.Count);
             source.OverrideExposureOrders.ForEach(plan => {
                 plan.PropertyChanged -= ProxyPropertyChanged;
-                OverrideExposureOrder copyOverrideExposureOrder = base.CopyEntity(plan);
+                OverrideExposureOrderItem copyOverrideExposureOrder = base.CopyEntity(plan);
                 copyOverrideExposureOrder.Order = plan.Order;
                 copyOverrideExposureOrder.Action = plan.Action;
                 copyOverrideExposureOrder.ReferenceIdx = plan.ReferenceIdx;

@@ -23,9 +23,9 @@ namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
             // Exp Plans: L,R,G,B
             // FC LRGBd, next is R
 
-            FilterCadenceExpert expert = new FilterCadenceExpert(project, target);
+            FilterCadenceFactory expert = new FilterCadenceFactory();
 
-            int nextIdx = target.FilterCadences.FindIndex(fc => fc.Next);
+            //int nextIdx = target.FilterCadences.FindIndex(fc => fc.Next);
 
             // TODO: does it make sense to formulate the FC list as a circular list?
             // just treat the list as a circle: https://stackoverflow.com/questions/33781853/circular-lists-in-c-sharp
