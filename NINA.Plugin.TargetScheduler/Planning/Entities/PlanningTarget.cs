@@ -61,9 +61,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
             OverrideExposureOrders = new List<IOverrideExposureOrderItem>(target.OverrideExposureOrders.Count);
             target.OverrideExposureOrders.ForEach(oeo => { this.OverrideExposureOrders.Add(new PlanningOverrideExposureOrder(oeo)); });
 
-            List<IFilterCadenceItem> filterCadences = new List<IFilterCadenceItem>(target.FilterCadences.Count);
-            target.FilterCadences.ForEach(fc => { filterCadences.Add(new PlanningFilterCadence(fc)); });
-            this.FilterCadence = new FilterCadence(filterCadences);
+            this.FilterCadence = new FilterCadenceFactory().Generate(planProject, this, target);
         }
 
         public PlanningTarget() {

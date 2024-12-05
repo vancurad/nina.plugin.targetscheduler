@@ -34,7 +34,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Entities {
             sut.ExposurePlans.Should().NotBeNull().And.HaveCount(0);
             sut.CompletedExposurePlans.Should().NotBeNull().And.HaveCount(0);
             sut.OverrideExposureOrders.Should().NotBeNull().And.HaveCount(0);
-            sut.FilterCadence.Should().NotBeNull();
+            sut.FilterCadence.Count.Should().Be(0);
 
             OverrideExposureOrderItem oeo = new OverrideExposureOrderItem();
             oeo.ReferenceIdx = 101;
@@ -49,7 +49,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Entities {
             sut = new PlanningTarget(project, target);
             sut.OverrideExposureOrders.Should().NotBeNull().And.HaveCount(1);
             sut.OverrideExposureOrders[0].ReferenceIdx.Should().Be(101);
-            sut.FilterCadence.Should().NotBeNull();
+            sut.FilterCadence.Count.Should().Be(1);
         }
     }
 }

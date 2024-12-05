@@ -1,4 +1,5 @@
 ﻿using NINA.Plugin.TargetScheduler.Planning.Interfaces;
+using NINA.Plugin.TargetScheduler.Shared.Utility;
 using System;
 
 namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
@@ -23,12 +24,34 @@ namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
             // Exp Plans: L,R,G,B
             // FC LRGBd, next is R
 
-            FilterCadenceFactory expert = new FilterCadenceFactory();
+            FilterCadence filterCadence = target.FilterCadence;
+            bool preDither = false;
+            int items = 0;
 
-            //int nextIdx = target.FilterCadences.FindIndex(fc => fc.Next);
+            foreach (var item in filterCadence) {
+            }
 
-            // TODO: does it make sense to formulate the FC list as a circular list?
-            // just treat the list as a circle: https://stackoverflow.com/questions/33781853/circular-lists-in-c-sharp
+            // TODO: also, if we end up selecting one that wasn't Next=true, we need to account for that
+            // when finally doing the Advance()
+
+            // OLD
+            while (true) {
+                IFilterCadenceItem item = filterCadence.GetNext();
+                if (item.Action == Database.Schema.FilterCadenceAction.Dither) {
+                    preDither = true;
+                    continue;
+                }
+
+                // Be sure we haven't been all the way around without finding an exposure
+                if (++items == filterCadence.Count) {
+                    TSLogger.Warning("looped around on filter cadence list witout finding a suitable exposure");
+                    return null;
+                }
+
+                // REALLY?  We don't really want to advance until we've taken the exposure!!
+                // Instead, we want an
+                //filterCadence.Advance();
+            }
 
             throw new NotImplementedException();
         }

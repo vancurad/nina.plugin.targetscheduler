@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using NINA.Plugin.TargetScheduler.Database.Schema;
+using NINA.Plugin.TargetScheduler.Shared.Utility;
 using NINA.Profile.Interfaces;
 using NINA.WPF.Base.ViewModel;
 using System.Collections.Generic;
@@ -131,7 +132,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
 
         private ObservableCollection<OverrideItem> SetOverrideItems(Target target) {
             ObservableCollection<OverrideItem> items = new ObservableCollection<OverrideItem>();
-            if (target.OverrideExposureOrders?.Count > 0) {
+            if (Common.IsNotEmpty(target.OverrideExposureOrders)) {
                 foreach (var oeo in target.OverrideExposureOrders) {
                     if (oeo.Action == OverrideExposureOrderAction.Exposure) {
                         string name = target.ExposurePlans[oeo.ReferenceIdx].ExposureTemplate.Name;

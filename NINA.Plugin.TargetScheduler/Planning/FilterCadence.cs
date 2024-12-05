@@ -1,11 +1,13 @@
 ﻿using NINA.Plugin.TargetScheduler.Planning.Interfaces;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Text;
 
 namespace NINA.Plugin.TargetScheduler.Planning {
 
-    public class FilterCadence {
+    public class FilterCadence : IEnumerable {
         private object lockObj = new object();
         private List<IFilterCadenceItem> filterCadenceList;
 
@@ -30,17 +32,17 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                 if (idx == -1) { throw new ArgumentException("filter cadence list has no next=true"); }
 
                 // Circular operation
-                if (idx == filterCadenceList.Count - 1) {
-                    filterCadenceList[idx].Next = false;
-                    filterCadenceList[0].Next = true;
-                    return filterCadenceList[0];
-                } else {
-                    filterCadenceList[idx].Next = false;
-                    filterCadenceList[idx + 1].Next = true;
-                    return filterCadenceList[idx + 1];
-                }
+                int nextIdx = idx == filterCadenceList.Count - 1 ? 0 : idx + 1;
+                filterCadenceList[idx].Next = false;
+                filterCadenceList[nextIdx].Next = true;
+
+                return filterCadenceList[nextIdx];
             }
         }
+
+        public int Count { get => filterCadenceList.Count; }
+
+        public ReadOnlyCollection<IFilterCadenceItem> List { get => filterCadenceList.AsReadOnly(); }
 
         private void AssertProper() {
             if (filterCadenceList.Count == 0) { return; }
@@ -59,10 +61,50 @@ namespace NINA.Plugin.TargetScheduler.Planning {
             }
         }
 
+        public IEnumerator GetEnumerator() {
+            return new FilterCadenceEnumerator(filterCadenceList);
+        }
+
         public override string ToString() {
             StringBuilder sb = new StringBuilder();
             filterCadenceList.ForEach(fc => { sb.Append(fc).AppendLine(); });
             return sb.ToString();
+        }
+    }
+
+    internal class FilterCadenceEnumerator : IEnumerator {
+        private List<IFilterCadenceItem> filterCadenceList;
+        private int currentIdx = -1;
+        private int wrappedIdx;
+        private bool first = true;
+
+        public FilterCadenceEnumerator(List<IFilterCadenceItem> filterCadenceList) {
+            this.filterCadenceList = filterCadenceList;
+            if (filterCadenceList.Count > 0) {
+                currentIdx = filterCadenceList.FindIndex(fc => fc.Next);
+                if (currentIdx == -1) { throw new ArgumentException("filter cadence list has no next=true"); }
+                wrappedIdx = currentIdx;
+            }
+        }
+
+        public object Current => filterCadenceList[currentIdx];
+
+        public bool MoveNext() {
+            if (filterCadenceList.Count == 0) return false;
+
+            if (!first) {
+                currentIdx = currentIdx == filterCadenceList.Count - 1 ? 0 : currentIdx + 1;
+            } else {
+                first = false;
+                return true;
+            }
+
+            return currentIdx != wrappedIdx;
+        }
+
+        public void Reset() {
+            // should get a fresh IEnumerator
+            throw new NotImplementedException("not implemented");
         }
     }
 }

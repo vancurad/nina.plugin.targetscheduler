@@ -1181,7 +1181,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
         }
 
         public static void SetItem(List<ExposurePlan> exposurePlans, List<OverrideExposureOrderItem> overrideExposureOrders) {
-            if (exposurePlans?.Count > 0) {
+            if (Common.IsNotEmpty(exposurePlans)) {
                 Instance.item = new ExposurePlansSpec(exposurePlans, overrideExposureOrders);
             }
         }

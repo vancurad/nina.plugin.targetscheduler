@@ -90,5 +90,54 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
             create = () => new FilterCadence(list);
             create.Should().Throw<ArgumentException>().WithMessage("wrong count of next items in filter cadence list: 2");
         }
+
+        [Test]
+        public void testEnumerate() {
+            FilterCadence sut = new FilterCadence(null);
+            sut.GetEnumerator().MoveNext().Should().BeFalse();
+
+            List<IFilterCadenceItem> list = new List<IFilterCadenceItem>();
+            sut = new FilterCadence(list);
+            sut.GetEnumerator().MoveNext().Should().BeFalse();
+
+            list.Add(new PlanningFilterCadence(1, true, FilterCadenceAction.Exposure, 0));
+            sut = new FilterCadence(list);
+            int check = 0;
+            foreach (IFilterCadenceItem item in sut) {
+                item.Order = check + 1;
+                item.Next = check == 0;
+                item.ReferenceIdx = check++;
+            }
+            check.Should().Be(1);
+
+            list.Clear();
+            list.Add(new PlanningFilterCadence(1, true, FilterCadenceAction.Exposure, 0));
+            list.Add(new PlanningFilterCadence(2, false, FilterCadenceAction.Exposure, 1));
+
+            sut = new FilterCadence(list);
+            check = 0;
+            foreach (IFilterCadenceItem item in sut) {
+                item.Order = check + 1;
+                item.Next = check == 0;
+                item.ReferenceIdx = check++;
+            }
+            check.Should().Be(2);
+
+            list.Clear();
+            list.Add(new PlanningFilterCadence(1, false, FilterCadenceAction.Exposure, 2));
+            list.Add(new PlanningFilterCadence(2, true, FilterCadenceAction.Exposure, 0));
+            list.Add(new PlanningFilterCadence(3, false, FilterCadenceAction.Exposure, 1));
+
+            sut = new FilterCadence(list);
+            check = 0;
+            foreach (IFilterCadenceItem item in sut) {
+                item.Next = check == 0;
+                item.ReferenceIdx = check++;
+            }
+            check.Should().Be(3);
+
+            Action reset = () => new FilterCadence(list).GetEnumerator().Reset();
+            reset.Should().Throw<NotImplementedException>().WithMessage("not implemented");
+        }
     }
 }

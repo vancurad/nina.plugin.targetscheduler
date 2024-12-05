@@ -214,7 +214,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
         }
 
         public bool ExposurePlansCopyEnabled {
-            get => !ShowEditView && TargetProxy.Original.ExposurePlans?.Count > 0;
+            get => !ShowEditView && Common.IsNotEmpty(TargetProxy.Original.ExposurePlans);
         }
 
         public bool ExposurePlansPasteEnabled {
@@ -222,7 +222,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
         }
 
         public bool ExposurePlansDeleteEnabled {
-            get => !ShowEditView && TargetProxy.Original.ExposurePlans?.Count > 0;
+            get => !ShowEditView && Common.IsNotEmpty(TargetProxy.Original.ExposurePlans);
         }
 
         private TargetImportVM targetImportVM;
@@ -366,7 +366,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
         }
 
         private void CopyExposurePlans(object obj) {
-            if (ExposurePlans?.Count > 0) {
+            if (Common.IsNotEmpty(ExposurePlans)) {
                 List<ExposurePlan> exposurePlans = new List<ExposurePlan>(ExposurePlans.Count);
                 ExposurePlans.ForEach(ep => exposurePlans.Add(ep));
                 List<OverrideExposureOrderItem> overrideExposureOrders = new List<OverrideExposureOrderItem>();
@@ -402,7 +402,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             }
 
             // Only paste override order if existing target has no exposure plans now
-            if (ExposurePlans.Count == 0 || srcOverrideExposureOrders?.Count > 0) {
+            if (ExposurePlans.Count == 0 || Common.IsNotEmpty(srcOverrideExposureOrders)) {
                 TargetProxy.Proxy.OverrideExposureOrders = srcOverrideExposureOrders;
             }
 
@@ -431,7 +431,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
         }
 
         private void DeleteAllExposurePlans(object obj) {
-            if (TargetProxy.Original.ExposurePlans?.Count > 0) {
+            if (Common.IsNotEmpty(TargetProxy.Original.ExposurePlans)) {
                 string message = "Delete all exposure plans for this target?  This cannot be undone.";
                 if (MyMessageBox.Show(message, "Delete all Exposure Plans?", MessageBoxButton.YesNo, MessageBoxResult.No) == MessageBoxResult.Yes) {
                     Target updatedTarget = managerVM.DeleteAllExposurePlans(TargetProxy.Original);
@@ -499,7 +499,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             }
         }
 
-        public bool HaveOverrideExposureOrder { get => TargetProxy.Original.OverrideExposureOrders?.Count > 0; private set { } }
+        public bool HaveOverrideExposureOrder { get => Common.IsNotEmpty(TargetProxy.Original.OverrideExposureOrders); private set { } }
 
         private void SetExposureOrderDisplay() {
             ExposureOrderDisplay = HaveOverrideExposureOrder
@@ -542,7 +542,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
         }
 
         private string GetOverrideExposureOrder() {
-            if (TargetProxy.Proxy.OverrideExposureOrders?.Count > 0) {
+            if (Common.IsNotEmpty(TargetProxy.Proxy.OverrideExposureOrders)) {
                 StringBuilder sb = new StringBuilder();
                 TargetProxy.Proxy.OverrideExposureOrders.ForEach((oeo) => {
                     if (oeo.Action == OverrideExposureOrderAction.Dither) {

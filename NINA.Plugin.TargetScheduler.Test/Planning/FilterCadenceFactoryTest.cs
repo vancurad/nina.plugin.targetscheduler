@@ -14,54 +14,41 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
     public class FilterCadenceFactoryTest {
 
         [Test]
-        public void testGenerateInitialPreexisting() {
+        public void testGenerateFromDatabase() {
             Mock<IProject> pp1 = PlanMocks.GetMockPlanProject("pp1", ProjectState.Active);
             pp1.SetupProperty(m => m.FilterSwitchFrequency, 1);
             pp1.SetupProperty(m => m.SmartExposureOrder, false);
-
-            List<IFilterCadenceItem> filterCadences = new List<IFilterCadenceItem>();
-            filterCadences.Add(new PlanningFilterCadence(1, true, FilterCadenceAction.Exposure, 0));
-
             Mock<ITarget> pt = PlanMocks.GetMockPlanTarget("IC1805", TestData.IC1805);
-            FilterCadence fc1 = new FilterCadence(filterCadences);
-            pt.SetupProperty(t => t.FilterCadence, fc1);
             SetEPs(pt);
             PlanMocks.AddMockPlanTarget(pp1, pt);
 
-            // Existing list will be left in place
+            Target target = new Target();
+            List<FilterCadenceItem> fcs = new List<FilterCadenceItem>();
+            fcs.Add(new FilterCadenceItem(101, 1, true, FilterCadenceAction.Exposure, 0));
+            fcs.Add(new FilterCadenceItem(101, 2, false, FilterCadenceAction.Exposure, 1));
+            target.FilterCadences = fcs;
+
+            // Filter cadence on database target => use
             FilterCadenceFactory sut = new FilterCadenceFactory();
-            FilterCadence fc2 = sut.Generate(pp1.Object, pt.Object);
-            fc2.Should().BeSameAs(fc1);
+            sut.Generate(pp1.Object, pt.Object, target).Count.Should().Be(2);
         }
 
-        private void SetEPs(Mock<ITarget> pt) {
-            Mock<IExposure> Lpf = PlanMocks.GetMockPlanExposure("L", 10, 0);
-            Mock<IExposure> Rpf = PlanMocks.GetMockPlanExposure("R", 10, 0);
-            Mock<IExposure> Gpf = PlanMocks.GetMockPlanExposure("G", 10, 0);
-            Mock<IExposure> Bpf = PlanMocks.GetMockPlanExposure("B", 10, 0);
-
-            PlanMocks.AddMockPlanFilter(pt, Lpf);
-            PlanMocks.AddMockPlanFilter(pt, Rpf);
-            PlanMocks.AddMockPlanFilter(pt, Gpf);
-            PlanMocks.AddMockPlanFilter(pt, Bpf);
-        }
-
-        /*
         [Test]
-        public void testGenerateInitialFSFZero() {
+        public void testGenerateFSFZero() {
             Mock<IProject> pp1 = PlanMocks.GetMockPlanProject("pp1", ProjectState.Active);
             pp1.SetupProperty(m => m.FilterSwitchFrequency, 0);
+            pp1.SetupProperty(m => m.SmartExposureOrder, false);
             Mock<ITarget> pt = PlanMocks.GetMockPlanTarget("IC1805", TestData.IC1805);
             SetEPs(pt);
             PlanMocks.AddMockPlanTarget(pp1, pt);
 
             // Filter switch frequency = 0 => empty initial list
-            FilterCadenceExpert sut = new FilterCadenceExpert(pp1.Object, pt.Object);
-            sut.GenerateInitial().Count.Should().Be(0);
+            FilterCadenceFactory sut = new FilterCadenceFactory();
+            sut.Generate(pp1.Object, pt.Object, new Target()).Count.Should().Be(0);
         }
 
         [Test]
-        public void testGenerateInitialSmart() {
+        public void testGenerateSmart() {
             Mock<IProject> pp1 = PlanMocks.GetMockPlanProject("pp1", ProjectState.Active);
             pp1.SetupProperty(m => m.FilterSwitchFrequency, 1);
             pp1.SetupProperty(m => m.SmartExposureOrder, true);
@@ -70,14 +57,12 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
             PlanMocks.AddMockPlanTarget(pp1, pt);
 
             // Smart exposure order => empty initial list
-            pp1.SetupProperty(m => m.FilterSwitchFrequency, 1);
-            pp1.SetupProperty(m => m.SmartExposureOrder, true);
-            FilterCadenceExpert sut = new FilterCadenceExpert(pp1.Object, pt.Object);
-            sut.GenerateInitial().Count.Should().Be(0);
+            FilterCadenceFactory sut = new FilterCadenceFactory();
+            sut.Generate(pp1.Object, pt.Object, new Target()).Count.Should().Be(0);
         }
 
         [Test]
-        public void testGenerateInitialFSFPlus() {
+        public void testGenerateFSFPlus() {
             Mock<IProject> pp1 = PlanMocks.GetMockPlanProject("pp1", ProjectState.Active);
             Mock<ITarget> pt = PlanMocks.GetMockPlanTarget("IC1805", TestData.IC1805);
             SetEPs(pt);
@@ -87,8 +72,8 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
             pp1.SetupProperty(m => m.FilterSwitchFrequency, 2);
             pp1.SetupProperty(m => m.DitherEvery, 0);
             pp1.SetupProperty(m => m.SmartExposureOrder, false);
-            FilterCadenceExpert sut = new FilterCadenceExpert(pp1.Object, pt.Object);
-            var list = sut.GenerateInitial();
+            FilterCadenceFactory sut = new FilterCadenceFactory();
+            var list = sut.Generate(pp1.Object, pt.Object, new Target()).List;
             list.Should().HaveCount(8);
 
             AssertFilterCadence(list[0], 1, true, FilterCadenceAction.Exposure, 0);
@@ -102,6 +87,29 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
         }
 
         [Test]
+        public void testGenerateOverride() {
+            Mock<IProject> pp1 = PlanMocks.GetMockPlanProject("pp1", ProjectState.Active);
+            pp1.SetupProperty(m => m.FilterSwitchFrequency, 0);
+            pp1.SetupProperty(m => m.SmartExposureOrder, false);
+            Mock<ITarget> pt = PlanMocks.GetMockPlanTarget("IC1805", TestData.IC1805);
+            SetEPs(pt);
+            List<IOverrideExposureOrderItem> overrideExposureOrders = new List<IOverrideExposureOrderItem>();
+            overrideExposureOrders.Add(new PlanningOverrideExposureOrder(1, OverrideExposureOrderAction.Exposure, 0));
+            overrideExposureOrders.Add(new PlanningOverrideExposureOrder(2, OverrideExposureOrderAction.Exposure, 1));
+            overrideExposureOrders.Add(new PlanningOverrideExposureOrder(3, OverrideExposureOrderAction.Dither, -1));
+            pt.SetupProperty(t => t.OverrideExposureOrders, overrideExposureOrders);
+            PlanMocks.AddMockPlanTarget(pp1, pt);
+
+            FilterCadenceFactory sut = new FilterCadenceFactory();
+            var list = sut.Generate(pp1.Object, pt.Object, new Target()).List;
+            list.Should().HaveCount(3);
+
+            AssertFilterCadence(list[0], 1, true, FilterCadenceAction.Exposure, 0);
+            AssertFilterCadence(list[1], 2, false, FilterCadenceAction.Exposure, 1);
+            AssertFilterCadence(list[2], 3, false, FilterCadenceAction.Dither, -1);
+        }
+
+        [Test]
         public void testAutoDither() {
             Mock<IProject> pp = PlanMocks.GetMockPlanProject("pp1", ProjectState.Active);
             Mock<ITarget> pt = PlanMocks.GetMockPlanTarget("IC1805", TestData.IC1805);
@@ -111,8 +119,8 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
             pp.SetupProperty(m => m.FilterSwitchFrequency, 2);
             pp.SetupProperty(m => m.DitherEvery, 1);
             pp.SetupProperty(m => m.SmartExposureOrder, false);
-            FilterCadenceExpert sut = new FilterCadenceExpert(pp.Object, pt.Object);
-            var list = pt.Object.FilterCadences;
+            FilterCadenceFactory sut = new FilterCadenceFactory();
+            var list = sut.Generate(pp.Object, pt.Object, new Target()).List;
 
             // LLRRGGBB => LdLRdRGdGBdB
             list.Should().HaveCount(12);
@@ -131,9 +139,8 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
 
             pp.SetupProperty(p => p.FilterSwitchFrequency, 3);
             pp.SetupProperty(p => p.DitherEvery, 2);
-            pt.SetupProperty(t => t.FilterCadences, new List<IFilterCadenceItem>());
-            sut = new FilterCadenceExpert(pp.Object, pt.Object);
-            list = pt.Object.FilterCadences;
+            sut = new FilterCadenceFactory();
+            list = list = sut.Generate(pp.Object, pt.Object, new Target()).List;
 
             // LLLRRRGGGBBB => LLdLRRdRGGdGBBdB
             list.Should().HaveCount(16);
@@ -155,60 +162,16 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
             AssertFilterCadence(list[15], 16, false, FilterCadenceAction.Exposure, 3);
         }
 
-        [Test]
-        public void testGenerateInitialOverride() {
-            Mock<IProject> pp1 = PlanMocks.GetMockPlanProject("pp1", ProjectState.Active);
-            pp1.SetupProperty(m => m.FilterSwitchFrequency, 0);
-            pp1.SetupProperty(m => m.SmartExposureOrder, false);
-            Mock<ITarget> pt = PlanMocks.GetMockPlanTarget("IC1805", TestData.IC1805);
-            SetEPs(pt);
-            List<IOverrideExposureOrderItem> overrideExposureOrders = new List<IOverrideExposureOrderItem>();
-            overrideExposureOrders.Add(new PlanningOverrideExposureOrder(1, OverrideExposureOrderAction.Exposure, 0));
-            overrideExposureOrders.Add(new PlanningOverrideExposureOrder(2, OverrideExposureOrderAction.Exposure, 1));
-            overrideExposureOrders.Add(new PlanningOverrideExposureOrder(3, OverrideExposureOrderAction.Dither, -1));
-            pt.SetupProperty(t => t.OverrideExposureOrders, overrideExposureOrders);
-            PlanMocks.AddMockPlanTarget(pp1, pt);
+        private void SetEPs(Mock<ITarget> pt) {
+            Mock<IExposure> Lpf = PlanMocks.GetMockPlanExposure("L", 10, 0);
+            Mock<IExposure> Rpf = PlanMocks.GetMockPlanExposure("R", 10, 0);
+            Mock<IExposure> Gpf = PlanMocks.GetMockPlanExposure("G", 10, 0);
+            Mock<IExposure> Bpf = PlanMocks.GetMockPlanExposure("B", 10, 0);
 
-            FilterCadenceExpert sut = new FilterCadenceExpert(pp1.Object, pt.Object);
-            var list = pt.Object.FilterCadences;
-            list.Should().HaveCount(3);
-
-            AssertFilterCadence(list[0], 1, true, FilterCadenceAction.Exposure, 0);
-            AssertFilterCadence(list[1], 2, false, FilterCadenceAction.Exposure, 1);
-            AssertFilterCadence(list[2], 3, false, FilterCadenceAction.Dither, -1);
-        }
-
-        [Test]
-        public void testGetNext() {
-            Mock<IProject> pp1 = PlanMocks.GetMockPlanProject("pp1", ProjectState.Active);
-            pp1.SetupProperty(m => m.FilterSwitchFrequency, 2);
-            Mock<ITarget> pt = PlanMocks.GetMockPlanTarget("IC1805", TestData.IC1805);
-            SetEPs(pt);
-            PlanMocks.AddMockPlanTarget(pp1, pt);
-
-            pp1.SetupProperty(m => m.FilterSwitchFrequency, 2);
-            pp1.SetupProperty(m => m.SmartExposureOrder, false);
-            FilterCadenceExpert sut = new FilterCadenceExpert(pp1.Object, pt.Object);
-            var list = pt.Object.FilterCadences;
-            list.Should().HaveCount(8);
-
-            IFilterCadenceItem fc = sut.GetNext();
-            fc.Order.Should().Be(1);
-            fc.ReferenceIdx.Should().Be(0);
-            IExposure pe = sut.GetExposurePlanForFilterCadence(fc);
-            pe.Should().NotBeNull();
-            pe.FilterName.Should().Be("L");
-
-            PlanningFilterCadence pfc = (PlanningFilterCadence)list[0];
-            pfc.Next = false;
-            pfc = (PlanningFilterCadence)list[4];
-            pfc.Next = true;
-            fc = sut.GetNext();
-            fc.Order.Should().Be(5);
-            fc.ReferenceIdx.Should().Be(2);
-            pe = sut.GetExposurePlanForFilterCadence(fc);
-            pe.Should().NotBeNull();
-            pe.FilterName.Should().Be("G");
+            PlanMocks.AddMockPlanFilter(pt, Lpf);
+            PlanMocks.AddMockPlanFilter(pt, Rpf);
+            PlanMocks.AddMockPlanFilter(pt, Gpf);
+            PlanMocks.AddMockPlanFilter(pt, Bpf);
         }
 
         private void AssertFilterCadence(IFilterCadenceItem fc, int order, bool next, FilterCadenceAction action, int refIdx) {
@@ -217,6 +180,5 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
             fc.Action.Should().Be(action);
             fc.ReferenceIdx.Should().Be(refIdx);
         }
-        */
     }
 }

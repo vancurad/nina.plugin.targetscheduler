@@ -1,4 +1,5 @@
 ﻿using NINA.Core.Utility;
+using System.Collections;
 
 namespace NINA.Plugin.TargetScheduler.Shared.Utility {
 
@@ -14,14 +15,12 @@ namespace NINA.Plugin.TargetScheduler.Shared.Utility {
             return CoreUtil.UnixTimeStampToDateTime(seconds == null ? 0 : seconds.Value);
         }
 
-        public static string Base64Encode(string plainText) {
-            var bytes = System.Text.Encoding.UTF8.GetBytes(plainText);
-            return Convert.ToBase64String(bytes);
+        public static bool IsEmpty(IList list) {
+            return list is null or [];
         }
 
-        public static string Base64Decode(string encoded) {
-            var bytes = Convert.FromBase64String(encoded);
-            return System.Text.Encoding.UTF8.GetString(bytes);
+        public static bool IsNotEmpty(IList list) {
+            return !IsEmpty(list);
         }
 
         private Common() {
