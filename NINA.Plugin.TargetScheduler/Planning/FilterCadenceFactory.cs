@@ -39,7 +39,7 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                 return new FilterCadence(filterCadences);
             }
 
-            // Otherwise, generate from (non-zero) filter switch frequency
+            // Otherwise, generate from (non-zero) filter switch frequency and dither count
             int idx = 0;
             order = 1;
             planTarget.ExposurePlans.ForEach((ep) => {

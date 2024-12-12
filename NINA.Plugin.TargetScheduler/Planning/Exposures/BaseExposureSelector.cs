@@ -1,12 +1,16 @@
-﻿using System;
+﻿using NINA.Plugin.TargetScheduler.Planning.Interfaces;
 
 namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
 
     public abstract class BaseExposureSelector {
-        public DateTime AtTime { get; private set; }
 
-        public BaseExposureSelector(DateTime atTime) {
-            this.AtTime = atTime;
+        public BaseExposureSelector() {
+        }
+
+        public bool AllExposurePlansRejected(ITarget target) {
+            bool atLeastOneAccepted = false;
+            target.ExposurePlans.ForEach(e => { if (!e.Rejected) atLeastOneAccepted = true; });
+            return !atLeastOneAccepted;
         }
     }
 }

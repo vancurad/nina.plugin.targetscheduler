@@ -3,6 +3,7 @@ using NINA.Equipment.Interfaces;
 using NINA.Plugin.Interfaces;
 using NINA.Plugin.TargetScheduler.Controls.AcquiredImages;
 using NINA.Plugin.TargetScheduler.Controls.DatabaseManager;
+using NINA.Plugin.TargetScheduler.Controls.PlanPreview;
 using NINA.Plugin.TargetScheduler.Database;
 using NINA.Plugin.TargetScheduler.Shared.Utility;
 using NINA.Profile;
@@ -81,7 +82,6 @@ namespace NINA.Plugin.TargetScheduler {
             }
         }
 
-        /*
         private PlanPreviewerViewVM planPreviewerViewVM;
 
         public PlanPreviewerViewVM PlanPreviewerViewVM {
@@ -90,7 +90,7 @@ namespace NINA.Plugin.TargetScheduler {
                 planPreviewerViewVM = value;
                 RaisePropertyChanged(nameof(PlanPreviewerViewVM));
             }
-        }*/
+        }
 
         private AcquiredImagesManagerViewVM acquiredImagesManagerViewVM;
 
@@ -114,7 +114,6 @@ namespace NINA.Plugin.TargetScheduler {
             }
         }
 
-        /*
         private bool planPreviewIsExpanded = false;
 
         public bool PlanPreviewIsExpanded {
@@ -125,7 +124,7 @@ namespace NINA.Plugin.TargetScheduler {
                     PlanPreviewerViewVM = new PlanPreviewerViewVM(profileService);
                 }
             }
-        }*/
+        }
 
         private bool acquiredImagesManagerIsExpanded = false;
 
@@ -162,13 +161,12 @@ namespace NINA.Plugin.TargetScheduler {
         }
 
         private void ProfileService_ProfileChanged(object? sender, EventArgs e) {
-            // TODO:
             DatabaseManagerVM = new DatabaseManagerVM(profileService, applicationMediator, framingAssistantVM, deepSkyObjectSearchVM, planetariumFactory);
-            //PlanPreviewerViewVM = new PlanPreviewerViewVM(profileService);
+            PlanPreviewerViewVM = new PlanPreviewerViewVM(profileService);
             AcquiredImagesManagerViewVM = new AcquiredImagesManagerViewVM(profileService);
 
             RaisePropertyChanged(nameof(DatabaseManagerVM));
-            //RaisePropertyChanged(nameof(PlanPreviewerViewVM));
+            RaisePropertyChanged(nameof(PlanPreviewerViewVM));
             RaisePropertyChanged(nameof(AcquiredImagesManagerViewVM));
 
             if (profileService.ActiveProfile != null) {

@@ -7,7 +7,7 @@ using System.IO;
 namespace NINA.Plugin.TargetScheduler.Test.Astrometry {
 
     public class TestData {
-        public static readonly ObserverInfo North_Mid_Lat, South_Mid_Lat, North_Artic, Pittsboro_NC, Waskaganish_QC, Sanikiluaq_NU, North_Upper_Lat, Chapel_Hill_NC, North_Artic_80;
+        public static readonly ObserverInfo North_Mid_Lat, South_Mid_Lat, North_Artic, Pittsboro_NC, Waskaganish_QC, Sanikiluaq_NU, North_Upper_Lat, Chapel_Hill_NC;
 
         public static readonly Coordinates BETELGEUSE = new Coordinates(AstroUtil.HMSToDegrees("5:55:11"), AstroUtil.DMSToDegrees("7:24:30"), Epoch.J2000, Coordinates.RAType.Degrees);
 
@@ -79,12 +79,6 @@ namespace NINA.Plugin.TargetScheduler.Test.Astrometry {
             Chapel_Hill_NC.Latitude = 35.927222;
             Chapel_Hill_NC.Longitude = -79.039167;
             Chapel_Hill_NC.Elevation = 0;
-
-            // Northern hemisphere, way above artic circle
-            North_Artic_80 = new ObserverInfo();
-            North_Artic_80.Latitude = 80;
-            North_Artic_80.Longitude = -80;
-            North_Artic_80.Elevation = 165;
         }
 
         public static CustomHorizon GetTestHorizon(int num) {

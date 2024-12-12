@@ -1,4 +1,5 @@
-﻿using NINA.Plugin.TargetScheduler.Planning.Interfaces;
+﻿using NINA.Plugin.TargetScheduler.Database.Schema;
+using NINA.Plugin.TargetScheduler.Planning.Interfaces;
 using NINA.Plugin.TargetScheduler.Shared.Utility;
 using System;
 
@@ -9,51 +10,40 @@ namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
     /// </summary>
     public class BasicExposureSelector : BaseExposureSelector, IExposureSelector {
 
-        public BasicExposureSelector(DateTime atTime) : base(atTime) {
+        public BasicExposureSelector() : base() {
         }
 
-        public IExposure Select(IProject project, ITarget target) {
-            //
-            /* TODO:
-             * - For <GetNext> in cadence list:
-             *   - if Dither: PreDither = true
-             *   - if Exposure && associated EP is not rejected (also for twilight level!): this is our exposure, return
-             *
-             */
-
-            // Exp Plans: L,R,G,B
-            // FC LRGBd, next is R
-
+        public IExposure Select(DateTime atTime, IProject project, ITarget target) {
             FilterCadence filterCadence = target.FilterCadence;
             bool preDither = false;
-            int items = 0;
 
-            foreach (var item in filterCadence) {
+            if (AllExposurePlansRejected(target)) {
+                throw new Exception($"unexpected: all exposure plans were rejected at exposure selection time for target '{target.Name}' at time {atTime}");
             }
 
-            // TODO: also, if we end up selecting one that wasn't Next=true, we need to account for that
-            // when finally doing the Advance()
+            if (filterCadence == null || filterCadence.Count == 0) {
+                throw new Exception($"unexpected: empty filter cadence for target '{target.Name}' at time {atTime}");
+            }
 
-            // OLD
-            while (true) {
-                IFilterCadenceItem item = filterCadence.GetNext();
-                if (item.Action == Database.Schema.FilterCadenceAction.Dither) {
+            foreach (IFilterCadenceItem item in filterCadence) {
+                if (item.Action == FilterCadenceAction.Dither) {
                     preDither = true;
                     continue;
                 }
 
-                // Be sure we haven't been all the way around without finding an exposure
-                if (++items == filterCadence.Count) {
-                    TSLogger.Warning("looped around on filter cadence list witout finding a suitable exposure");
-                    return null;
+                IExposure exposurePlan = target.ExposurePlans[item.ReferenceIdx];
+                if (!exposurePlan.Rejected) {
+                    exposurePlan.PreDither = preDither;
+                    exposurePlan.PlannedExposures = 1;
+                    filterCadence.SetLastSelected(item);
+                    return exposurePlan;
                 }
-
-                // REALLY?  We don't really want to advance until we've taken the exposure!!
-                // Instead, we want an
-                //filterCadence.Advance();
             }
 
-            throw new NotImplementedException();
+            // Fail safe ...
+            string msg = $"no acceptable exposure plan in basic exposure selector for target '{target.Name}' at time {atTime}";
+            TSLogger.Error(msg);
+            throw new Exception(msg);
         }
     }
 }

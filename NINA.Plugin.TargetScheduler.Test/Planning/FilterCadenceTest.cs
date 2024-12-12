@@ -13,32 +13,51 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
     public class FilterCadenceTest {
 
         [Test]
-        public void testGetNext() {
-            new FilterCadence(null).GetNext().Should().BeNull();
-            List<IFilterCadenceItem> list = new List<IFilterCadenceItem>();
-            new FilterCadence(list).GetNext().Should().BeNull();
-
-            list.Add(new PlanningFilterCadence(1, true, FilterCadenceAction.Exposure, 0));
-            list.Add(new PlanningFilterCadence(2, false, FilterCadenceAction.Exposure, 1));
-            list.Add(new PlanningFilterCadence(3, false, FilterCadenceAction.Exposure, 2));
-
-            IFilterCadenceItem fc = new FilterCadence(list).GetNext();
-            fc.Should().BeSameAs(list[0]);
-
-            list.Clear();
-            list.Add(new PlanningFilterCadence(1, false, FilterCadenceAction.Exposure, 0));
-            list.Add(new PlanningFilterCadence(2, false, FilterCadenceAction.Exposure, 1));
-            list.Add(new PlanningFilterCadence(3, true, FilterCadenceAction.Exposure, 2));
-            fc = new FilterCadence(list).GetNext();
-            fc.Should().BeSameAs(list[2]);
-        }
-
-        [Test]
         public void testAdvance() {
             new FilterCadence(null).Advance().Should().BeNull();
             List<IFilterCadenceItem> list = new List<IFilterCadenceItem>();
             new FilterCadence(list).Advance().Should().BeNull();
 
+            list.Add(new PlanningFilterCadence(1, true, FilterCadenceAction.Exposure, 0));
+            FilterCadence sut = new FilterCadence(list);
+            sut.SetLastSelected(list[0]);
+            sut.Advance().Should().BeSameAs(list[0]);
+            list[0].Next.Should().BeTrue();
+
+            list.Clear();
+            list.Add(new PlanningFilterCadence(1, true, FilterCadenceAction.Exposure, 0));
+            list.Add(new PlanningFilterCadence(2, false, FilterCadenceAction.Exposure, 1));
+            list.Add(new PlanningFilterCadence(3, false, FilterCadenceAction.Exposure, 2));
+
+            sut = new FilterCadence(list);
+            sut.Advance().Should().BeNull();
+
+            sut.SetLastSelected(list[1]);
+            sut.Advance().Should().BeSameAs(list[2]);
+            list[0].Next.Should().BeFalse();
+            list[1].Next.Should().BeFalse();
+            list[2].Next.Should().BeTrue();
+
+            list.Clear();
+            list.Add(new PlanningFilterCadence(1, false, FilterCadenceAction.Exposure, 0));
+            list.Add(new PlanningFilterCadence(2, false, FilterCadenceAction.Exposure, 1));
+            list.Add(new PlanningFilterCadence(3, true, FilterCadenceAction.Exposure, 2));
+            list.Add(new PlanningFilterCadence(4, false, FilterCadenceAction.Exposure, 3));
+            list.Add(new PlanningFilterCadence(5, false, FilterCadenceAction.Exposure, 4)); //
+            list.Add(new PlanningFilterCadence(6, false, FilterCadenceAction.Exposure, 5));
+
+            sut = new FilterCadence(list);
+            sut.SetLastSelected(list[4]);
+            sut.Advance().Should().BeSameAs(list[5]);
+            list[2].Next.Should().BeFalse();
+            list[5].Next.Should().BeTrue();
+
+            sut.SetLastSelected(list[5]);
+            sut.Advance().Should().BeSameAs(list[0]);
+            list[5].Next.Should().BeFalse();
+            list[0].Next.Should().BeTrue();
+
+            /*
             list.Add(new PlanningFilterCadence(1, true, FilterCadenceAction.Exposure, 0));
             IFilterCadenceItem fc = new FilterCadence(list).Advance();
             fc.Should().BeSameAs(list[0]);
@@ -65,6 +84,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
             list[0].Next.Should().BeTrue();
             list[1].Next.Should().BeFalse();
             list[2].Next.Should().BeFalse();
+            */
         }
 
         [Test]
@@ -102,26 +122,26 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
 
             list.Add(new PlanningFilterCadence(1, true, FilterCadenceAction.Exposure, 0));
             sut = new FilterCadence(list);
-            int check = 0;
+            int iteration = 0;
             foreach (IFilterCadenceItem item in sut) {
-                item.Order = check + 1;
-                item.Next = check == 0;
-                item.ReferenceIdx = check++;
+                item.Order = iteration + 1;
+                item.Next = iteration == 0;
+                item.ReferenceIdx = iteration++;
             }
-            check.Should().Be(1);
+            iteration.Should().Be(1);
 
             list.Clear();
             list.Add(new PlanningFilterCadence(1, true, FilterCadenceAction.Exposure, 0));
             list.Add(new PlanningFilterCadence(2, false, FilterCadenceAction.Exposure, 1));
 
             sut = new FilterCadence(list);
-            check = 0;
+            iteration = 0;
             foreach (IFilterCadenceItem item in sut) {
-                item.Order = check + 1;
-                item.Next = check == 0;
-                item.ReferenceIdx = check++;
+                item.Order = iteration + 1;
+                item.Next = iteration == 0;
+                item.ReferenceIdx = iteration++;
             }
-            check.Should().Be(2);
+            iteration.Should().Be(2);
 
             list.Clear();
             list.Add(new PlanningFilterCadence(1, false, FilterCadenceAction.Exposure, 2));
@@ -129,12 +149,12 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
             list.Add(new PlanningFilterCadence(3, false, FilterCadenceAction.Exposure, 1));
 
             sut = new FilterCadence(list);
-            check = 0;
+            iteration = 0;
             foreach (IFilterCadenceItem item in sut) {
-                item.Next = check == 0;
-                item.ReferenceIdx = check++;
+                item.Next = iteration == 0;
+                item.ReferenceIdx = iteration++;
             }
-            check.Should().Be(3);
+            iteration.Should().Be(3);
 
             Action reset = () => new FilterCadence(list).GetEnumerator().Reset();
             reset.Should().Throw<NotImplementedException>().WithMessage("not implemented");

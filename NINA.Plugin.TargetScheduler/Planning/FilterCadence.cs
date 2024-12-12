@@ -1,4 +1,5 @@
 ﻿using NINA.Plugin.TargetScheduler.Planning.Interfaces;
+using NINA.Plugin.TargetScheduler.Shared.Utility;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,33 +11,42 @@ namespace NINA.Plugin.TargetScheduler.Planning {
     public class FilterCadence : IEnumerable {
         private object lockObj = new object();
         private List<IFilterCadenceItem> filterCadenceList;
+        private int lastSelectedIdx = -1;
 
         public FilterCadence(List<IFilterCadenceItem> filterCadenceList) {
             this.filterCadenceList = filterCadenceList is null
-                ? new List<IFilterCadenceItem>()
-                : filterCadenceList;
+                ? new List<IFilterCadenceItem>(0)
+                : new List<IFilterCadenceItem>(filterCadenceList);
             AssertProper();
         }
 
-        public IFilterCadenceItem GetNext() {
-            if (filterCadenceList.Count == 0) { return null; }
-            return filterCadenceList.Find(fc => fc.Next);
+        public void SetLastSelected(IFilterCadenceItem item) {
+            lock (lockObj) {
+                int idx = filterCadenceList.FindIndex(fc => fc == item);
+                if (idx == -1) {
+                    TSLogger.Warning("filter cadence SetLastSelected: item not found");
+                    lastSelectedIdx = -1;
+                    return;
+                }
+
+                lastSelectedIdx = idx;
+            }
         }
 
         public IFilterCadenceItem Advance() {
-            if (filterCadenceList.Count == 0) { return null; }
-            if (filterCadenceList.Count == 1) { return filterCadenceList[0]; }
+            if (lastSelectedIdx == -1) {
+                TSLogger.Warning("filter cadence Advance called with no last selected position => no change");
+                return null;
+            }
 
             lock (lockObj) {
                 int idx = filterCadenceList.FindIndex(fc => fc.Next);
-                if (idx == -1) { throw new ArgumentException("filter cadence list has no next=true"); }
-
-                // Circular operation
-                int nextIdx = idx == filterCadenceList.Count - 1 ? 0 : idx + 1;
                 filterCadenceList[idx].Next = false;
-                filterCadenceList[nextIdx].Next = true;
+                int next = lastSelectedIdx == filterCadenceList.Count - 1 ? 0 : lastSelectedIdx + 1;
+                filterCadenceList[next].Next = true;
 
-                return filterCadenceList[nextIdx];
+                lastSelectedIdx = -1;
+                return filterCadenceList[next];
             }
         }
 
@@ -72,6 +82,9 @@ namespace NINA.Plugin.TargetScheduler.Planning {
         }
     }
 
+    /// <summary>
+    /// Custom circular iterator filter cadence for cycling.
+    /// </summary>
     internal class FilterCadenceEnumerator : IEnumerator {
         private List<IFilterCadenceItem> filterCadenceList;
         private int currentIdx = -1;
@@ -103,7 +116,6 @@ namespace NINA.Plugin.TargetScheduler.Planning {
         }
 
         public void Reset() {
-            // should get a fresh IEnumerator
             throw new NotImplementedException("not implemented");
         }
     }

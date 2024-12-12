@@ -11,7 +11,7 @@ using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 
-namespace NINA.Plugin.TargetScheduler.Test.Planning {
+namespace NINA.Plugin.TargetScheduler.Test.Planning.Exposures {
 
     [TestFixture]
     public class ExposureCompletionHelperTest {

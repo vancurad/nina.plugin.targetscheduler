@@ -8,11 +8,11 @@ namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
     /// </summary>
     public class SmartExposureSelector : BaseExposureSelector, IExposureSelector {
 
-        public SmartExposureSelector(DateTime atTime) : base(atTime) {
+        public SmartExposureSelector() : base() {
         }
 
-        public IExposure Select(IProject project, ITarget target) {
-            return null;
+        public IExposure Select(DateTime atTime, IProject project, ITarget target) {
+            throw new NotImplementedException("SmartExposureSelector.Select not implement");
         }
     }
 }

@@ -12,14 +12,19 @@ namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
         public ExposureSelectionExpert() {
         }
 
-        /* TODO:
-         * - Test for BasicExposureSelector
-         * - Implement SmartExposureOrder and test
-         * - Implement SmartExposureOrder and test
-         * - Test for ExposureSelectionExpert
-         *
-         */
+        public IExposureSelector GetExposureSelector(IProject project, ITarget target) {
+            if (project.SmartExposureOrder) {
+                return new SmartExposureSelector();
+            }
 
+            if (target.OverrideExposureOrders.Count > 0) {
+                return new OverrideOrderExposureSelector();
+            }
+
+            return new BasicExposureSelector();
+        }
+
+        /*
         public IExposure Select(DateTime atTime, IProject project, ITarget target) {
             if (project.SmartExposureOrder) {
                 return new SmartExposureSelector(atTime).Select(project, target);
@@ -30,11 +35,11 @@ namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
             }
 
             return new BasicExposureSelector(atTime).Select(project, target);
-        }
+        }*/
     }
 
     public interface IExposureSelector {
 
-        IExposure Select(IProject project, ITarget target);
+        IExposure Select(DateTime atTime, IProject project, ITarget target);
     }
 }

@@ -4,6 +4,7 @@ using NINA.Core.Utility;
 using NINA.Plugin.TargetScheduler.Astrometry;
 using NINA.Plugin.TargetScheduler.Database;
 using NINA.Plugin.TargetScheduler.Database.Schema;
+using NINA.Plugin.TargetScheduler.Planning.Exposures;
 using NINA.Plugin.TargetScheduler.Planning.Interfaces;
 using NINA.Plugin.TargetScheduler.Planning.Scoring;
 using NINA.Plugin.TargetScheduler.Shared.Utility;
@@ -60,25 +61,35 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                         projects = GetProjects();
                     }
 
+                    // Filter all targets for suitability
                     projects = FilterForIncomplete(projects);
                     projects = FilterForVisibility(projects);
                     projects = FilterForMoonAvoidance(projects);
+                    projects = FilterForTwilight(projects);
 
                     // See if one or more targets are ready to image now
                     List<ITarget> readyTargets = GetTargetsReadyNow(projects);
                     if (readyTargets.Count > 0) {
-                        SelectTargetExposure(readyTargets);
+                        SelectTargetExposures(readyTargets);
 
                         // If only one ready target, no need to run scoring engine
                         ITarget selectedTarget;
                         if (readyTargets.Count == 1) {
                             selectedTarget = readyTargets[0];
                         } else {
-                            ScoringEngine scoringEngine = new ScoringEngine(activeProfile, profilePreferences, atTime, previousTarget);
-                            selectedTarget = SelectTargetByScore(projects, scoringEngine);
-                            // TODO: generate instructions for the selected target
+                            selectedTarget = SelectTargetByScore(readyTargets, new ScoringEngine(activeProfile, profilePreferences, atTime, previousTarget));
                         }
+
+                        // Generate instructions for the selected target/exposure
+                        List<IInstruction> instructions = new InstructionGenerator().Generate(selectedTarget, previousTarget);
+                        return new SchedulerPlan(atTime, projects, selectedTarget, instructions, !checkCondition);
                     } else {
+                        // TODO: check for wait ...
+                        // HERE
+                        TSLogger.Info("Scheduler Planner: no target selected");
+                        return null;
+
+                        //throw new Exception("wait not yet implemented");
                         /* Determine if we can wait for a target:
                          * - For each remaining target:
                          *   - For each visibility span:
@@ -88,8 +99,6 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                          * - Otherwise, we're done - nothing else available tonight.
                          */
                     }
-
-                    return null; // FIXME
                 } catch (Exception ex) {
                     if (ex is SequenceEntityFailedException) {
                         throw;
@@ -147,8 +156,8 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                     }
 
                     // Get the most inclusive twilight over all incomplete exposure plans
-                    TwilightCircumstances nighttimeCircumstances = TwilightCircumstances.AdjustTwilightCircumstances(observerInfo, atTime);
-                    TimeInterval twilightSpan = nighttimeCircumstances.GetTwilightSpan(GetOverallTwilight(planTarget));
+                    TwilightCircumstances twilightCircumstances = TwilightCircumstances.AdjustTwilightCircumstances(observerInfo, atTime);
+                    TimeInterval twilightSpan = twilightCircumstances.GetTwilightSpan(GetOverallTwilight(planTarget));
 
                     // At high latitudes near the summer solsice, you can lose nighttime completely (even below the polar circle)
                     if (twilightSpan == null) {
@@ -160,9 +169,9 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                     TargetVisibility targetVisibility = new TargetVisibility(
                         planTarget,
                         observerInfo,
-                        nighttimeCircumstances.OnDate,
-                        nighttimeCircumstances.Sunset,
-                        nighttimeCircumstances.Sunrise,
+                        twilightCircumstances.OnDate,
+                        twilightCircumstances.Sunset,
+                        twilightCircumstances.Sunrise,
                         TARGET_VISIBILITY_SAMPLE_INTERVAL);
 
                     if (!targetVisibility.ImagingPossible) {
@@ -253,6 +262,39 @@ namespace NINA.Plugin.TargetScheduler.Planning {
         }
 
         /// <summary>
+        /// Reject target exposures that are not suitable for the current level of twilight.
+        /// </summary>
+        /// <param name="projects"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public List<IProject> FilterForTwilight(List<IProject> projects) {
+            if (NoProjects(projects)) { return null; }
+            TwilightCircumstances twilightCircumstances = TwilightCircumstances.AdjustTwilightCircumstances(observerInfo, atTime);
+            TwilightLevel? currentTwilightLevel = twilightCircumstances.GetCurrentTwilightLevel(atTime);
+
+            foreach (IProject planProject in projects) {
+                if (planProject.Rejected) { continue; }
+
+                foreach (ITarget planTarget in planProject.Targets) {
+                    if (planTarget.Rejected) { continue; }
+
+                    foreach (IExposure planExposure in planTarget.ExposurePlans) {
+                        if (!planExposure.Rejected && planExposure.IsIncomplete()) {
+                            if (currentTwilightLevel.HasValue) {
+                                if (currentTwilightLevel > planExposure.TwilightLevel)
+                                    SetRejected(planExposure, Reasons.FilterTwilight);
+                            } else {
+                                SetRejected(planExposure, Reasons.FilterTwilight);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return PropagateRejections(projects);
+        }
+
+        /// <summary>
         /// Return the list of targets that are imagable now.
         /// </summary>
         /// <param name="projects"></param>
@@ -260,9 +302,7 @@ namespace NINA.Plugin.TargetScheduler.Planning {
         public List<ITarget> GetTargetsReadyNow(List<IProject> projects) {
             List<ITarget> targets = new List<ITarget>();
 
-            if (NoProjects(projects)) {
-                return targets;
-            }
+            if (NoProjects(projects)) { return targets; }
 
             foreach (IProject planProject in projects) {
                 if (planProject.Rejected) { continue; }
@@ -284,62 +324,40 @@ namespace NINA.Plugin.TargetScheduler.Planning {
         /// Select the best exposure plan now for each potential target.
         /// </summary>
         /// <param name="readyTargets"></param>
-        public void SelectTargetExposure(List<ITarget> readyTargets) {
+        public void SelectTargetExposures(List<ITarget> readyTargets) {
+            ExposureSelectionExpert selectionExpert = new ExposureSelectionExpert();
+
             foreach (ITarget planTarget in readyTargets) {
-                List<IExposure> potentials = new List<IExposure>();
-                foreach (IExposure planExposure in planTarget.ExposurePlans) {
-                    if (planExposure.Rejected) { continue; }
-                    // check twilight allowed
-
-                    // planTarget.selectedExposure = planExposure;
-                }
+                IExposureSelector exposureSelector = selectionExpert.GetExposureSelector(planTarget.Project, planTarget);
+                planTarget.SelectedExposure = exposureSelector.Select(atTime, planTarget.Project, planTarget);
             }
-
-            //
-
-            throw new NotImplementedException();
         }
 
         /// <summary>
         /// Run the scoring engine, applying the weighted rules to determine the target with the highest score.
         /// </summary>
-        /// <param name="projects"></param>
+        /// <param name="readyTargets"></param>
         /// <param name="scoringEngine"></param>
         /// <returns></returns>
-        public ITarget SelectTargetByScore(List<IProject> projects, IScoringEngine scoringEngine) {
-            // TODO: can we not just use the list of targets already determined (with selected exposure)?
-            // But we need the project rule weights ...
-
+        public ITarget SelectTargetByScore(List<ITarget> readyTargets, IScoringEngine scoringEngine) {
             ITarget highScoreTarget = null;
             double highScore = double.MinValue;
 
-            foreach (IProject planProject in projects) {
-                if (planProject.Rejected) { continue; }
-                scoringEngine.RuleWeights = planProject.RuleWeights;
-
-                foreach (ITarget planTarget in planProject.Targets) {
-                    if (planTarget.Rejected) { continue; }
-
-                    TSLogger.Trace($"running scoring engine for project/target {planProject.Name}/{planTarget.Name}");
-                    double score = scoringEngine.ScoreTarget(planTarget);
-                    if (score > highScore) {
-                        highScoreTarget = planTarget;
-                        highScore = score;
-                    }
+            foreach (ITarget target in readyTargets) {
+                TSLogger.Debug($"running scoring engine for project/target {target.Project.Name}/{target.Name}");
+                scoringEngine.RuleWeights = target.Project.RuleWeights;
+                double score = scoringEngine.ScoreTarget(target);
+                if (score > highScore) {
+                    highScoreTarget = target;
+                    highScore = score;
                 }
             }
 
             // Mark losing targets rejected
-            foreach (IProject planProject in projects) {
-                if (planProject.Rejected) { continue; }
-
-                foreach (ITarget planTarget in planProject.Targets) {
-                    if (planTarget.Rejected) { continue; }
-
-                    if (planTarget != highScoreTarget) {
-                        planTarget.Rejected = true;
-                        planTarget.RejectedReason = Reasons.TargetLowerScore;
-                    }
+            foreach (ITarget target in readyTargets) {
+                if (target != highScoreTarget) {
+                    target.Rejected = true;
+                    target.RejectedReason = Reasons.TargetLowerScore;
                 }
             }
 
@@ -481,6 +499,7 @@ namespace NINA.Plugin.TargetScheduler.Planning {
 
         public const string FilterComplete = "complete";
         public const string FilterMoonAvoidance = "moon avoidance";
+        public const string FilterTwilight = "twilight";
         public const string FilterNoExposuresPlanned = "no exposures planned";
 
         private Reasons() {

@@ -22,7 +22,8 @@ namespace NINA.Plugin.TargetScheduler.Astrometry {
     /// while the dawn (end) times will be on the following day (in general) - determining the potential imaging time span for
     /// a single 'night'.
     ///
-    /// This code leverages the NINA Astrometry sun rise/set/altitude time determination code in NINA.Astrometry.RiseAndSet.
+    /// This code leverages the NINA Astrometry sun rise/set/altitude time determination code in NINA.Astrometry.RiseAndSet.  Note
+    /// that this code works up to latitude 70° - above that, it doesn't return reliable twilight times.
     /// </summary>
     public class TwilightCircumstances {
         public const double DayEndAltitude = 0; // refraction adjustment not needed here
@@ -94,6 +95,14 @@ namespace NINA.Plugin.TargetScheduler.Astrometry {
             }
         }
 
+        public TwilightLevel? GetCurrentTwilightLevel(DateTime atTime) {
+            if (HasNighttime() && NighttimeStart < atTime && atTime <= NighttimeEnd) return TwilightLevel.Nighttime;
+            if (HasAstronomicalTwilight() && AstronomicalTwilightStart < atTime && atTime <= AstronomicalTwilightEnd) return TwilightLevel.Astronomical;
+            if (HasNauticalTwilight() && NauticalTwilightStart < atTime && atTime <= NauticalTwilightEnd) return TwilightLevel.Nautical;
+            if (HasCivilTwilight() && CivilTwilightStart < atTime && atTime <= CivilTwilightEnd) return TwilightLevel.Civil;
+            return null;
+        }
+
         public static TwilightCircumstances AdjustTwilightCircumstances(ObserverInfo observerInfo, DateTime atTime) {
             TwilightCircumstances twilightCircumstances = new TwilightCircumstances(observerInfo, atTime);
             DateTime? CivilTwilightStart = twilightCircumstances.CivilTwilightStart;
@@ -102,7 +111,7 @@ namespace NINA.Plugin.TargetScheduler.Astrometry {
             DateTime midnight = atTime.Date.AddHours(24);
 
             if (!CivilTwilightStart.HasValue || !CivilTwilightEnd.HasValue) {
-                throw new ArgumentException("Oops!  Need to fix AdjustNighttimeCircumstances!");
+                throw new ArgumentException("Oops!  Need to fix AdjustTwilightCircumstances!");
             }
 
             // If atTime is between noon and civil start, return next dusk/following dawn

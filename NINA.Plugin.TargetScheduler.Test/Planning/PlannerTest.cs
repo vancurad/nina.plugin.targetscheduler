@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using Moq;
+using NINA.Plugin.TargetScheduler.Astrometry;
 using NINA.Plugin.TargetScheduler.Database.Schema;
 using NINA.Plugin.TargetScheduler.Planning;
 using NINA.Plugin.TargetScheduler.Planning.Entities;
@@ -397,6 +398,80 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
         }
 
         [Test]
+        public void testFilterForTwilightCivil() {
+            Mock<IProfileService> profileMock = PlanMocks.GetMockProfileService(TestData.Pittsboro_NC);
+            IProfile profile = profileMock.Object.ActiveProfile;
+            List<IProject> projects = GetProjectForFilterTest();
+
+            projects = new Planner(new DateTime(2024, 12, 1, 17, 0, 0), profile, GetPrefs(), false).FilterForTwilight(projects);
+            Assert.That(projects, Is.Not.Null);
+            projects.Count.Should().Be(1);
+            projects[0].Rejected.Should().BeTrue();
+            projects[0].Targets[0].Rejected.Should().BeTrue();
+
+            projects[0].Targets[0].ExposurePlans[0].Rejected.Should().BeTrue();
+            projects[0].Targets[0].ExposurePlans[0].RejectedReason.Should().Be(Reasons.FilterTwilight);
+            projects[0].Targets[0].ExposurePlans[1].Rejected.Should().BeTrue();
+            projects[0].Targets[0].ExposurePlans[1].RejectedReason.Should().Be(Reasons.FilterTwilight);
+            projects[0].Targets[0].ExposurePlans[2].Rejected.Should().BeTrue();
+            projects[0].Targets[0].ExposurePlans[2].RejectedReason.Should().Be(Reasons.FilterTwilight);
+        }
+
+        [Test]
+        public void testFilterForTwilightNautical() {
+            Mock<IProfileService> profileMock = PlanMocks.GetMockProfileService(TestData.Pittsboro_NC);
+            IProfile profile = profileMock.Object.ActiveProfile;
+            List<IProject> projects = GetProjectForFilterTest();
+
+            projects = new Planner(new DateTime(2024, 12, 1, 18, 0, 0), profile, GetPrefs(), false).FilterForTwilight(projects);
+            Assert.That(projects, Is.Not.Null);
+            projects.Count.Should().Be(1);
+            projects[0].Rejected.Should().BeFalse();
+            projects[0].Targets[0].Rejected.Should().BeFalse();
+
+            projects[0].Targets[0].ExposurePlans[0].Rejected.Should().BeTrue();
+            projects[0].Targets[0].ExposurePlans[0].RejectedReason.Should().Be(Reasons.FilterTwilight);
+            projects[0].Targets[0].ExposurePlans[1].Rejected.Should().BeTrue();
+            projects[0].Targets[0].ExposurePlans[1].RejectedReason.Should().Be(Reasons.FilterTwilight);
+            projects[0].Targets[0].ExposurePlans[2].Rejected.Should().BeFalse();
+        }
+
+        [Test]
+        public void testFilterForTwilightAstronomical() {
+            Mock<IProfileService> profileMock = PlanMocks.GetMockProfileService(TestData.Pittsboro_NC);
+            IProfile profile = profileMock.Object.ActiveProfile;
+            List<IProject> projects = GetProjectForFilterTest();
+
+            projects = new Planner(new DateTime(2024, 12, 1, 18, 20, 0), profile, GetPrefs(), false).FilterForTwilight(projects);
+            Assert.That(projects, Is.Not.Null);
+            projects.Count.Should().Be(1);
+            projects[0].Rejected.Should().BeFalse();
+            projects[0].Targets[0].Rejected.Should().BeFalse();
+
+            projects[0].Targets[0].ExposurePlans[0].Rejected.Should().BeTrue();
+            projects[0].Targets[0].ExposurePlans[0].RejectedReason.Should().Be(Reasons.FilterTwilight);
+            projects[0].Targets[0].ExposurePlans[1].Rejected.Should().BeFalse();
+            projects[0].Targets[0].ExposurePlans[2].Rejected.Should().BeFalse();
+        }
+
+        [Test]
+        public void testFilterForTwilightNight() {
+            Mock<IProfileService> profileMock = PlanMocks.GetMockProfileService(TestData.Pittsboro_NC);
+            IProfile profile = profileMock.Object.ActiveProfile;
+            List<IProject> projects = GetProjectForFilterTest();
+
+            projects = new Planner(new DateTime(2024, 12, 1, 19, 20, 0), profile, GetPrefs(), false).FilterForTwilight(projects);
+            Assert.That(projects, Is.Not.Null);
+            projects.Count.Should().Be(1);
+            projects[0].Rejected.Should().BeFalse();
+            projects[0].Targets[0].Rejected.Should().BeFalse();
+
+            projects[0].Targets[0].ExposurePlans[0].Rejected.Should().BeFalse();
+            projects[0].Targets[0].ExposurePlans[1].Rejected.Should().BeFalse();
+            projects[0].Targets[0].ExposurePlans[2].Rejected.Should().BeFalse();
+        }
+
+        [Test]
         public void testTargetsReadyNow() {
             Mock<IProfileService> profileMock = PlanMocks.GetMockProfileService(TestData.Pittsboro_NC);
             IProfile profile = profileMock.Object.ActiveProfile;
@@ -433,8 +508,35 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
             targets.Count.Should().Be(2);
         }
 
+        [Test]
+        public void testSelectTargetByScore() {
+            throw new NotImplementedException();
+        }
+
         private ProfilePreference GetPrefs(string profileId = "abcd-1234") {
             return new ProfilePreference(profileId);
+        }
+
+        private List<IProject> GetProjectForFilterTest() {
+            Mock<IProject> pp1 = PlanMocks.GetMockPlanProject("pp1", ProjectState.Active);
+            Mock<ITarget> pt = PlanMocks.GetMockPlanTarget("M42", TestData.M42);
+            pt.SetupProperty(m => m.StartTime, new DateTime(2023, 12, 25, 18, 9, 0));
+            pt.SetupProperty(m => m.EndTime, new DateTime(2023, 12, 26, 5, 17, 0));
+
+            Mock<IExposure> pe = PlanMocks.GetMockPlanExposure("N", 10, 0);
+            pe.SetupProperty(f => f.TwilightLevel, TwilightLevel.Nighttime);
+            PlanMocks.AddMockPlanFilter(pt, pe);
+
+            pe = PlanMocks.GetMockPlanExposure("A", 10, 0);
+            pe.SetupProperty(f => f.TwilightLevel, TwilightLevel.Astronomical);
+            PlanMocks.AddMockPlanFilter(pt, pe);
+
+            pe = PlanMocks.GetMockPlanExposure("N", 10, 0);
+            pe.SetupProperty(f => f.TwilightLevel, TwilightLevel.Nautical);
+            PlanMocks.AddMockPlanFilter(pt, pe);
+
+            PlanMocks.AddMockPlanTarget(pp1, pt);
+            return PlanMocks.ProjectsList(pp1.Object);
         }
     }
 }
