@@ -34,10 +34,8 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                 SchedulerPlan plan;
                 while ((plan = new Planner(currentTime, profileService.ActiveProfile, profilePreferences, false, projects).GetPlan(previousPlanTarget)) != null) {
                     plans.Add(plan);
-                    previousPlanTarget = plan.WaitForNextTargetTime.HasValue ? null : plan.PlanTarget;
-                    currentTime = plan.WaitForNextTargetTime.HasValue
-                        ? (DateTime)plan.WaitForNextTargetTime
-                        : plan.EndTime;
+                    previousPlanTarget = plan.IsWait ? null : plan.PlanTarget;
+                    currentTime = plan.IsWait ? (DateTime)plan.WaitForNextTargetTime : plan.EndTime;
                     PrepForNextRun(projects, plan);
                 }
 
@@ -51,7 +49,8 @@ namespace NINA.Plugin.TargetScheduler.Planning {
         }
 
         private void PrepForNextRun(List<IProject> projects, SchedulerPlan plan) {
-            plan.PlanTarget.FilterCadence.Advance();
+            if (!plan.IsWait)
+                plan.PlanTarget.FilterCadence.Advance();
 
             foreach (IProject project in projects) {
                 project.Rejected = false;
@@ -60,7 +59,6 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                     target.ScoringResults = null;
                     target.Rejected = false;
                     target.RejectedReason = null;
-                    target.SelectedExposure = null;
 
                     foreach (IExposure exposure in target.ExposurePlans) {
                         if (project.EnableGrader) {

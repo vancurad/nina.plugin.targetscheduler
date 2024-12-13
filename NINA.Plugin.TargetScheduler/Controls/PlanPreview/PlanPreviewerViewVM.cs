@@ -236,7 +236,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.PlanPreview {
                 foreach (SchedulerPlan plan in SchedulerPlans) {
                     TreeViewItem planItem = new TreeViewItem();
 
-                    if (plan.WaitForNextTargetTime.HasValue) {
+                    if (plan.IsWait) {
                         planItem.Header = $"Wait until {Utils.FormatDateTimeFull(plan.WaitForNextTargetTime)}";
                         list.Add(planItem);
                         continue;

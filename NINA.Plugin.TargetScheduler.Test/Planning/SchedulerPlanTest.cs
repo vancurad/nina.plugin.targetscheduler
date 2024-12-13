@@ -31,6 +31,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
             sut.TimeInterval.StartTime.Should().Be(atTime);
             sut.TimeInterval.EndTime.Should().Be(atTime.AddSeconds(300));
             sut.PlanInstructions.Count.Should().Be(0);
+            sut.IsWait.Should().BeFalse();
         }
 
         [Test]
@@ -45,6 +46,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
             sut.TimeInterval.StartTime.Should().Be(atTime);
             sut.TimeInterval.EndTime.Should().Be(atTime.AddHours(1));
             sut.PlanInstructions.Should().BeNull();
+            sut.IsWait.Should().BeTrue();
         }
     }
 }

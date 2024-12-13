@@ -107,5 +107,21 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
 
             return null;
         }
+
+        public override bool Equals(object obj) {
+            if ((obj == null) || !this.GetType().Equals(obj.GetType())) {
+                return false;
+            }
+
+            PlanningExposure e = (PlanningExposure)obj;
+            return this.DatabaseId == e.DatabaseId && this.FilterName == e.FilterName;
+        }
+
+        public override int GetHashCode() {
+            int hash = 17;
+            hash = hash * 23 + this.DatabaseId;
+            hash = hash * 23 + this.FilterName.GetHashCode();
+            return hash;
+        }
     }
 }

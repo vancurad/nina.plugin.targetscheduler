@@ -22,6 +22,7 @@ namespace NINA.Plugin.TargetScheduler.Planning {
 
         public List<IInstruction> PlanInstructions { get; private set; }
         public DateTime? WaitForNextTargetTime { get; private set; }
+        public bool IsWait { get => WaitForNextTargetTime.HasValue; }
         public bool IsEmulator { get; set; }
         public string DetailsLog { get; private set; }
 
@@ -67,7 +68,7 @@ namespace NINA.Plugin.TargetScheduler.Planning {
 
         public string LogPlanResults() {
             StringBuilder sb = new StringBuilder();
-            string type = WaitForNextTargetTime.HasValue ? "WAIT" : "TARGET";
+            string type = IsWait ? "WAIT" : "TARGET";
 
             sb.AppendLine("\n" + String.Format("{0,-6}", type) + " ==========================================================================================");
 
@@ -158,7 +159,7 @@ namespace NINA.Plugin.TargetScheduler.Planning {
 
         public string PlanSummary() {
             StringBuilder sb = new StringBuilder();
-            if (WaitForNextTargetTime.HasValue) {
+            if (IsWait) {
                 sb.AppendLine($"Waiting until {Utils.FormatDateTimeFull(WaitForNextTargetTime)}");
             } else {
                 sb.AppendLine($"Target:         {PlanTarget.Name} at {PlanTarget.Coordinates.RAString} {PlanTarget.Coordinates.DecString}");

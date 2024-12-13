@@ -70,7 +70,7 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                     // See if one or more targets are ready to image now
                     List<ITarget> readyTargets = GetTargetsReadyNow(projects);
                     if (readyTargets.Count > 0) {
-                        SelectTargetExposures(readyTargets);
+                        SelectTargetExposures(readyTargets, previousTarget);
 
                         // If only one ready target, no need to run scoring engine
                         ITarget selectedTarget;
@@ -79,6 +79,12 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                         } else {
                             selectedTarget = SelectTargetByScore(readyTargets, new ScoringEngine(activeProfile, profilePreferences, atTime, previousTarget));
                         }
+
+                        /* CRAP.  I think we're going to need to maintain the selected exposure history
+                         * for a target.  Otherwise, there's no way to determine whether a dither is needed
+                         * or not once exposures start getting rejected, especially given varience with
+                         * ditherEvery.
+                         */
 
                         // Generate instructions for the selected target/exposure
                         List<IInstruction> instructions = new InstructionGenerator().Generate(selectedTarget, previousTarget);
@@ -324,12 +330,13 @@ namespace NINA.Plugin.TargetScheduler.Planning {
         /// Select the best exposure plan now for each potential target.
         /// </summary>
         /// <param name="readyTargets"></param>
-        public void SelectTargetExposures(List<ITarget> readyTargets) {
+        public void SelectTargetExposures(List<ITarget> readyTargets, ITarget previousTarget) {
             ExposureSelectionExpert selectionExpert = new ExposureSelectionExpert();
+            IExposure previousExposure = previousTarget != null ? previousTarget.SelectedExposure : null;
 
             foreach (ITarget planTarget in readyTargets) {
                 IExposureSelector exposureSelector = selectionExpert.GetExposureSelector(planTarget.Project, planTarget);
-                planTarget.SelectedExposure = exposureSelector.Select(atTime, planTarget.Project, planTarget);
+                planTarget.SelectedExposure = exposureSelector.Select(atTime, planTarget.Project, planTarget, previousExposure);
             }
         }
 

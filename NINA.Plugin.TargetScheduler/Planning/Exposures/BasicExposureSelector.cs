@@ -6,14 +6,15 @@ using System;
 namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
 
     /// <summary>
-    /// Select the next exposure based on the persisted filter cadence for this target.
+    /// Select the next exposure based on the persisted filter cadence for this target.  Add a dither before the
+    /// exposure if appropriate.
     /// </summary>
     public class BasicExposureSelector : BaseExposureSelector, IExposureSelector {
 
         public BasicExposureSelector() : base() {
         }
 
-        public IExposure Select(DateTime atTime, IProject project, ITarget target) {
+        public IExposure Select(DateTime atTime, IProject project, ITarget target, IExposure previousExposure) {
             FilterCadence filterCadence = target.FilterCadence;
             bool preDither = false;
 
@@ -25,6 +26,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
                 throw new Exception($"unexpected: empty filter cadence for target '{target.Name}' at time {atTime}");
             }
 
+            bool exposureSkipped = false;
             foreach (IFilterCadenceItem item in filterCadence) {
                 if (item.Action == FilterCadenceAction.Dither) {
                     preDither = true;
@@ -33,14 +35,16 @@ namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
 
                 IExposure exposurePlan = target.ExposurePlans[item.ReferenceIdx];
                 if (!exposurePlan.Rejected) {
-                    exposurePlan.PreDither = preDither;
+                    exposurePlan.PreDither = DitherRequired(preDither, exposureSkipped, exposurePlan, previousExposure); ;
                     exposurePlan.PlannedExposures = 1;
                     filterCadence.SetLastSelected(item);
                     return exposurePlan;
+                } else {
+                    exposureSkipped = true;
                 }
             }
 
-            // Fail safe ...
+            // Fail safe ... should not happen
             string msg = $"no acceptable exposure plan in basic exposure selector for target '{target.Name}' at time {atTime}";
             TSLogger.Error(msg);
             throw new Exception(msg);

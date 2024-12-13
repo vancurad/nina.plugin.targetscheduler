@@ -11,9 +11,9 @@ namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
         public OverrideOrderExposureSelector() : base() {
         }
 
-        public IExposure Select(DateTime atTime, IProject project, ITarget target) {
+        public IExposure Select(DateTime atTime, IProject project, ITarget target, IExposure previousExposure) {
             // Since an override order generates an explicit filter cadence, we can just leverage the basic approach
-            return new BasicExposureSelector().Select(atTime, project, target);
+            return new BasicExposureSelector().Select(atTime, project, target, previousExposure);
         }
     }
 }
