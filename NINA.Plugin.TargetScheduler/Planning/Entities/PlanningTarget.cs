@@ -22,6 +22,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
         public List<IExposure> CompletedExposurePlans { get; set; }
         public List<IOverrideExposureOrderItem> OverrideExposureOrders { get; set; }
         public FilterCadence FilterCadence { get; set; }
+        public DitherManager DitherManager { get; set; }
         public IProject Project { get; set; }
         public bool Rejected { get; set; }
         public string RejectedReason { get; set; }
@@ -62,6 +63,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
             target.OverrideExposureOrders.ForEach(oeo => { this.OverrideExposureOrders.Add(new PlanningOverrideExposureOrder(oeo)); });
 
             this.FilterCadence = new FilterCadenceFactory().Generate(planProject, this, target);
+            this.DitherManager = new DitherManager(planProject.DitherEvery);
         }
 
         public PlanningTarget() {
@@ -76,13 +78,13 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
             foreach (OverrideExposureOrderItem oeo in target.OverrideExposureOrders) {
                 if (oeo.Action == OverrideExposureOrderAction.Dither) { continue; }
                 if (oeo.Action == OverrideExposureOrderAction.Exposure) {
-                    // TODO: fix this is wrong for EP idx approach
-                    ExposurePlan exposurePlan = target.ExposurePlans.Find(ep => ep.Id == oeo.ReferenceIdx);
+                    ExposurePlan exposurePlan = target.ExposurePlans[oeo.ReferenceIdx];
                     if (exposurePlan != null && !list.Contains(exposurePlan)) {
                         list.Add(exposurePlan);
                     }
                 }
             }
+
             return list;
         }
 

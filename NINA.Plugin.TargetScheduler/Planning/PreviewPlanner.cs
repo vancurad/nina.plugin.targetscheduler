@@ -19,6 +19,7 @@ namespace NINA.Plugin.TargetScheduler.Planning {
     /// for previewing and troubleshooting.
     /// </summary>
     public class PreviewPlanner {
+        private ITarget previousTarget;
 
         public PreviewPlanner() {
         }
@@ -28,13 +29,12 @@ namespace NINA.Plugin.TargetScheduler.Planning {
 
             List<SchedulerPlan> plans = new List<SchedulerPlan>();
             DateTime currentTime = atTime;
-            ITarget previousPlanTarget = null;
+            previousTarget = null;
 
             try {
                 SchedulerPlan plan;
-                while ((plan = new Planner(currentTime, profileService.ActiveProfile, profilePreferences, false, projects).GetPlan(previousPlanTarget)) != null) {
+                while ((plan = new Planner(currentTime, profileService.ActiveProfile, profilePreferences, false, projects).GetPlan(previousTarget)) != null) {
                     plans.Add(plan);
-                    previousPlanTarget = plan.IsWait ? null : plan.PlanTarget;
                     currentTime = plan.IsWait ? (DateTime)plan.WaitForNextTargetTime : plan.EndTime;
                     PrepForNextRun(projects, plan);
                 }
@@ -49,8 +49,24 @@ namespace NINA.Plugin.TargetScheduler.Planning {
         }
 
         private void PrepForNextRun(List<IProject> projects, SchedulerPlan plan) {
-            if (!plan.IsWait)
+            if (!plan.IsWait) {
+                if ((previousTarget != null && plan.PlanTarget != previousTarget) || plan.PlanTarget.SelectedExposure.PreDither) {
+                    plan.PlanTarget.DitherManager.Reset();
+                }
+
+                plan.PlanTarget.DitherManager.AddExposure(plan.PlanTarget.SelectedExposure);
                 plan.PlanTarget.FilterCadence.Advance();
+
+                if (plan.PlanTarget.Project.EnableGrader) {
+                    plan.PlanTarget.SelectedExposure.Accepted++;
+                } else {
+                    plan.PlanTarget.SelectedExposure.Acquired++;
+                }
+
+                previousTarget = plan.PlanTarget;
+            } else {
+                previousTarget = null;
+            }
 
             foreach (IProject project in projects) {
                 project.Rejected = false;
@@ -61,13 +77,6 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                     target.RejectedReason = null;
 
                     foreach (IExposure exposure in target.ExposurePlans) {
-                        if (project.EnableGrader) {
-                            exposure.Accepted += exposure.PlannedExposures;
-                        } else {
-                            exposure.Acquired += exposure.PlannedExposures;
-                        }
-
-                        exposure.PlannedExposures = 0;
                         exposure.Rejected = false;
                         exposure.RejectedReason = null;
                         exposure.MoonAvoidanceScore = MoonAvoidanceExpert.SCORE_OFF;

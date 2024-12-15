@@ -306,6 +306,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Exposures {
         public List<IExposure> CompletedExposurePlans { get; set; }
         public List<IOverrideExposureOrderItem> OverrideExposureOrders { get; set; }
         public FilterCadence FilterCadence { get; set; }
+        public DitherManager DitherManager { get; set; }
 
         public TestPlanTarget() {
             ExposurePlans = new List<IExposure>();
@@ -328,8 +329,33 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Exposures {
         public DateTime EndTime { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public DateTime CulminationTime { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public TimeInterval MeridianWindow { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        string ITarget.PlanId { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        int ITarget.DatabaseId { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        string ITarget.Name { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        Coordinates ITarget.Coordinates { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        Epoch ITarget.Epoch { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        double ITarget.Rotation { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        double ITarget.ROI { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        IProject ITarget.Project { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        bool ITarget.Rejected { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        string ITarget.RejectedReason { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        IExposure ITarget.SelectedExposure { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        ScoringResults ITarget.ScoringResults { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        DateTime ITarget.StartTime { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        DateTime ITarget.EndTime { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        DateTime ITarget.CulminationTime { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        TimeInterval ITarget.MeridianWindow { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public void SetCircumstances(bool isVisible, DateTime startTime, DateTime culminationTime, DateTime endTime) {
+            throw new NotImplementedException();
+        }
+
+        void ITarget.SetCircumstances(bool isVisible, DateTime startTime, DateTime culminationTime, DateTime endTime) {
+            throw new NotImplementedException();
+        }
+
+        string ITarget.ToString() {
             throw new NotImplementedException();
         }
     }

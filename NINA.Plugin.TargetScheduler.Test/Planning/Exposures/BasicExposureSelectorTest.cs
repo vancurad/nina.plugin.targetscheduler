@@ -25,49 +25,58 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Exposures {
             SetEPs(pt);
             FilterCadence fc = new FilterCadenceFactory().Generate(pp.Object, pt.Object, new Target());
             pt.SetupProperty(t => t.FilterCadence, fc);
+            DitherManager dm = new DitherManager(1);
+            pt.SetupProperty(t => t.DitherManager, dm);
 
             BasicExposureSelector sut = new BasicExposureSelector();
             IExposure e = sut.Select(DateTime.Now, pp.Object, pt.Object, null);
             e.FilterName.Should().Be("L");
             e.PreDither.Should().BeFalse();
+            dm.AddExposure(e);
 
             fc.Advance();
             e = sut.Select(DateTime.Now, pp.Object, pt.Object, null);
             e.FilterName.Should().Be("L");
             e.PreDither.Should().BeTrue();
+            dm.Reset();
 
             fc.Advance();
             e = sut.Select(DateTime.Now, pp.Object, pt.Object, null);
             e.FilterName.Should().Be("R");
             e.PreDither.Should().BeFalse();
+            dm.AddExposure(e);
 
             fc.Advance();
             e = sut.Select(DateTime.Now, pp.Object, pt.Object, null);
             e.FilterName.Should().Be("R");
             e.PreDither.Should().BeTrue();
+            dm.Reset();
 
             fc.Advance();
             e = sut.Select(DateTime.Now, pp.Object, pt.Object, null);
             e.FilterName.Should().Be("G");
             e.PreDither.Should().BeFalse();
+            dm.AddExposure(e);
 
             fc.Advance();
             e = sut.Select(DateTime.Now, pp.Object, pt.Object, null);
             e.FilterName.Should().Be("G");
             e.PreDither.Should().BeTrue();
+            dm.Reset();
 
             fc.Advance();
             e = sut.Select(DateTime.Now, pp.Object, pt.Object, null);
             e.FilterName.Should().Be("B");
             e.PreDither.Should().BeFalse();
+            dm.AddExposure(e);
 
             fc.Advance();
             e = sut.Select(DateTime.Now, pp.Object, pt.Object, null);
             e.FilterName.Should().Be("B");
             e.PreDither.Should().BeTrue();
+            dm.Reset();
 
             fc.Advance();
-            TestContext.WriteLine(fc);
             e = sut.Select(DateTime.Now, pp.Object, pt.Object, null);
             e.FilterName.Should().Be("L");
             e.PreDither.Should().BeFalse();
@@ -85,57 +94,90 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Exposures {
             SetEPs(pt);
             FilterCadence fc = new FilterCadenceFactory().Generate(pp.Object, pt.Object, new Target());
             pt.SetupProperty(t => t.FilterCadence, fc);
-            TestContext.WriteLine(fc);
+            DitherManager dm = new DitherManager(1);
+            pt.SetupProperty(t => t.DitherManager, dm);
 
             BasicExposureSelector sut = new BasicExposureSelector();
             IExposure e = sut.Select(DateTime.Now, pp.Object, pt.Object, null);
             e.FilterName.Should().Be("L");
             e.PreDither.Should().BeFalse();
+            dm.AddExposure(e);
 
             fc.Advance();
-            e = sut.Select(DateTime.Now, pp.Object, pt.Object, e);
+            e = sut.Select(DateTime.Now, pp.Object, pt.Object, null);
             e.FilterName.Should().Be("L");
             e.PreDither.Should().BeTrue();
+            dm.Reset();
 
             fc.Advance();
-            e = sut.Select(DateTime.Now, pp.Object, pt.Object, e);
+            e = sut.Select(DateTime.Now, pp.Object, pt.Object, null);
             e.FilterName.Should().Be("R");
             e.PreDither.Should().BeFalse();
+            dm.AddExposure(e);
 
             fc.Advance();
-            e = sut.Select(DateTime.Now, pp.Object, pt.Object, e);
+            e = sut.Select(DateTime.Now, pp.Object, pt.Object, null);
             e.FilterName.Should().Be("R");
             e.PreDither.Should().BeTrue();
+            dm.Reset();
 
             fc.Advance();
-            e = sut.Select(DateTime.Now, pp.Object, pt.Object, e);
+            e = sut.Select(DateTime.Now, pp.Object, pt.Object, null);
             e.FilterName.Should().Be("G");
             e.PreDither.Should().BeFalse();
+            dm.AddExposure(e);
 
             fc.Advance();
-            e = sut.Select(DateTime.Now, pp.Object, pt.Object, e);
+            e = sut.Select(DateTime.Now, pp.Object, pt.Object, null);
             e.FilterName.Should().Be("G");
             e.PreDither.Should().BeTrue();
+            dm.Reset();
 
             fc.Advance();
-            e = sut.Select(DateTime.Now, pp.Object, pt.Object, e);
+            e = sut.Select(DateTime.Now, pp.Object, pt.Object, null);
             e.FilterName.Should().Be("B");
             e.PreDither.Should().BeFalse();
+            dm.AddExposure(e);
 
             fc.Advance();
-            e = sut.Select(DateTime.Now, pp.Object, pt.Object, e);
+            e = sut.Select(DateTime.Now, pp.Object, pt.Object, null);
             e.FilterName.Should().Be("B");
             e.PreDither.Should().BeTrue();
+            dm.Reset();
 
             fc.Advance();
-            e = sut.Select(DateTime.Now, pp.Object, pt.Object, e);
+            e = sut.Select(DateTime.Now, pp.Object, pt.Object, null);
             e.FilterName.Should().Be("L");
             e.PreDither.Should().BeFalse();
+            dm.AddExposure(e);
 
-            fc.Advance();
-            IExposure repeat = pt.Object.ExposurePlans.Find(e => e.FilterName == "L");
             pt.Object.ExposurePlans.ForEach(e => { if (e.FilterName != "L") e.Rejected = true; });
-            // TODO: test ...
+            dm.Reset();
+
+            fc.Advance();
+            e = sut.Select(DateTime.Now, pp.Object, pt.Object, null);
+            e.FilterName.Should().Be("L");
+            e.PreDither.Should().BeFalse();
+            dm.AddExposure(e);
+
+            fc.Advance();
+            e = sut.Select(DateTime.Now, pp.Object, pt.Object, null);
+            e.FilterName.Should().Be("L");
+            e.PreDither.Should().BeTrue();
+            dm.Reset();
+            dm.AddExposure(e);
+
+            fc.Advance();
+            e = sut.Select(DateTime.Now, pp.Object, pt.Object, null);
+            e.FilterName.Should().Be("L");
+            e.PreDither.Should().BeTrue();
+            dm.Reset();
+            dm.AddExposure(e);
+
+            fc.Advance();
+            e = sut.Select(DateTime.Now, pp.Object, pt.Object, null);
+            e.FilterName.Should().Be("L");
+            e.PreDither.Should().BeTrue();
         }
 
         [Test]

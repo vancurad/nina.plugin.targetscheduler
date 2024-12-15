@@ -510,7 +510,27 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
 
         [Test]
         public void testSelectTargetByScore() {
-            throw new NotImplementedException();
+            Mock<IProfileService> profileMock = PlanMocks.GetMockProfileService(TestData.Pittsboro_NC);
+            IProfile profile = profileMock.Object.ActiveProfile;
+            DateTime atTime = new DateTime(2024, 12, 1, 20, 0, 0);
+
+            List<ITarget> readyTargets = new List<ITarget>();
+            Action score = () => new Planner(atTime, profile, GetPrefs(), false).SelectTargetByScore(readyTargets, null);
+            score.Should().Throw<ArgumentException>().WithMessage("no ready targets in SelectTargetByScore");
+
+            ITarget t1 = PlanMocks.GetMockPlanTarget("T1", TestData.M31).Object;
+            readyTargets.Add(t1);
+            ITarget selected = new Planner(atTime, profile, GetPrefs(), false).SelectTargetByScore(readyTargets, null);
+            (t1 == selected).Should().BeTrue();
+
+            ITarget t2 = PlanMocks.GetMockPlanTarget("T2", TestData.M31).Object;
+            readyTargets.Add(t2);
+            selected = new Planner(atTime, profile, GetPrefs(), false).SelectTargetByScore(readyTargets, GetTestScoringEngine());
+
+            (t2 == selected).Should().BeTrue();
+            t1.Rejected.Should().BeTrue();
+            t1.RejectedReason.Should().Be(Reasons.TargetLowerScore);
+            t2.Rejected.Should().BeFalse();
         }
 
         private ProfilePreference GetPrefs(string profileId = "abcd-1234") {
@@ -537,6 +557,13 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
 
             PlanMocks.AddMockPlanTarget(pp1, pt);
             return PlanMocks.ProjectsList(pp1.Object);
+        }
+
+        private IScoringEngine GetTestScoringEngine() {
+            Mock<IScoringEngine> mock = new Mock<IScoringEngine>();
+            mock.SetupAllProperties();
+            mock.Setup(p => p.ScoreTarget(It.IsAny<ITarget>())).Returns((ITarget t) => t.Name == "T1" ? .5 : .75);
+            return mock.Object;
         }
     }
 }

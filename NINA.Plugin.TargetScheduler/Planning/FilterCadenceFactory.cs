@@ -11,7 +11,7 @@ namespace NINA.Plugin.TargetScheduler.Planning {
         public FilterCadenceFactory() {
         }
 
-        public FilterCadence Generate(IProject project, ITarget planTarget, Target databaseTarget) {
+        public FilterCadence Generate(IProject project, ITarget target, Target databaseTarget) {
             List<IFilterCadenceItem> filterCadences = new List<IFilterCadenceItem>();
 
             // Use database records if present
@@ -22,8 +22,8 @@ namespace NINA.Plugin.TargetScheduler.Planning {
 
             // Generate from override list
             int order = 1;
-            if (Common.IsNotEmpty(planTarget.OverrideExposureOrders)) {
-                planTarget.OverrideExposureOrders.ForEach((oeo) => {
+            if (Common.IsNotEmpty(target.OverrideExposureOrders)) {
+                target.OverrideExposureOrders.ForEach((oeo) => {
                     bool next = order == 1;
                     FilterCadenceAction action = oeo.Action == OverrideExposureOrderAction.Exposure ? FilterCadenceAction.Exposure : FilterCadenceAction.Dither;
                     filterCadences.Add(new PlanningFilterCadence(order++, next, action, oeo.ReferenceIdx));
@@ -39,10 +39,10 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                 return new FilterCadence(filterCadences);
             }
 
-            // Otherwise, generate from (non-zero) filter switch frequency and dither count
+            // Otherwise, generate from (non-zero) filter switch frequency
             int idx = 0;
             order = 1;
-            planTarget.ExposurePlans.ForEach((ep) => {
+            target.ExposurePlans.ForEach((ep) => {
                 for (int i = 0; i < filterSwitchFrequency; i++) {
                     bool next = order == 1;
                     filterCadences.Add(new PlanningFilterCadence(order++, next, FilterCadenceAction.Exposure, idx));
@@ -50,7 +50,7 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                 idx++;
             });
 
-            return new FilterCadence(new DitherInjector(filterCadences, planTarget.ExposurePlans, project.DitherEvery).Inject());
+            return new FilterCadence(filterCadences);
         }
     }
 }

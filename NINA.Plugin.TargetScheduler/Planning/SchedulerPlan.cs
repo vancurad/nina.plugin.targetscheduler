@@ -176,6 +176,7 @@ namespace NINA.Plugin.TargetScheduler.Planning {
             sb.Append("Target: ").AppendLine(PlanTarget != null ? PlanTarget.Name : null);
             sb.AppendLine($"Interval: {TimeInterval}");
             sb.AppendLine($"Wait: {WaitForNextTargetTime}");
+            sb.Append("Selected Exp: ").AppendLine(PlanTarget != null ? PlanTarget.SelectedExposure?.FilterName : null);
             sb.AppendLine($"Instructions:\n");
             if (PlanInstructions != null) {
                 foreach (IInstruction instruction in PlanInstructions) {

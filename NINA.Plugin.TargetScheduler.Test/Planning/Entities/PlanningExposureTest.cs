@@ -38,7 +38,6 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Entities {
             sut.MoonAvoidanceEnabled.Should().BeFalse();
             sut.PreDither.Should().BeFalse();
             sut.Rejected.Should().BeFalse();
-            sut.PlannedExposures.Should().Be(0);
             sut.PlanTarget.Should().Be(targetMock.Object);
         }
 

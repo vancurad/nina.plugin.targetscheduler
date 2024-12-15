@@ -92,6 +92,12 @@ namespace NINA.Plugin.TargetScheduler.Database {
                 .Where(p =>
                 p.ProfileId.Equals(profileId) &&
                 p.state_col == (int)ProjectState.Active);
+
+            projects.ForEach(p => {
+                p.Targets.ForEach(t => t.OverrideExposureOrders = GetOverrideExposureOrders(t.Id));
+                p.Targets.ForEach(t => t.FilterCadences = GetFilterCadences(t.Id));
+            });
+
             return projects.ToList();
         }
 

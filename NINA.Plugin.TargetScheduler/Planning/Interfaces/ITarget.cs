@@ -1,4 +1,5 @@
 ﻿using NINA.Astrometry;
+using NINA.Plugin.TargetScheduler.Planning.Exposures;
 using NINA.Plugin.TargetScheduler.Planning.Scoring.Rules;
 using System;
 using System.Collections.Generic;
@@ -17,6 +18,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Interfaces {
         List<IExposure> CompletedExposurePlans { get; set; }
         List<IOverrideExposureOrderItem> OverrideExposureOrders { get; set; }
         FilterCadence FilterCadence { get; set; }
+        DitherManager DitherManager { get; set; }
         IProject Project { get; set; }
         bool Rejected { get; set; }
         string RejectedReason { get; set; }

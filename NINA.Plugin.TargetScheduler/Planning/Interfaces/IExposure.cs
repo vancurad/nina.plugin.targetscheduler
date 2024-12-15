@@ -30,7 +30,6 @@ namespace NINA.Plugin.TargetScheduler.Planning.Interfaces {
 
         bool Rejected { get; set; }
         string RejectedReason { get; set; }
-        int PlannedExposures { get; set; }
 
         int NeededExposures();
 

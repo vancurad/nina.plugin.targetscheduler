@@ -39,8 +39,6 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
         public bool Rejected { get; set; }
         public string RejectedReason { get; set; }
 
-        public int PlannedExposures { get; set; }
-
         public PlanningExposure(ITarget planTarget, ExposurePlan exposurePlan, ExposureTemplate exposureTemplate) {
             this.PlanId = Guid.NewGuid().ToString();
             this.DatabaseId = exposurePlan.Id;
@@ -70,7 +68,6 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
 
             this.PreDither = false;
             this.Rejected = false;
-            this.PlannedExposures = 0;
         }
 
         public int NeededExposures() {
@@ -93,7 +90,6 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
             sb.AppendLine($"Desired: {Desired}");
             sb.AppendLine($"Acquired: {Acquired}");
             sb.AppendLine($"Accepted: {Accepted}");
-            sb.AppendLine($"PlannedExposures: {PlannedExposures}");
             sb.AppendLine($"Pre-dither: {PreDither}");
             sb.AppendLine($"Rejected: {Rejected}");
             sb.AppendLine($"RejectedReason: {RejectedReason}");

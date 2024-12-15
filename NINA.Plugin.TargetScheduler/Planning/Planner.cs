@@ -80,12 +80,6 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                             selectedTarget = SelectTargetByScore(readyTargets, new ScoringEngine(activeProfile, profilePreferences, atTime, previousTarget));
                         }
 
-                        /* CRAP.  I think we're going to need to maintain the selected exposure history
-                         * for a target.  Otherwise, there's no way to determine whether a dither is needed
-                         * or not once exposures start getting rejected, especially given varience with
-                         * ditherEvery.
-                         */
-
                         // Generate instructions for the selected target/exposure
                         List<IInstruction> instructions = new InstructionGenerator().Generate(selectedTarget, previousTarget);
                         return new SchedulerPlan(atTime, projects, selectedTarget, instructions, !checkCondition);
@@ -126,11 +120,11 @@ namespace NINA.Plugin.TargetScheduler.Planning {
         public List<IProject> FilterForIncomplete(List<IProject> projects) {
             if (NoProjects(projects)) { return null; }
 
-            foreach (IProject planProject in projects) {
-                if (!ProjectIsInComplete(planProject)) {
-                    SetRejected(planProject, Reasons.ProjectComplete);
-                    foreach (ITarget planTarget in planProject.Targets) {
-                        SetRejected(planTarget, Reasons.TargetComplete);
+            foreach (IProject project in projects) {
+                if (!ProjectIsInComplete(project)) {
+                    SetRejected(project, Reasons.ProjectComplete);
+                    foreach (ITarget target in project.Targets) {
+                        SetRejected(target, Reasons.TargetComplete);
                     }
                 }
             }
@@ -149,31 +143,31 @@ namespace NINA.Plugin.TargetScheduler.Planning {
         public List<IProject> FilterForVisibility(List<IProject> projects) {
             if (NoProjects(projects)) { return null; }
 
-            foreach (IProject planProject in projects) {
-                if (planProject.Rejected) { continue; }
+            foreach (IProject project in projects) {
+                if (project.Rejected) { continue; }
 
-                foreach (ITarget planTarget in planProject.Targets) {
-                    if (planTarget.Rejected) { continue; }
+                foreach (ITarget target in project.Targets) {
+                    if (target.Rejected) { continue; }
 
-                    if (!AstrometryUtils.RisesAtLocation(observerInfo, planTarget.Coordinates)) {
-                        TSLogger.Warning($"target {planProject.Name}/{planTarget.Name} never rises at location - skipping");
-                        SetRejected(planTarget, Reasons.TargetNeverRises);
+                    if (!AstrometryUtils.RisesAtLocation(observerInfo, target.Coordinates)) {
+                        TSLogger.Warning($"target {project.Name}/{target.Name} never rises at location - skipping");
+                        SetRejected(target, Reasons.TargetNeverRises);
                         continue;
                     }
 
                     // Get the most inclusive twilight over all incomplete exposure plans
                     TwilightCircumstances twilightCircumstances = TwilightCircumstances.AdjustTwilightCircumstances(observerInfo, atTime);
-                    TimeInterval twilightSpan = twilightCircumstances.GetTwilightSpan(GetOverallTwilight(planTarget));
+                    TimeInterval twilightSpan = twilightCircumstances.GetTwilightSpan(GetOverallTwilight(target));
 
                     // At high latitudes near the summer solsice, you can lose nighttime completely (even below the polar circle)
                     if (twilightSpan == null) {
-                        TSLogger.Warning($"No twilight span for target {planProject.Name}/{planTarget.Name} on {Utils.FormatDateTimeFull(atTime)} at latitude {observerInfo.Latitude}");
-                        SetRejected(planTarget, Reasons.TargetAllExposurePlans);
+                        TSLogger.Warning($"No twilight span for target {project.Name}/{target.Name} on {Utils.FormatDateTimeFull(atTime)} at latitude {observerInfo.Latitude}");
+                        SetRejected(target, Reasons.TargetAllExposurePlans);
                         continue;
                     }
 
                     TargetVisibility targetVisibility = new TargetVisibility(
-                        planTarget,
+                        target,
                         observerInfo,
                         twilightCircumstances.OnDate,
                         twilightCircumstances.Sunset,
@@ -181,16 +175,16 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                         TARGET_VISIBILITY_SAMPLE_INTERVAL);
 
                     if (!targetVisibility.ImagingPossible) {
-                        TSLogger.Debug($"Target not visible at all {planProject.Name}/{planTarget.Name} on {Utils.FormatDateTimeFull(atTime)} at latitude {observerInfo.Latitude}");
-                        SetRejected(planTarget, Reasons.TargetNotVisible);
+                        TSLogger.Debug($"Target not visible at all {project.Name}/{target.Name} on {Utils.FormatDateTimeFull(atTime)} at latitude {observerInfo.Latitude}");
+                        SetRejected(target, Reasons.TargetNotVisible);
                         continue;
                     }
 
                     // Determine the next time interval of visibility of at least the mimimum time
-                    VisibilityDetermination viz = targetVisibility.NextVisibleInterval(atTime, twilightSpan, planProject.HorizonDefinition, planProject.MinimumTime * 60);
+                    VisibilityDetermination viz = targetVisibility.NextVisibleInterval(atTime, twilightSpan, project.HorizonDefinition, project.MinimumTime * 60);
                     if (!viz.IsVisible) {
-                        TSLogger.Debug($"Target not visible for rest of night {planProject.Name}/{planTarget.Name} on {Utils.FormatDateTimeFull(atTime)} at latitude {observerInfo.Latitude}");
-                        SetRejected(planTarget, Reasons.TargetNotVisible);
+                        TSLogger.Debug($"Target not visible for rest of night {project.Name}/{target.Name} on {Utils.FormatDateTimeFull(atTime)} at latitude {observerInfo.Latitude}");
+                        SetRejected(target, Reasons.TargetNotVisible);
                         continue;
                     }
 
@@ -200,20 +194,20 @@ namespace NINA.Plugin.TargetScheduler.Planning {
 
                     // Clip time span to optional meridian window
                     TimeInterval meridianClippedSpan = null;
-                    if (planProject.MeridianWindow > 0) {
-                        TSLogger.Debug($"checking meridian window for {planProject.Name}/{planTarget.Name}");
+                    if (project.MeridianWindow > 0) {
+                        TSLogger.Debug($"checking meridian window for {project.Name}/{target.Name}");
                         meridianClippedSpan = new MeridianWindowClipper().Clip(
                                            targetStartTime,
                                            targetTransitTime,
                                            targetEndTime,
-                                           planProject.MeridianWindow);
+                                           project.MeridianWindow);
 
                         if (meridianClippedSpan == null) {
-                            SetRejected(planTarget, Reasons.TargetMeridianWindowClipped);
+                            SetRejected(target, Reasons.TargetMeridianWindowClipped);
                             continue;
                         }
 
-                        planTarget.MeridianWindow = meridianClippedSpan;
+                        target.MeridianWindow = meridianClippedSpan;
                         targetStartTime = meridianClippedSpan.StartTime;
                         targetEndTime = meridianClippedSpan.EndTime;
                     }
@@ -221,17 +215,17 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                     // If the start time is in the future, reject ... for now
                     DateTime actualStart = atTime > targetStartTime ? atTime : targetStartTime;
                     if (actualStart > atTime) {
-                        planTarget.StartTime = actualStart;
-                        planTarget.EndTime = targetEndTime;
+                        target.StartTime = actualStart;
+                        target.EndTime = targetEndTime;
                         string reason = meridianClippedSpan != null ? Reasons.TargetBeforeMeridianWindow : Reasons.TargetNotYetVisible;
-                        SetRejected(planTarget, reason);
+                        SetRejected(target, reason);
                         continue;
                     }
 
                     // Otherwise the target is a candidate
-                    planTarget.StartTime = targetStartTime;
-                    planTarget.EndTime = targetEndTime;
-                    planTarget.CulminationTime = targetTransitTime;
+                    target.StartTime = targetStartTime;
+                    target.EndTime = targetEndTime;
+                    target.CulminationTime = targetTransitTime;
                 }
             }
 
@@ -248,16 +242,16 @@ namespace NINA.Plugin.TargetScheduler.Planning {
             if (NoProjects(projects)) { return null; }
             MoonAvoidanceExpert expert = new MoonAvoidanceExpert(observerInfo);
 
-            foreach (IProject planProject in projects) {
-                if (planProject.Rejected) { continue; }
+            foreach (IProject project in projects) {
+                if (project.Rejected) { continue; }
 
-                foreach (ITarget planTarget in planProject.Targets) {
-                    if (planTarget.Rejected && planTarget.RejectedReason != Reasons.TargetNotYetVisible) { continue; }
+                foreach (ITarget target in project.Targets) {
+                    if (target.Rejected && target.RejectedReason != Reasons.TargetNotYetVisible) { continue; }
 
-                    foreach (IExposure planExposure in planTarget.ExposurePlans) {
-                        if (planExposure.IsIncomplete()) {
-                            if (expert.IsRejected(atTime, planTarget, planExposure)) {
-                                SetRejected(planExposure, Reasons.FilterMoonAvoidance);
+                    foreach (IExposure exposure in target.ExposurePlans) {
+                        if (exposure.IsIncomplete()) {
+                            if (expert.IsRejected(atTime, target, exposure)) {
+                                SetRejected(exposure, Reasons.FilterMoonAvoidance);
                             }
                         }
                     }
@@ -278,19 +272,19 @@ namespace NINA.Plugin.TargetScheduler.Planning {
             TwilightCircumstances twilightCircumstances = TwilightCircumstances.AdjustTwilightCircumstances(observerInfo, atTime);
             TwilightLevel? currentTwilightLevel = twilightCircumstances.GetCurrentTwilightLevel(atTime);
 
-            foreach (IProject planProject in projects) {
-                if (planProject.Rejected) { continue; }
+            foreach (IProject project in projects) {
+                if (project.Rejected) { continue; }
 
-                foreach (ITarget planTarget in planProject.Targets) {
-                    if (planTarget.Rejected) { continue; }
+                foreach (ITarget target in project.Targets) {
+                    if (target.Rejected) { continue; }
 
-                    foreach (IExposure planExposure in planTarget.ExposurePlans) {
-                        if (!planExposure.Rejected && planExposure.IsIncomplete()) {
+                    foreach (IExposure exposure in target.ExposurePlans) {
+                        if (!exposure.Rejected && exposure.IsIncomplete()) {
                             if (currentTwilightLevel.HasValue) {
-                                if (currentTwilightLevel > planExposure.TwilightLevel)
-                                    SetRejected(planExposure, Reasons.FilterTwilight);
+                                if (currentTwilightLevel > exposure.TwilightLevel)
+                                    SetRejected(exposure, Reasons.FilterTwilight);
                             } else {
-                                SetRejected(planExposure, Reasons.FilterTwilight);
+                                SetRejected(exposure, Reasons.FilterTwilight);
                             }
                         }
                     }
@@ -310,15 +304,15 @@ namespace NINA.Plugin.TargetScheduler.Planning {
 
             if (NoProjects(projects)) { return targets; }
 
-            foreach (IProject planProject in projects) {
-                if (planProject.Rejected) { continue; }
+            foreach (IProject project in projects) {
+                if (project.Rejected) { continue; }
 
-                foreach (ITarget planTarget in planProject.Targets) {
-                    if (planTarget.Rejected) { continue; }
+                foreach (ITarget target in project.Targets) {
+                    if (target.Rejected) { continue; }
 
-                    TimeSpan diff = atTime - planTarget.StartTime;
+                    TimeSpan diff = atTime - target.StartTime;
                     if (Math.Abs(diff.TotalSeconds) <= TARGET_VISIBILITY_SAMPLE_INTERVAL * 2) {
-                        targets.Add(planTarget);
+                        targets.Add(target);
                     }
                 }
             }
@@ -330,13 +324,18 @@ namespace NINA.Plugin.TargetScheduler.Planning {
         /// Select the best exposure plan now for each potential target.
         /// </summary>
         /// <param name="readyTargets"></param>
+        /// <param name="previousTarget"></param>
         public void SelectTargetExposures(List<ITarget> readyTargets, ITarget previousTarget) {
+            if (Common.IsEmpty(readyTargets)) {
+                return;
+            }
+
             ExposureSelectionExpert selectionExpert = new ExposureSelectionExpert();
             IExposure previousExposure = previousTarget != null ? previousTarget.SelectedExposure : null;
 
-            foreach (ITarget planTarget in readyTargets) {
-                IExposureSelector exposureSelector = selectionExpert.GetExposureSelector(planTarget.Project, planTarget);
-                planTarget.SelectedExposure = exposureSelector.Select(atTime, planTarget.Project, planTarget, previousExposure);
+            foreach (ITarget target in readyTargets) {
+                IExposureSelector exposureSelector = selectionExpert.GetExposureSelector(target.Project, target);
+                target.SelectedExposure = exposureSelector.Select(atTime, target.Project, target, previousExposure);
             }
         }
 
@@ -347,6 +346,12 @@ namespace NINA.Plugin.TargetScheduler.Planning {
         /// <param name="scoringEngine"></param>
         /// <returns></returns>
         public ITarget SelectTargetByScore(List<ITarget> readyTargets, IScoringEngine scoringEngine) {
+            if (Common.IsEmpty(readyTargets)) {
+                throw new ArgumentException("no ready targets in SelectTargetByScore");
+            }
+
+            if (readyTargets.Count == 1) { return readyTargets[0]; }
+
             ITarget highScoreTarget = null;
             double highScore = double.MinValue;
 
@@ -389,11 +394,11 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                 return targets;
             }
 
-            foreach (IProject planProject in projects) {
-                if (planProject.Rejected) { continue; }
-                foreach (ITarget planTarget in planProject.Targets) {
-                    if (planTarget.Rejected) { continue; }
-                    targets.Add(planTarget);
+            foreach (IProject project in projects) {
+                if (project.Rejected) { continue; }
+                foreach (ITarget target in project.Targets) {
+                    if (target.Rejected) { continue; }
+                    targets.Add(target);
                 }
             }
 
@@ -404,70 +409,70 @@ namespace NINA.Plugin.TargetScheduler.Planning {
             return projects == null || projects.Count == 0;
         }
 
-        private void SetRejected(IProject planProject, string reason) {
-            planProject.Rejected = true;
-            planProject.RejectedReason = reason;
+        private void SetRejected(IProject project, string reason) {
+            project.Rejected = true;
+            project.RejectedReason = reason;
         }
 
-        private void SetRejected(ITarget planTarget, string reason) {
-            planTarget.Rejected = true;
-            planTarget.RejectedReason = reason;
+        private void SetRejected(ITarget target, string reason) {
+            target.Rejected = true;
+            target.RejectedReason = reason;
         }
 
-        private void SetRejected(IExposure planExposure, string reason) {
-            planExposure.Rejected = true;
-            planExposure.RejectedReason = reason;
+        private void SetRejected(IExposure exposure, string reason) {
+            exposure.Rejected = true;
+            exposure.RejectedReason = reason;
         }
 
         private List<IProject> PropagateRejections(List<IProject> projects) {
             if (NoProjects(projects)) { return null; }
 
-            foreach (IProject planProject in projects) {
-                if (planProject.Rejected) { continue; }
+            foreach (IProject project in projects) {
+                if (project.Rejected) { continue; }
                 bool projectRejected = true;
 
-                foreach (ITarget planTarget in planProject.Targets) {
-                    if (planTarget.Rejected) { continue; }
+                foreach (ITarget target in project.Targets) {
+                    if (target.Rejected) { continue; }
                     bool targetRejected = true;
 
                     bool allExposurePlansComplete = true;
-                    foreach (IExposure planExposure in planTarget.ExposurePlans) {
-                        if (!planExposure.Rejected) {
+                    foreach (IExposure exposure in target.ExposurePlans) {
+                        if (!exposure.Rejected) {
                             targetRejected = false;
                             break;
                         }
 
-                        if (planExposure.Rejected && planExposure.RejectedReason != Reasons.FilterComplete) {
+                        if (exposure.Rejected && exposure.RejectedReason != Reasons.FilterComplete) {
                             allExposurePlansComplete = false;
                         }
                     }
 
                     if (targetRejected) {
-                        SetRejected(planTarget, allExposurePlansComplete ? Reasons.TargetComplete : Reasons.TargetAllExposurePlans);
+                        SetRejected(target, allExposurePlansComplete ? Reasons.TargetComplete : Reasons.TargetAllExposurePlans);
                     }
 
-                    if (!planTarget.Rejected) {
+                    if (!target.Rejected) {
                         projectRejected = false;
                     }
                 }
 
                 if (projectRejected) {
-                    SetRejected(planProject, Reasons.ProjectAllTargets);
+                    SetRejected(project, Reasons.ProjectAllTargets);
                 }
             }
 
             return projects;
         }
 
-        private bool ProjectIsInComplete(IProject planProject) {
+        private bool ProjectIsInComplete(IProject project) {
             bool incomplete = false;
 
-            foreach (ITarget target in planProject.Targets) {
-                foreach (IExposure planExposure in target.ExposurePlans) {
-                    if (planExposure.NeededExposures() > 0) {
+            foreach (ITarget target in project.Targets) {
+                foreach (IExposure exposure in target.ExposurePlans) {
+                    if (exposure.NeededExposures() > 0) {
                         incomplete = true;
                     } else {
-                        SetRejected(planExposure, Reasons.FilterComplete);
+                        SetRejected(exposure, Reasons.FilterComplete);
                     }
                 }
             }
@@ -475,12 +480,12 @@ namespace NINA.Plugin.TargetScheduler.Planning {
             return incomplete;
         }
 
-        private TwilightLevel GetOverallTwilight(ITarget planTarget) {
+        private TwilightLevel GetOverallTwilight(ITarget target) {
             TwilightLevel twilightLevel = TwilightLevel.Nighttime;
-            foreach (IExposure planExposure in planTarget.ExposurePlans) {
+            foreach (IExposure exposure in target.ExposurePlans) {
                 // find most permissive (brightest) twilight over all incomplete plans
-                if (planExposure.TwilightLevel > twilightLevel && planExposure.IsIncomplete()) {
-                    twilightLevel = planExposure.TwilightLevel;
+                if (exposure.TwilightLevel > twilightLevel && exposure.IsIncomplete()) {
+                    twilightLevel = exposure.TwilightLevel;
                 }
             }
 

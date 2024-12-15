@@ -56,35 +56,6 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
             sut.Advance().Should().BeSameAs(list[0]);
             list[5].Next.Should().BeFalse();
             list[0].Next.Should().BeTrue();
-
-            /*
-            list.Add(new PlanningFilterCadence(1, true, FilterCadenceAction.Exposure, 0));
-            IFilterCadenceItem fc = new FilterCadence(list).Advance();
-            fc.Should().BeSameAs(list[0]);
-
-            list.Clear();
-            list.Add(new PlanningFilterCadence(1, true, FilterCadenceAction.Exposure, 0));
-            list.Add(new PlanningFilterCadence(2, false, FilterCadenceAction.Exposure, 1));
-            list.Add(new PlanningFilterCadence(3, false, FilterCadenceAction.Exposure, 2));
-
-            fc = new FilterCadence(list).Advance();
-            fc.Should().BeSameAs(list[1]);
-            list[0].Next.Should().BeFalse();
-            list[1].Next.Should().BeTrue();
-            list[2].Next.Should().BeFalse();
-
-            fc = new FilterCadence(list).Advance();
-            fc.Should().BeSameAs(list[2]);
-            list[0].Next.Should().BeFalse();
-            list[1].Next.Should().BeFalse();
-            list[2].Next.Should().BeTrue();
-
-            fc = new FilterCadence(list).Advance();
-            fc.Should().BeSameAs(list[0]);
-            list[0].Next.Should().BeTrue();
-            list[1].Next.Should().BeFalse();
-            list[2].Next.Should().BeFalse();
-            */
         }
 
         [Test]

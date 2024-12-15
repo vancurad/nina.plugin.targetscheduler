@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using NINA.Core.Model.Equipment;
 using NINA.Plugin.TargetScheduler.Database.Schema;
 using NINA.Plugin.TargetScheduler.Planning.Entities;
 using NINA.Plugin.TargetScheduler.Planning.Interfaces;
@@ -35,21 +36,52 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Entities {
             sut.CompletedExposurePlans.Should().NotBeNull().And.HaveCount(0);
             sut.OverrideExposureOrders.Should().NotBeNull().And.HaveCount(0);
             sut.FilterCadence.Count.Should().Be(0);
+        }
 
-            OverrideExposureOrderItem oeo = new OverrideExposureOrderItem();
-            oeo.ReferenceIdx = 101;
-            target.OverrideExposureOrders.Add(oeo);
-            FilterCadenceItem fc = new FilterCadenceItem();
-            fc.Order = 1;
-            fc.Next = true;
-            fc.Action = FilterCadenceAction.Exposure;
-            fc.ReferenceIdx = 202;
-            target.FilterCadences.Add(fc);
+        [Test]
+        public void TestWithOverrideExposureOrder() {
+            IProject project = PlanMocks.GetMockPlanProject("project", ProjectState.Active).Object;
+            Target target = new Target();
+            target.Id = 101;
+            target.Name = "target";
+            target.ra = 12;
+            target.dec = 13;
+            target.rotation = 14;
+            target.roi = .8;
+            target.FilterCadences = new List<FilterCadenceItem>();
 
-            sut = new PlanningTarget(project, target);
-            sut.OverrideExposureOrders.Should().NotBeNull().And.HaveCount(1);
-            sut.OverrideExposureOrders[0].ReferenceIdx.Should().Be(101);
-            sut.FilterCadence.Count.Should().Be(1);
+            ExposurePlan L = GetEP("L");
+            ExposurePlan R = GetEP("R");
+            ExposurePlan G = GetEP("G");
+            ExposurePlan B = GetEP("B");
+            target.ExposurePlans = new List<ExposurePlan>();
+            target.ExposurePlans.Add(L);
+            target.ExposurePlans.Add(R);
+            target.ExposurePlans.Add(G);
+            target.ExposurePlans.Add(B);
+
+            target.OverrideExposureOrders = new List<OverrideExposureOrderItem>();
+            target.OverrideExposureOrders.Add(GetOEO(1, 1, OverrideExposureOrderAction.Exposure, 0));
+            target.OverrideExposureOrders.Add(GetOEO(1, 2, OverrideExposureOrderAction.Exposure, 0));
+            target.OverrideExposureOrders.Add(GetOEO(1, 3, OverrideExposureOrderAction.Dither, -1));
+            target.OverrideExposureOrders.Add(GetOEO(1, 4, OverrideExposureOrderAction.Exposure, 1));
+            target.OverrideExposureOrders.Add(GetOEO(1, 5, OverrideExposureOrderAction.Exposure, 1));
+            target.OverrideExposureOrders.Add(GetOEO(1, 6, OverrideExposureOrderAction.Dither, -1));
+
+            PlanningTarget sut = new PlanningTarget(project, target);
+            sut.ExposurePlans.Count.Should().Be(2);
+            sut.ExposurePlans[0].FilterName.Should().Be("L");
+            sut.ExposurePlans[1].FilterName.Should().Be("R");
+        }
+
+        private ExposurePlan GetEP(string filterName) {
+            var ep = new ExposurePlan();
+            ep.ExposureTemplate = new ExposureTemplate { FilterName = filterName, BinningMode = new BinningMode(1, 1) };
+            return ep;
+        }
+
+        private OverrideExposureOrderItem GetOEO(int tid, int order, OverrideExposureOrderAction action, int refIdx) {
+            return new OverrideExposureOrderItem { TargetId = tid, Order = order, Action = action, ReferenceIdx = refIdx };
         }
     }
 }
