@@ -20,10 +20,9 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
         public double ROI { get; set; }
         public List<IExposure> ExposurePlans { get; set; }
         public List<IExposure> CompletedExposurePlans { get; set; }
-        public List<IOverrideExposureOrderItem> OverrideExposureOrders { get; set; }
-        public FilterCadence FilterCadence { get; set; }
-        public DitherManager DitherManager { get; set; }
+        public IExposureSelector ExposureSelector { get; set; }
         public IProject Project { get; set; }
+
         public bool Rejected { get; set; }
         public string RejectedReason { get; set; }
         public IExposure SelectedExposure { get; set; }
@@ -59,15 +58,11 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
                 }
             }
 
-            OverrideExposureOrders = new List<IOverrideExposureOrderItem>(target.OverrideExposureOrders.Count);
-            target.OverrideExposureOrders.ForEach(oeo => { this.OverrideExposureOrders.Add(new PlanningOverrideExposureOrder(oeo)); });
-
-            this.FilterCadence = new FilterCadenceFactory().Generate(planProject, this, target);
-            this.DitherManager = new DitherManager(planProject.DitherEvery);
+            ExposureSelector = new ExposureSelectionExpert().GetExposureSelector(planProject, this, target);
         }
 
         public PlanningTarget() {
-        } // for PlanTargetEmulator only
+        } // for PlanningTargetEmulator only
 
         private List<ExposurePlan> GetActiveExposurePlans(Target target) {
             if (target.OverrideExposureOrders.Count == 0) {

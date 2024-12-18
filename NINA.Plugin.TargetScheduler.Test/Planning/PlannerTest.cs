@@ -533,6 +533,34 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
             t2.Rejected.Should().BeFalse();
         }
 
+        [Test]
+        [Ignore("GetNextPossibleTarget needs more tests when real future wait is implemented")]
+        public void testGetNextPossibleTarget() {
+            /*
+            Mock<IProfileService> profileMock = PlanMocks.GetMockProfileService(TestData.Pittsboro_NC);
+            IProfile profile = profileMock.Object.ActiveProfile;
+            DateTime atTime = new DateTime(2023, 12, 25, 18, 0, 0);
+
+            // 2 targets in future
+            Mock<IProject> pp1 = PlanMocks.GetMockPlanProject("pp1", ProjectState.Active);
+            Mock<ITarget> pt1 = PlanMocks.GetMockPlanTarget("M42", TestData.M42);
+            pt1.SetupProperty(t => t.StartTime, atTime.AddHours(1));
+            Mock<IExposure> pf1 = PlanMocks.GetMockPlanExposure("Ha", 10, 0);
+            PlanMocks.AddMockPlanFilter(pt1, pf1);
+            PlanMocks.AddMockPlanTarget(pp1, pt1);
+
+            Mock<ITarget> pt2 = PlanMocks.GetMockPlanTarget("M42", TestData.M42);
+            pt2.SetupProperty(t => t.StartTime, atTime.AddHours(2));
+            Mock<IExposure> pf2 = PlanMocks.GetMockPlanExposure("S2", 10, 0);
+            PlanMocks.AddMockPlanFilter(pt2, pf2);
+            PlanMocks.AddMockPlanTarget(pp1, pt2);
+
+            List<IProject> projects = PlanMocks.ProjectsList(pp1.Object);
+            ITarget target = new Planner(atTime, profile, GetPrefs(), false).GetNextPossibleTarget(projects);
+            target.Should().Be(pt1.Object);
+            */
+        }
+
         private ProfilePreference GetPrefs(string profileId = "abcd-1234") {
             return new ProfilePreference(profileId);
         }

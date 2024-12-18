@@ -305,8 +305,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Exposures {
         public List<IExposure> ExposurePlans { get; set; }
         public List<IExposure> CompletedExposurePlans { get; set; }
         public List<IOverrideExposureOrderItem> OverrideExposureOrders { get; set; }
-        public FilterCadence FilterCadence { get; set; }
-        public DitherManager DitherManager { get; set; }
+        public IExposureSelector ExposureSelector { get; set; }
 
         public TestPlanTarget() {
             ExposurePlans = new List<IExposure>();

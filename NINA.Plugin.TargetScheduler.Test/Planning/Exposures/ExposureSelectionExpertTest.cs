@@ -16,12 +16,13 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Exposures {
         public void testBasicExposureSelector() {
             Mock<IProject> mockProject = PlanMocks.GetMockPlanProject("P1", ProjectState.Active);
             mockProject.SetupAllProperties();
+            mockProject.SetupProperty(p => p.FilterSwitchFrequency, 1);
             mockProject.SetupProperty(p => p.SmartExposureOrder, false);
             Mock<ITarget> mockTarget = PlanMocks.GetMockPlanTarget("T1", TestData.M31);
             mockTarget.SetupAllProperties();
-            mockTarget.SetupProperty(t => t.OverrideExposureOrders, new List<IOverrideExposureOrderItem>());
+            mockTarget.SetupProperty(t => t.ExposurePlans, new List<IExposure>());
 
-            IExposureSelector s = new ExposureSelectionExpert().GetExposureSelector(mockProject.Object, mockTarget.Object);
+            IExposureSelector s = new ExposureSelectionExpert().GetExposureSelector(mockProject.Object, mockTarget.Object, new Target());
             (s is BasicExposureSelector).Should().BeTrue();
         }
 
@@ -33,8 +34,21 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Exposures {
             Mock<ITarget> mockTarget = PlanMocks.GetMockPlanTarget("T1", TestData.M31);
             mockTarget.SetupAllProperties();
 
-            IExposureSelector s = new ExposureSelectionExpert().GetExposureSelector(mockProject.Object, mockTarget.Object);
+            IExposureSelector s = new ExposureSelectionExpert().GetExposureSelector(mockProject.Object, mockTarget.Object, new Target());
             (s is SmartExposureSelector).Should().BeTrue();
+        }
+
+        [Test]
+        public void testRepeatUntilDoneExposureSelector() {
+            Mock<IProject> mockProject = PlanMocks.GetMockPlanProject("P1", ProjectState.Active);
+            mockProject.SetupAllProperties();
+            mockProject.SetupProperty(p => p.FilterSwitchFrequency, 0);
+            mockProject.SetupProperty(p => p.SmartExposureOrder, false);
+            Mock<ITarget> mockTarget = PlanMocks.GetMockPlanTarget("T1", TestData.M31);
+            mockTarget.SetupAllProperties();
+
+            IExposureSelector s = new ExposureSelectionExpert().GetExposureSelector(mockProject.Object, mockTarget.Object, new Target());
+            (s is RepeatUntilDoneExposureSelector).Should().BeTrue();
         }
 
         [Test]
@@ -44,11 +58,15 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Exposures {
             mockProject.SetupProperty(p => p.SmartExposureOrder, false);
             Mock<ITarget> mockTarget = PlanMocks.GetMockPlanTarget("T1", TestData.M31);
             mockTarget.SetupAllProperties();
-            Mock<IOverrideExposureOrderItem> oeo = new Mock<IOverrideExposureOrderItem>();
-            List<IOverrideExposureOrderItem> oeos = new List<IOverrideExposureOrderItem>() { oeo.Object };
-            mockTarget.SetupProperty(t => t.OverrideExposureOrders, oeos);
 
-            IExposureSelector s = new ExposureSelectionExpert().GetExposureSelector(mockProject.Object, mockTarget.Object);
+            List<OverrideExposureOrderItem> oeos = new List<OverrideExposureOrderItem>();
+            oeos.Add(new OverrideExposureOrderItem(101, 1, OverrideExposureOrderAction.Exposure, 0));
+            oeos.Add(new OverrideExposureOrderItem(101, 2, OverrideExposureOrderAction.Dither, -1));
+
+            Target target = new Target();
+            target.OverrideExposureOrders = oeos;
+
+            IExposureSelector s = new ExposureSelectionExpert().GetExposureSelector(mockProject.Object, mockTarget.Object, target);
             (s is OverrideOrderExposureSelector).Should().BeTrue();
         }
     }

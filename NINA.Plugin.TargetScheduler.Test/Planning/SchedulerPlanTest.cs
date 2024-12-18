@@ -37,11 +37,13 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
         [Test]
         public void testWait() {
             DateTime atTime = new(2024, 12, 1, 20, 0, 0);
-            SchedulerPlan sut = new(atTime, new List<IProject>(), atTime.AddHours(1), false);
+            Mock<ITarget> mockTarget = PlanMocks.GetMockPlanTarget("T1", TestData.M31);
+            mockTarget.SetupProperty(t => t.StartTime, atTime.AddHours(1));
+            SchedulerPlan sut = new(atTime, new List<IProject>(), mockTarget.Object, false);
             sut.PlanTime.Should().Be(atTime);
             sut.StartTime.Should().Be(atTime);
             sut.EndTime.Should().Be(atTime.AddHours(1));
-            sut.PlanTarget.Should().BeNull();
+            sut.PlanTarget.Should().Be(mockTarget.Object);
             sut.Projects.Count.Should().Be(0);
             sut.TimeInterval.StartTime.Should().Be(atTime);
             sut.TimeInterval.EndTime.Should().Be(atTime.AddHours(1));

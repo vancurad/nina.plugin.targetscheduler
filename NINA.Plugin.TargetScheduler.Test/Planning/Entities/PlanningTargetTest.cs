@@ -2,6 +2,7 @@
 using NINA.Core.Model.Equipment;
 using NINA.Plugin.TargetScheduler.Database.Schema;
 using NINA.Plugin.TargetScheduler.Planning.Entities;
+using NINA.Plugin.TargetScheduler.Planning.Exposures;
 using NINA.Plugin.TargetScheduler.Planning.Interfaces;
 using NUnit.Framework;
 using System.Collections.Generic;
@@ -14,6 +15,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Entities {
         [Test]
         public void TestPlanningTarget() {
             IProject project = PlanMocks.GetMockPlanProject("project", ProjectState.Active).Object;
+            project.FilterSwitchFrequency = 1;
             Target target = new Target();
             target.Id = 101;
             target.Name = "target";
@@ -34,8 +36,8 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Entities {
             sut.Rejected.Should().BeFalse();
             sut.ExposurePlans.Should().NotBeNull().And.HaveCount(0);
             sut.CompletedExposurePlans.Should().NotBeNull().And.HaveCount(0);
-            sut.OverrideExposureOrders.Should().NotBeNull().And.HaveCount(0);
-            sut.FilterCadence.Count.Should().Be(0);
+            sut.ExposureSelector.Should().NotBeNull();
+            (sut.ExposureSelector is BasicExposureSelector).Should().BeTrue();
         }
 
         [Test]
@@ -72,6 +74,9 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Entities {
             sut.ExposurePlans.Count.Should().Be(2);
             sut.ExposurePlans[0].FilterName.Should().Be("L");
             sut.ExposurePlans[1].FilterName.Should().Be("R");
+
+            sut.ExposureSelector.Should().NotBeNull();
+            (sut.ExposureSelector is OverrideOrderExposureSelector).Should().BeTrue();
         }
 
         private ExposurePlan GetEP(string filterName) {

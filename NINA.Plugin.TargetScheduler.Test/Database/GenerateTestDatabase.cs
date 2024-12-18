@@ -13,10 +13,11 @@ namespace NINA.Plugin.TargetScheduler.Test.Database {
             db = GetDatabase();
         }
 
+        /*
         [Test]
         [Ignore("tbd")]
         public void Test1() {
-        }
+        }*/
 
         private SchedulerDatabaseInteraction GetDatabase() {
             var testDbPath = Path.Combine(TestContext.CurrentContext.TestDirectory, @"schedulerdb.sqlite");

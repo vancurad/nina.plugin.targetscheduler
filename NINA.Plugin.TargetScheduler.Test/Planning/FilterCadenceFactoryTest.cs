@@ -2,7 +2,6 @@
 using Moq;
 using NINA.Plugin.TargetScheduler.Database.Schema;
 using NINA.Plugin.TargetScheduler.Planning;
-using NINA.Plugin.TargetScheduler.Planning.Entities;
 using NINA.Plugin.TargetScheduler.Planning.Interfaces;
 using NINA.Plugin.TargetScheduler.Test.Astrometry;
 using NUnit.Framework;
@@ -93,15 +92,18 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
             pp1.SetupProperty(m => m.SmartExposureOrder, false);
             Mock<ITarget> pt = PlanMocks.GetMockPlanTarget("IC1805", TestData.IC1805);
             SetEPs(pt);
-            List<IOverrideExposureOrderItem> overrideExposureOrders = new List<IOverrideExposureOrderItem>();
-            overrideExposureOrders.Add(new PlanningOverrideExposureOrder(1, OverrideExposureOrderAction.Exposure, 0));
-            overrideExposureOrders.Add(new PlanningOverrideExposureOrder(2, OverrideExposureOrderAction.Exposure, 1));
-            overrideExposureOrders.Add(new PlanningOverrideExposureOrder(3, OverrideExposureOrderAction.Dither, -1));
-            pt.SetupProperty(t => t.OverrideExposureOrders, overrideExposureOrders);
             PlanMocks.AddMockPlanTarget(pp1, pt);
 
+            List<OverrideExposureOrderItem> oeos = new List<OverrideExposureOrderItem>();
+            oeos.Add(new OverrideExposureOrderItem(101, 1, OverrideExposureOrderAction.Exposure, 0));
+            oeos.Add(new OverrideExposureOrderItem(101, 2, OverrideExposureOrderAction.Exposure, 1));
+            oeos.Add(new OverrideExposureOrderItem(101, 3, OverrideExposureOrderAction.Dither, -1));
+
+            Target target = new Target();
+            target.OverrideExposureOrders = oeos;
+
             FilterCadenceFactory sut = new FilterCadenceFactory();
-            var list = sut.Generate(pp1.Object, pt.Object, new Target()).List;
+            var list = sut.Generate(pp1.Object, pt.Object, target).List;
             list.Should().HaveCount(3);
 
             AssertFilterCadence(list[0], 1, true, FilterCadenceAction.Exposure, 0);

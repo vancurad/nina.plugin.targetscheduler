@@ -233,18 +233,26 @@ namespace NINA.Plugin.TargetScheduler.Controls.PlanPreview {
                     return;
                 }
 
-                foreach (SchedulerPlan plan in SchedulerPlans) {
-                    TreeViewItem planItem = new TreeViewItem();
+                int lastTargetId = -1;
+                string lastFilterName = null;
+                TreeViewItem planItem = null;
 
+                foreach (SchedulerPlan plan in SchedulerPlans) {
                     if (plan.IsWait) {
+                        planItem = new TreeViewItem();
                         planItem.Header = $"Wait until {Utils.FormatDateTimeFull(plan.WaitForNextTargetTime)}";
                         list.Add(planItem);
+                        lastTargetId = -1;
                         continue;
                     }
 
-                    planItem.Header = GetTargetLabel(plan);
-                    planItem.IsExpanded = false;
-                    list.Add(planItem);
+                    if (plan.PlanTarget.DatabaseId != lastTargetId) {
+                        lastTargetId = plan.PlanTarget.DatabaseId;
+                        planItem = new TreeViewItem();
+                        planItem.Header = GetTargetLabel(plan);
+                        planItem.IsExpanded = false;
+                        list.Add(planItem);
+                    }
 
                     foreach (IInstruction instruction in plan.PlanInstructions) {
                         TreeViewItem instructionItem = new TreeViewItem();
@@ -260,8 +268,12 @@ namespace NINA.Plugin.TargetScheduler.Controls.PlanPreview {
                         }
 
                         if (instruction is PlanSwitchFilter) {
-                            instructionItem.Header = $"Switch Filter: {((PlanSwitchFilter)instruction).planExposure.FilterName}";
-                            planItem.Items.Add(instructionItem);
+                            string filterName = ((PlanSwitchFilter)instruction).planExposure.FilterName;
+                            if (filterName != lastFilterName) {
+                                lastFilterName = filterName;
+                                instructionItem.Header = $"Switch Filter: {filterName}";
+                                planItem.Items.Add(instructionItem);
+                            }
                             continue;
                         }
 
@@ -365,7 +377,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.PlanPreview {
 
         private string GetTargetLabel(SchedulerPlan plan) {
             string label = $"{plan.PlanTarget.Project.Name} / {plan.PlanTarget.Name}";
-            return $"{label} - start: {Utils.FormatDateTimeFull(plan.StartTime)} stop: {Utils.FormatDateTimeFull(plan.EndTime)}";
+            return $"{label} - start: {Utils.FormatDateTimeFull(plan.StartTime)}";
         }
 
         private string GetSlewLabel(ITarget planTarget, PlanSlew planSlew) {

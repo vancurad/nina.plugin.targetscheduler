@@ -50,12 +50,11 @@ namespace NINA.Plugin.TargetScheduler.Planning {
 
         private void PrepForNextRun(List<IProject> projects, SchedulerPlan plan) {
             if (!plan.IsWait) {
-                if ((previousTarget != null && plan.PlanTarget != previousTarget) || plan.PlanTarget.SelectedExposure.PreDither) {
-                    plan.PlanTarget.DitherManager.Reset();
+                if ((previousTarget != null && plan.PlanTarget != previousTarget)) {
+                    plan.PlanTarget.ExposureSelector.TargetReset();
                 }
 
-                plan.PlanTarget.DitherManager.AddExposure(plan.PlanTarget.SelectedExposure);
-                plan.PlanTarget.FilterCadence.Advance();
+                plan.PlanTarget.ExposureSelector.ExposureTaken(plan.PlanTarget.SelectedExposure);
 
                 if (plan.PlanTarget.Project.EnableGrader) {
                     plan.PlanTarget.SelectedExposure.Accepted++;

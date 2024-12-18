@@ -4,7 +4,6 @@ using NINA.Core.Utility;
 using NINA.Plugin.TargetScheduler.Astrometry;
 using NINA.Plugin.TargetScheduler.Database;
 using NINA.Plugin.TargetScheduler.Database.Schema;
-using NINA.Plugin.TargetScheduler.Planning.Exposures;
 using NINA.Plugin.TargetScheduler.Planning.Interfaces;
 using NINA.Plugin.TargetScheduler.Planning.Scoring;
 using NINA.Plugin.TargetScheduler.Shared.Utility;
@@ -71,33 +70,19 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                     List<ITarget> readyTargets = GetTargetsReadyNow(projects);
                     if (readyTargets.Count > 0) {
                         SelectTargetExposures(readyTargets, previousTarget);
-
-                        // If only one ready target, no need to run scoring engine
-                        ITarget selectedTarget;
-                        if (readyTargets.Count == 1) {
-                            selectedTarget = readyTargets[0];
-                        } else {
-                            selectedTarget = SelectTargetByScore(readyTargets, new ScoringEngine(activeProfile, profilePreferences, atTime, previousTarget));
-                        }
-
-                        // Generate instructions for the selected target/exposure
+                        ITarget selectedTarget = readyTargets.Count == 1
+                            ? readyTargets[0]
+                            : SelectTargetByScore(readyTargets, new ScoringEngine(activeProfile, profilePreferences, atTime, previousTarget));
                         List<IInstruction> instructions = new InstructionGenerator().Generate(selectedTarget, previousTarget);
                         return new SchedulerPlan(atTime, projects, selectedTarget, instructions, !checkCondition);
                     } else {
-                        // TODO: check for wait ...
-                        // HERE
-                        TSLogger.Info("Scheduler Planner: no target selected");
-                        return null;
-
-                        //throw new Exception("wait not yet implemented");
-                        /* Determine if we can wait for a target:
-                         * - For each remaining target:
-                         *   - For each visibility span:
-                         *     - At X second intervals over the span, check if any filters pass moon avoidance.  If so, that's
-                         *       the effective start time for this project.  Don't forget meridian clipping!
-                         * - The soonest effective start time over all targets is our wait time.
-                         * - Otherwise, we're done - nothing else available tonight.
-                         */
+                        ITarget nextTarget = GetNextPossibleTarget(projects);
+                        if (nextTarget != null) {
+                            return new SchedulerPlan(atTime, projects, nextTarget, !checkCondition);
+                        } else {
+                            TSLogger.Info("Scheduler Planner: no target selected");
+                            return null;
+                        }
                     }
                 } catch (Exception ex) {
                     if (ex is SequenceEntityFailedException) {
@@ -321,6 +306,68 @@ namespace NINA.Plugin.TargetScheduler.Planning {
         }
 
         /// <summary>
+        /// Determine the target (if any) that could potentially be imaged at a later time.  This takes into account
+        /// both the changing visibility of the target as well as well as other circumstances (like moon impact) that
+        /// may reject the target or exposure plans.
+        /// </summary>
+        /// <param name="projects"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public ITarget GetNextPossibleTarget(List<IProject> projects) {
+            if (NoProjects(projects)) { return null; }
+
+            List<ITarget> potentialTargets = new List<ITarget>();
+
+            // Find all targets that could possibly be imaged later
+            foreach (IProject project in projects) {
+                foreach (ITarget target in project.Targets) {
+                    if (target.Rejected
+                        && target.RejectedReason != Reasons.TargetNotYetVisible
+                        && target.RejectedReason != Reasons.TargetBeforeMeridianWindow) {
+                        continue;
+                    }
+
+                    potentialTargets.Add(target);
+                }
+            }
+
+            // Of the potential targets, find those that actually could be imaged given the actual circumstances
+            // present when visible.  For example, moon conditions later in the night could either reject or allow
+            // certain exposures - and perhaps not until later in the target's visibility time span.
+            List<ITarget> imagableTargets = new List<ITarget>();
+            foreach (ITarget target in potentialTargets) {
+                // any exposures good for the twilight level starting at target start time
+                DateTime potentialStart = target.StartTime;
+                // any exposures ready at this time?
+                potentialStart.AddMinutes(1);
+            }
+
+            /* TODO: here
+            List<ITarget> imagableTargets = new List<ITarget>();
+            foreach (ITarget target in potentialTargets) {
+            * Determine if we can wait for a target:
+             * - For each remaining target:
+             *   - For each visibility span:
+             *     - At X second intervals over the span, check if any filters pass moon avoidance.  If so, that's
+             *       the effective start time for this project.  Don't forget meridian clipping!
+             * - The soonest effective start time over all targets is our wait time.
+             * - Otherwise, we're done - nothing else available tonight.
+        }*/
+
+            // Find the soonest of the imagable targets
+            ITarget nextAvailableTarget = null;
+            DateTime? nextAvailableTime = DateTime.MaxValue;
+            foreach (ITarget target in imagableTargets) {
+                if (target.StartTime < nextAvailableTime) {
+                    nextAvailableTarget = target;
+                    nextAvailableTime = target.StartTime;
+                }
+            }
+
+            return nextAvailableTarget;
+        }
+
+        /// <summary>
         /// Select the best exposure plan now for each potential target.
         /// </summary>
         /// <param name="readyTargets"></param>
@@ -330,12 +377,9 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                 return;
             }
 
-            ExposureSelectionExpert selectionExpert = new ExposureSelectionExpert();
             IExposure previousExposure = previousTarget != null ? previousTarget.SelectedExposure : null;
-
             foreach (ITarget target in readyTargets) {
-                IExposureSelector exposureSelector = selectionExpert.GetExposureSelector(target.Project, target);
-                target.SelectedExposure = exposureSelector.Select(atTime, target.Project, target, previousExposure);
+                target.SelectedExposure = target.ExposureSelector.Select(atTime, target.Project, target, previousExposure);
             }
         }
 

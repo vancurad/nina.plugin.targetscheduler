@@ -14,7 +14,7 @@ namespace NINA.Plugin.TargetScheduler.Planning {
         public FilterCadence Generate(IProject project, ITarget target, Target databaseTarget) {
             List<IFilterCadenceItem> filterCadences = new List<IFilterCadenceItem>();
 
-            // Use database records if present
+            // Restore from database records if available
             if (Common.IsNotEmpty(databaseTarget.FilterCadences)) {
                 databaseTarget.FilterCadences.ForEach(fc => { filterCadences.Add(new PlanningFilterCadence(fc)); });
                 return new FilterCadence(filterCadences);
@@ -22,8 +22,8 @@ namespace NINA.Plugin.TargetScheduler.Planning {
 
             // Generate from override list
             int order = 1;
-            if (Common.IsNotEmpty(target.OverrideExposureOrders)) {
-                target.OverrideExposureOrders.ForEach((oeo) => {
+            if (Common.IsNotEmpty(databaseTarget.OverrideExposureOrders)) {
+                databaseTarget.OverrideExposureOrders.ForEach((oeo) => {
                     bool next = order == 1;
                     FilterCadenceAction action = oeo.Action == OverrideExposureOrderAction.Exposure ? FilterCadenceAction.Exposure : FilterCadenceAction.Dither;
                     filterCadences.Add(new PlanningFilterCadence(order++, next, action, oeo.ReferenceIdx));

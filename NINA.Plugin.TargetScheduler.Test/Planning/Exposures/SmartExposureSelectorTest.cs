@@ -1,5 +1,4 @@
 ﻿using NUnit.Framework;
-using System;
 
 namespace NINA.Plugin.TargetScheduler.Test.Planning.Exposures {
 
@@ -7,8 +6,8 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Exposures {
     public class SmartExposureSelectorTest {
 
         [Test]
-        public void testBasicExposureSelector() {
-            throw new NotImplementedException();
+        [Ignore("SmartExposureSelector test when implemented")]
+        public void testSmartExposureSelector() {
         }
     }
 }

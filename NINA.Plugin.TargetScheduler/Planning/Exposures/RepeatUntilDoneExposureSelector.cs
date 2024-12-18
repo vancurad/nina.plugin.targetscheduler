@@ -2,17 +2,17 @@
 using NINA.Plugin.TargetScheduler.Planning.Interfaces;
 using NINA.Plugin.TargetScheduler.Shared.Utility;
 using System;
+using System.Linq;
 
 namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
 
     /// <summary>
-    /// Select the next exposure based on the persisted filter cadence for this target.  Add a dither before the
-    /// exposure if appropriate.
+    /// Select the next exposure so that exposures that are not rejected are repeated until complete.  This
+    /// is the implementation for project filter switch frequency = 0.
     /// </summary>
-    public class BasicExposureSelector : BaseExposureSelector, IExposureSelector {
+    public class RepeatUntilDoneExposureSelector : BaseExposureSelector, IExposureSelector {
 
-        public BasicExposureSelector(IProject project, ITarget target, Target databaseTarget) : base() {
-            FilterCadence = new FilterCadenceFactory().Generate(project, target, databaseTarget);
+        public RepeatUntilDoneExposureSelector(IProject project, ITarget target, Target databaseTarget) : base() {
             DitherManager = new DitherManager(project.DitherEvery);
         }
 
@@ -21,23 +21,19 @@ namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
                 throw new Exception($"unexpected: all exposure plans were rejected at exposure selection time for target '{target.Name}' at time {atTime}");
             }
 
-            foreach (IFilterCadenceItem item in FilterCadence) {
-                IExposure exposure = target.ExposurePlans[item.ReferenceIdx];
-                if (!exposure.Rejected) {
-                    exposure.PreDither = DitherManager.DitherRequired(exposure);
-                    FilterCadence.SetLastSelected(item);
-                    return exposure;
-                }
+            IExposure exposure = target.ExposurePlans.FirstOrDefault(e => !e.Rejected);
+            if (exposure != null) {
+                exposure.PreDither = DitherManager.DitherRequired(exposure);
+                return exposure;
             }
 
             // Fail safe ... should not happen
-            string msg = $"no acceptable exposure plan in basic exposure selector for target '{target.Name}' at time {atTime}";
+            string msg = $"no acceptable exposure plan in repeat until done exposure selector for target '{target.Name}' at time {atTime}";
             TSLogger.Error(msg);
             throw new Exception(msg);
         }
 
         public void ExposureTaken(IExposure exposure) {
-            FilterCadence.Advance();
             if (exposure.PreDither) DitherManager.Reset();
             DitherManager.AddExposure(exposure);
         }

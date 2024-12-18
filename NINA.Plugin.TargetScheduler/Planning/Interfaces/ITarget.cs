@@ -16,10 +16,9 @@ namespace NINA.Plugin.TargetScheduler.Planning.Interfaces {
         double ROI { get; set; }
         List<IExposure> ExposurePlans { get; set; }
         List<IExposure> CompletedExposurePlans { get; set; }
-        List<IOverrideExposureOrderItem> OverrideExposureOrders { get; set; }
-        FilterCadence FilterCadence { get; set; }
-        DitherManager DitherManager { get; set; }
+        IExposureSelector ExposureSelector { get; set; }
         IProject Project { get; set; }
+
         bool Rejected { get; set; }
         string RejectedReason { get; set; }
         IExposure SelectedExposure { get; set; }

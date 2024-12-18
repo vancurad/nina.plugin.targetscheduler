@@ -26,13 +26,13 @@ namespace NINA.Plugin.TargetScheduler.Planning {
         public bool IsEmulator { get; set; }
         public string DetailsLog { get; private set; }
 
-        public SchedulerPlan(DateTime planTime, List<IProject> projects, ITarget planTarget, List<IInstruction> planInstructions, bool logPlan) {
+        public SchedulerPlan(DateTime planTime, List<IProject> projects, ITarget target, List<IInstruction> planInstructions, bool logPlan) {
             this.PlanId = Guid.NewGuid().ToString();
             this.PlanTime = planTime;
-            this.PlanTarget = planTarget;
+            this.PlanTarget = target;
             this.Projects = projects;
             this.PlanInstructions = planInstructions;
-            this.EndTime = planTime.AddSeconds(planTarget.SelectedExposure.ExposureLength);
+            this.EndTime = planTime.AddSeconds(target.SelectedExposure.ExposureLength);
             this.TimeInterval = new TimeInterval(StartTime, EndTime);
             this.WaitForNextTargetTime = null;
 
@@ -43,13 +43,14 @@ namespace NINA.Plugin.TargetScheduler.Planning {
             }
         }
 
-        public SchedulerPlan(DateTime planTime, List<IProject> projects, DateTime waitForNextTargetTime, bool logPlan) {
+        public SchedulerPlan(DateTime planTime, List<IProject> projects, ITarget nextTarget, bool logPlan) {
             this.PlanId = Guid.NewGuid().ToString();
             this.PlanTime = planTime;
-            this.EndTime = waitForNextTargetTime;
+            this.PlanTarget = nextTarget;
+            this.EndTime = nextTarget.StartTime;
             this.Projects = projects;
             this.TimeInterval = new TimeInterval(StartTime, EndTime);
-            this.WaitForNextTargetTime = waitForNextTargetTime;
+            this.WaitForNextTargetTime = nextTarget.StartTime;
 
             if (logPlan) {
                 string log = LogPlanResults();

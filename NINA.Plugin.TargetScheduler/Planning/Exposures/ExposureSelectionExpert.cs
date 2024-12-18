@@ -1,32 +1,41 @@
-﻿using NINA.Plugin.TargetScheduler.Planning.Interfaces;
+﻿using NINA.Plugin.TargetScheduler.Database.Schema;
+using NINA.Plugin.TargetScheduler.Planning.Interfaces;
 using System;
 
 namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
 
     /// <summary>
     /// Determine the appropriate exposure selector approach based on project/target settings and
-    /// select and next best exposure.
+    /// select the next best exposure.
     /// </summary>
     public class ExposureSelectionExpert {
 
         public ExposureSelectionExpert() {
         }
 
-        public IExposureSelector GetExposureSelector(IProject project, ITarget target) {
+        public IExposureSelector GetExposureSelector(IProject project, ITarget target, Target databaseTarget) {
             if (project.SmartExposureOrder) {
-                return new SmartExposureSelector();
+                return new SmartExposureSelector(project, target, databaseTarget);
             }
 
-            if (target.OverrideExposureOrders.Count > 0) {
-                return new OverrideOrderExposureSelector();
+            if (databaseTarget.OverrideExposureOrders.Count > 0) {
+                return new OverrideOrderExposureSelector(project, target, databaseTarget);
             }
 
-            return new BasicExposureSelector();
+            if (project.FilterSwitchFrequency == 0) {
+                return new RepeatUntilDoneExposureSelector(project, target, databaseTarget);
+            }
+
+            return new BasicExposureSelector(project, target, databaseTarget);
         }
     }
 
     public interface IExposureSelector {
 
         IExposure Select(DateTime atTime, IProject project, ITarget target, IExposure previousExposure);
+
+        void ExposureTaken(IExposure exposure);
+
+        void TargetReset();
     }
 }
