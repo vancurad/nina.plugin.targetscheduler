@@ -534,9 +534,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
         }
 
         [Test]
-        [Ignore("GetNextPossibleTarget needs more tests when real future wait is implemented")]
         public void testGetNextPossibleTarget() {
-            /*
             Mock<IProfileService> profileMock = PlanMocks.GetMockProfileService(TestData.Pittsboro_NC);
             IProfile profile = profileMock.Object.ActiveProfile;
             DateTime atTime = new DateTime(2023, 12, 25, 18, 0, 0);
@@ -558,7 +556,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
             List<IProject> projects = PlanMocks.ProjectsList(pp1.Object);
             ITarget target = new Planner(atTime, profile, GetPrefs(), false).GetNextPossibleTarget(projects);
             target.Should().Be(pt1.Object);
-            */
+            target.StartTime.Should().Be(atTime.AddHours(1));
         }
 
         private ProfilePreference GetPrefs(string profileId = "abcd-1234") {

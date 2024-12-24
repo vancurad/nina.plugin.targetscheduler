@@ -19,7 +19,7 @@ namespace NINA.Plugin.TargetScheduler.Planning {
     /// (and therefore independent of actual target-moon separation), the score can simply use the calculated required avoidance
     /// separation which will always be > 0 and < 180.
     /// </summary>
-    public class MoonAvoidanceExpert {
+    public class MoonAvoidanceExpert : IMoonAvoidanceExpert {
         public const double SCORE_OFF = 0;
         public const double SCORE_MAX = 1;
 
@@ -107,5 +107,16 @@ namespace NINA.Plugin.TargetScheduler.Planning {
         public virtual double GetMoonSeparationAngle(ObserverInfo location, DateTime atTime, Coordinates coordinates) {
             return AstrometryUtils.GetMoonSeparationAngle(observerInfo, atTime, coordinates);
         }
+    }
+
+    public interface IMoonAvoidanceExpert {
+
+        bool IsRejected(DateTime atTime, ITarget planTarget, IExposure planExposure);
+
+        double GetRelaxationMoonAltitude(DateTime evaluationTime);
+
+        double GetMoonAge(DateTime atTime);
+
+        double GetMoonSeparationAngle(ObserverInfo location, DateTime atTime, Coordinates coordinates);
     }
 }

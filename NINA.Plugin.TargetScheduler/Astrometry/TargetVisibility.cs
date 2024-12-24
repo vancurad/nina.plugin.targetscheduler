@@ -37,8 +37,8 @@ namespace NINA.Plugin.TargetScheduler.Astrometry {
         public bool ImagingPossible { get; private set; }
         public IList<PositionAtTime> TargetPositions { get; private set; }
 
-        public TargetVisibility(ITarget planTarget, ObserverInfo observerInfo, DateTime imagingDate, DateTime? sunset, DateTime? sunrise, int sampleInterval = 10) :
-            this(planTarget.Name, planTarget.DatabaseId, observerInfo, planTarget.Coordinates, imagingDate, sunset, sunrise, sampleInterval) { }
+        public TargetVisibility(ITarget target, ObserverInfo observerInfo, DateTime imagingDate, DateTime? sunset, DateTime? sunrise, int sampleInterval = 10) :
+            this(target.Name, target.DatabaseId, observerInfo, target.Coordinates, imagingDate, sunset, sunrise, sampleInterval) { }
 
         public TargetVisibility(string targetName, int targetId, ObserverInfo observerInfo, Coordinates coordinates, DateTime imagingDate, DateTime? sunset, DateTime? sunrise, int sampleInterval = 10) {
             if (sunset >= sunrise) {

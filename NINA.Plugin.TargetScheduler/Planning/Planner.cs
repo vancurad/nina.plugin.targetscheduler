@@ -15,8 +15,6 @@ using System.Collections.Generic;
 namespace NINA.Plugin.TargetScheduler.Planning {
 
     public class Planner {
-        private const int TARGET_VISIBILITY_SAMPLE_INTERVAL = 10;
-
         private bool checkCondition = false;
         private DateTime atTime;
         private IProfile activeProfile;
@@ -127,90 +125,13 @@ namespace NINA.Plugin.TargetScheduler.Planning {
         /// <returns></returns>
         public List<IProject> FilterForVisibility(List<IProject> projects) {
             if (NoProjects(projects)) { return null; }
+            TargetImagingExpert targetExpert = new TargetImagingExpert(activeProfile, profilePreferences);
 
             foreach (IProject project in projects) {
                 if (project.Rejected) { continue; }
 
                 foreach (ITarget target in project.Targets) {
-                    if (target.Rejected) { continue; }
-
-                    if (!AstrometryUtils.RisesAtLocation(observerInfo, target.Coordinates)) {
-                        TSLogger.Warning($"target {project.Name}/{target.Name} never rises at location - skipping");
-                        SetRejected(target, Reasons.TargetNeverRises);
-                        continue;
-                    }
-
-                    // Get the most inclusive twilight over all incomplete exposure plans
-                    TwilightCircumstances twilightCircumstances = TwilightCircumstances.AdjustTwilightCircumstances(observerInfo, atTime);
-                    TimeInterval twilightSpan = twilightCircumstances.GetTwilightSpan(GetOverallTwilight(target));
-
-                    // At high latitudes near the summer solsice, you can lose nighttime completely (even below the polar circle)
-                    if (twilightSpan == null) {
-                        TSLogger.Warning($"No twilight span for target {project.Name}/{target.Name} on {Utils.FormatDateTimeFull(atTime)} at latitude {observerInfo.Latitude}");
-                        SetRejected(target, Reasons.TargetAllExposurePlans);
-                        continue;
-                    }
-
-                    TargetVisibility targetVisibility = new TargetVisibility(
-                        target,
-                        observerInfo,
-                        twilightCircumstances.OnDate,
-                        twilightCircumstances.Sunset,
-                        twilightCircumstances.Sunrise,
-                        TARGET_VISIBILITY_SAMPLE_INTERVAL);
-
-                    if (!targetVisibility.ImagingPossible) {
-                        TSLogger.Debug($"Target not visible at all {project.Name}/{target.Name} on {Utils.FormatDateTimeFull(atTime)} at latitude {observerInfo.Latitude}");
-                        SetRejected(target, Reasons.TargetNotVisible);
-                        continue;
-                    }
-
-                    // Determine the next time interval of visibility of at least the mimimum time
-                    VisibilityDetermination viz = targetVisibility.NextVisibleInterval(atTime, twilightSpan, project.HorizonDefinition, project.MinimumTime * 60);
-                    if (!viz.IsVisible) {
-                        TSLogger.Debug($"Target not visible for rest of night {project.Name}/{target.Name} on {Utils.FormatDateTimeFull(atTime)} at latitude {observerInfo.Latitude}");
-                        SetRejected(target, Reasons.TargetNotVisible);
-                        continue;
-                    }
-
-                    DateTime targetStartTime = viz.StartTime;
-                    DateTime targetTransitTime = targetVisibility.TransitTime;
-                    DateTime targetEndTime = viz.StopTime;
-
-                    // Clip time span to optional meridian window
-                    TimeInterval meridianClippedSpan = null;
-                    if (project.MeridianWindow > 0) {
-                        TSLogger.Debug($"checking meridian window for {project.Name}/{target.Name}");
-                        meridianClippedSpan = new MeridianWindowClipper().Clip(
-                                           targetStartTime,
-                                           targetTransitTime,
-                                           targetEndTime,
-                                           project.MeridianWindow);
-
-                        if (meridianClippedSpan == null) {
-                            SetRejected(target, Reasons.TargetMeridianWindowClipped);
-                            continue;
-                        }
-
-                        target.MeridianWindow = meridianClippedSpan;
-                        targetStartTime = meridianClippedSpan.StartTime;
-                        targetEndTime = meridianClippedSpan.EndTime;
-                    }
-
-                    // If the start time is in the future, reject ... for now
-                    DateTime actualStart = atTime > targetStartTime ? atTime : targetStartTime;
-                    if (actualStart > atTime) {
-                        target.StartTime = actualStart;
-                        target.EndTime = targetEndTime;
-                        string reason = meridianClippedSpan != null ? Reasons.TargetBeforeMeridianWindow : Reasons.TargetNotYetVisible;
-                        SetRejected(target, reason);
-                        continue;
-                    }
-
-                    // Otherwise the target is a candidate
-                    target.StartTime = targetStartTime;
-                    target.EndTime = targetEndTime;
-                    target.CulminationTime = targetTransitTime;
+                    targetExpert.Visibility(atTime, target);
                 }
             }
 
@@ -225,21 +146,14 @@ namespace NINA.Plugin.TargetScheduler.Planning {
         /// <returns></returns>
         public List<IProject> FilterForMoonAvoidance(List<IProject> projects) {
             if (NoProjects(projects)) { return null; }
-            MoonAvoidanceExpert expert = new MoonAvoidanceExpert(observerInfo);
+            IMoonAvoidanceExpert moonExpert = new MoonAvoidanceExpert(observerInfo);
+            TargetImagingExpert targetExpert = new TargetImagingExpert(activeProfile, profilePreferences);
 
             foreach (IProject project in projects) {
                 if (project.Rejected) { continue; }
 
                 foreach (ITarget target in project.Targets) {
-                    if (target.Rejected && target.RejectedReason != Reasons.TargetNotYetVisible) { continue; }
-
-                    foreach (IExposure exposure in target.ExposurePlans) {
-                        if (exposure.IsIncomplete()) {
-                            if (expert.IsRejected(atTime, target, exposure)) {
-                                SetRejected(exposure, Reasons.FilterMoonAvoidance);
-                            }
-                        }
-                    }
+                    targetExpert.MoonAvoidanceFilter(atTime, target, moonExpert);
                 }
             }
 
@@ -256,23 +170,13 @@ namespace NINA.Plugin.TargetScheduler.Planning {
             if (NoProjects(projects)) { return null; }
             TwilightCircumstances twilightCircumstances = TwilightCircumstances.AdjustTwilightCircumstances(observerInfo, atTime);
             TwilightLevel? currentTwilightLevel = twilightCircumstances.GetCurrentTwilightLevel(atTime);
+            TargetImagingExpert targetExpert = new TargetImagingExpert(activeProfile, profilePreferences);
 
             foreach (IProject project in projects) {
                 if (project.Rejected) { continue; }
 
                 foreach (ITarget target in project.Targets) {
-                    if (target.Rejected) { continue; }
-
-                    foreach (IExposure exposure in target.ExposurePlans) {
-                        if (!exposure.Rejected && exposure.IsIncomplete()) {
-                            if (currentTwilightLevel.HasValue) {
-                                if (currentTwilightLevel > exposure.TwilightLevel)
-                                    SetRejected(exposure, Reasons.FilterTwilight);
-                            } else {
-                                SetRejected(exposure, Reasons.FilterTwilight);
-                            }
-                        }
-                    }
+                    targetExpert.TwilightFilter(target, currentTwilightLevel);
                 }
             }
 
@@ -288,15 +192,13 @@ namespace NINA.Plugin.TargetScheduler.Planning {
             List<ITarget> targets = new List<ITarget>();
 
             if (NoProjects(projects)) { return targets; }
+            TargetImagingExpert targetExpert = new TargetImagingExpert(activeProfile, profilePreferences);
 
             foreach (IProject project in projects) {
                 if (project.Rejected) { continue; }
 
                 foreach (ITarget target in project.Targets) {
-                    if (target.Rejected) { continue; }
-
-                    TimeSpan diff = atTime - target.StartTime;
-                    if (Math.Abs(diff.TotalSeconds) <= TARGET_VISIBILITY_SAMPLE_INTERVAL * 2) {
+                    if (targetExpert.ReadyNow(atTime, target)) {
                         targets.Add(target);
                     }
                 }
@@ -335,24 +237,20 @@ namespace NINA.Plugin.TargetScheduler.Planning {
             // present when visible.  For example, moon conditions later in the night could either reject or allow
             // certain exposures - and perhaps not until later in the target's visibility time span.
             List<ITarget> imagableTargets = new List<ITarget>();
+            TargetImagingExpert targetExpert = new TargetImagingExpert(activeProfile, profilePreferences);
+            IMoonAvoidanceExpert moonExpert = new MoonAvoidanceExpert(observerInfo);
+
             foreach (ITarget target in potentialTargets) {
-                // any exposures good for the twilight level starting at target start time
-                DateTime potentialStart = target.StartTime;
-                // any exposures ready at this time?
-                potentialStart.AddMinutes(1);
+                targetExpert.ClearRejections(target);
+                targetExpert.CheckFuture(target, moonExpert);
+                if (!target.Rejected) {
+                    imagableTargets.Add(target);
+                }
             }
 
-            /* TODO: here
-            List<ITarget> imagableTargets = new List<ITarget>();
-            foreach (ITarget target in potentialTargets) {
-            * Determine if we can wait for a target:
-             * - For each remaining target:
-             *   - For each visibility span:
-             *     - At X second intervals over the span, check if any filters pass moon avoidance.  If so, that's
-             *       the effective start time for this project.  Don't forget meridian clipping!
-             * - The soonest effective start time over all targets is our wait time.
-             * - Otherwise, we're done - nothing else available tonight.
-        }*/
+            if (imagableTargets.Count == 0) {
+                return null;
+            }
 
             // Find the soonest of the imagable targets
             ITarget nextAvailableTarget = null;
@@ -522,18 +420,6 @@ namespace NINA.Plugin.TargetScheduler.Planning {
             }
 
             return incomplete;
-        }
-
-        private TwilightLevel GetOverallTwilight(ITarget target) {
-            TwilightLevel twilightLevel = TwilightLevel.Nighttime;
-            foreach (IExposure exposure in target.ExposurePlans) {
-                // find most permissive (brightest) twilight over all incomplete plans
-                if (exposure.TwilightLevel > twilightLevel && exposure.IsIncomplete()) {
-                    twilightLevel = exposure.TwilightLevel;
-                }
-            }
-
-            return twilightLevel;
         }
     }
 

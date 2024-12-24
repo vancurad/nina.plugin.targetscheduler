@@ -412,12 +412,10 @@ namespace NINA.Plugin.TargetScheduler.Test.Astrometry {
 
             // North circumpolar
             sut = new TargetVisibility("T1", 1, TestData.North_Mid_Lat, TestData.STAR_NORTH_CIRCP, dateTime, sunset, sunrise, 120);
-            //TestContext.WriteLine(sut);
             sut.TransitTime.Should().BeCloseTo(new DateTime(2024, 8, 2, 4, 31, 1), TimeSpan.FromSeconds(1));
 
             // South circumpolar
             sut = new TargetVisibility("T1", 1, TestData.South_Mid_Lat, TestData.STAR_SOUTH_CIRCP, dateTime, sunset, sunrise, 120);
-            //TestContext.WriteLine(sut);
             sut.TransitTime.Should().BeCloseTo(new DateTime(2024, 8, 2, 4, 35, 1), TimeSpan.FromSeconds(1));
         }
 
