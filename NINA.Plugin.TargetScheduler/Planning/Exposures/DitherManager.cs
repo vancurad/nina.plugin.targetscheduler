@@ -1,5 +1,8 @@
 ﻿using NINA.Plugin.TargetScheduler.Planning.Interfaces;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Caching;
 
 namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
 
@@ -31,17 +34,37 @@ namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
 
         public bool DitherRequired(IExposure nextExposure) {
             if (ditherEvery == 0) { return false; }
-
-            int count = 0;
-            foreach (var item in exposureStack) {
-                if (item.FilterName == nextExposure.FilterName) { count++; }
-            }
-
+            int count = exposureStack.Count(item => item.FilterName == nextExposure.FilterName);
             return count >= ditherEvery;
         }
 
         public void Reset() {
             exposureStack.Clear();
+        }
+    }
+
+    public class DitherManagerCache {
+        private static readonly TimeSpan ITEM_TIMEOUT = TimeSpan.FromHours(12);
+        private static MemoryCache _cache = CreateCache();
+
+        public static DitherManager Get(string cacheKey) {
+            return (DitherManager)_cache.Get(cacheKey);
+        }
+
+        public static void Put(DitherManager ditherManager, string cacheKey) {
+            _cache.Add(cacheKey, ditherManager, DateTime.Now.Add(ITEM_TIMEOUT));
+        }
+
+        public static void Clear() {
+            _cache.Dispose();
+            _cache = CreateCache();
+        }
+
+        private static MemoryCache CreateCache() {
+            return new MemoryCache("Scheduler DitherManager");
+        }
+
+        private DitherManagerCache() {
         }
     }
 }

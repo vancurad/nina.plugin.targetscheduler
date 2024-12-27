@@ -5,8 +5,7 @@ using System;
 namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
 
     /// <summary>
-    /// Determine the appropriate exposure selector approach based on project/target settings and
-    /// select the next best exposure.
+    /// Determine the appropriate exposure selector implementation based on project/target settings.
     /// </summary>
     public class ExposureSelectionExpert {
 

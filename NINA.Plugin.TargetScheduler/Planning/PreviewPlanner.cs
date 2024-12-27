@@ -1,4 +1,5 @@
 ﻿using NINA.Plugin.TargetScheduler.Database.Schema;
+using NINA.Plugin.TargetScheduler.Planning.Exposures;
 using NINA.Plugin.TargetScheduler.Planning.Interfaces;
 using NINA.Plugin.TargetScheduler.Shared.Utility;
 using NINA.Profile.Interfaces;
@@ -27,6 +28,7 @@ namespace NINA.Plugin.TargetScheduler.Planning {
         public List<SchedulerPlan> GetPlanPreview(DateTime atTime, IProfileService profileService, ProfilePreference profilePreferences, List<IProject> projects) {
             TSLogger.Info("-- BEGIN PLAN PREVIEW ----------------------------------------------------------");
 
+            DitherManagerCache.Clear();
             List<SchedulerPlan> plans = new List<SchedulerPlan>();
             DateTime currentTime = atTime;
             previousTarget = null;
