@@ -1,4 +1,5 @@
-﻿using NINA.Core.Utility;
+﻿using NINA.Core.Model;
+using NINA.Core.Utility;
 using NINA.Equipment.Interfaces;
 using NINA.Plugin.Interfaces;
 using NINA.Plugin.TargetScheduler.Controls.AcquiredImages;
@@ -21,6 +22,12 @@ namespace NINA.Plugin.TargetScheduler {
 
     [Export(typeof(IPluginManifest))]
     public class TargetScheduler : PluginBase, INotifyPropertyChanged {
+
+        // Plugin specific image file patterns
+        public static readonly ImagePattern FlatSessionIdImagePattern = new ImagePattern("$$TSSESSIONID$$", "Session identifier for working with TS lights and flats", "Target Scheduler");
+
+        public static readonly ImagePattern ProjectNameImagePattern = new ImagePattern("$$TSPROJECTNAME$$", "TS project name (if available)", "Target Scheduler");
+
         private IPluginOptionsAccessor pluginSettings;
         private IProfileService profileService;
         private IApplicationMediator applicationMediator;
@@ -49,6 +56,9 @@ namespace NINA.Plugin.TargetScheduler {
             this.planetariumFactory = planetariumFactory;
 
             profileService.ProfileChanged += ProfileService_ProfileChanged;
+
+            options.AddImagePattern(FlatSessionIdImagePattern);
+            options.AddImagePattern(ProjectNameImagePattern);
         }
 
         public override Task Initialize() {

@@ -1,4 +1,6 @@
-﻿using NINA.Plugin.TargetScheduler.Planning.Interfaces;
+﻿using NINA.Plugin.TargetScheduler.Database.Schema;
+using NINA.Plugin.TargetScheduler.Planning.Interfaces;
+using NINA.Plugin.TargetScheduler.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,24 +45,60 @@ namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
         }
     }
 
+    /// <summary>
+    /// Support an in-memory cache of DitherManagers.  This is needed so that some exposure
+    /// selectors can maintain dither state over the course of an imaging session.
+    /// </summary>
     public class DitherManagerCache {
-        private static readonly TimeSpan ITEM_TIMEOUT = TimeSpan.FromHours(12);
-        private static MemoryCache _cache = CreateCache();
+        private static readonly TimeSpan ITEM_TIMEOUT = TimeSpan.FromHours(18);
+        private static MemoryCache _cache = Create();
+        private static object lockObj = new object();
+
+        public static string GetCacheKey(Target target) {
+            return $"{target.Id}";
+        }
+
+        public static string GetCacheKey(ITarget target) {
+            return $"{target.DatabaseId}";
+        }
 
         public static DitherManager Get(string cacheKey) {
-            return (DitherManager)_cache.Get(cacheKey);
+            lock (lockObj) {
+                return (DitherManager)_cache.Get(cacheKey);
+            }
         }
 
         public static void Put(DitherManager ditherManager, string cacheKey) {
-            _cache.Add(cacheKey, ditherManager, DateTime.Now.Add(ITEM_TIMEOUT));
+            lock (lockObj) {
+                _cache.Add(cacheKey, ditherManager, DateTime.Now.Add(ITEM_TIMEOUT));
+            }
+        }
+
+        public static void Remove(Target target) {
+            Remove(GetCacheKey(target));
+        }
+
+        public static void Remove(List<Target> targets) {
+            if (Common.IsEmpty(targets)) return;
+            foreach (Target target in targets) {
+                Remove(target);
+            }
+        }
+
+        public static void Remove(string cacheKey) {
+            lock (lockObj) {
+                _cache.Remove(cacheKey);
+            }
         }
 
         public static void Clear() {
-            _cache.Dispose();
-            _cache = CreateCache();
+            lock (lockObj) {
+                _cache.Dispose();
+                _cache = Create();
+            }
         }
 
-        private static MemoryCache CreateCache() {
+        private static MemoryCache Create() {
             return new MemoryCache("Scheduler DitherManager");
         }
 

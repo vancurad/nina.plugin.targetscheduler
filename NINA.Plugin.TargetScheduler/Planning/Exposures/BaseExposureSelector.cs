@@ -17,7 +17,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
         /// <param name="target"></param>
         /// <returns></returns>
         public DitherManager GetDitherManager(IProject project, ITarget target) {
-            string cacheKey = $"{target.DatabaseId}";
+            string cacheKey = DitherManagerCache.GetCacheKey(target);
             DitherManager dm = DitherManagerCache.Get(cacheKey);
             if (dm != null) {
                 return dm;

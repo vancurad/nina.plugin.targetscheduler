@@ -558,6 +558,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
                     }
 
                     SetTreeColorizeMode(SelectedColorizeMode);
+                    DitherManagerCache.Remove(project.Targets);
                 } else {
                     Notification.ShowError("Failed to save Scheduler Project (see log for details)");
                 }
@@ -695,6 +696,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
                     parentItem.Data = context.GetProject(target.ProjectId);
 
                     SetTreeColorizeMode(SelectedColorizeMode);
+                    DitherManagerCache.Remove(target);
                 } else {
                     Notification.ShowError("Failed to save Scheduler Target (see log for details)");
                 }
@@ -753,6 +755,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
                     }
 
                     SetTreeColorizeMode(SelectedColorizeMode);
+                    DitherManagerCache.Remove(target);
                 } else {
                     Notification.ShowError("Failed to reset Target Exposure Plans (see log for details)");
                 }
@@ -783,6 +786,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
                 if (updatedTarget != null) {
                     activeTreeDataItem.Data = updatedTarget;
                     SetTreeColorizeMode(SelectedColorizeMode);
+                    DitherManagerCache.Remove(target);
                 } else {
                     Notification.ShowError("Failed to delete Scheduler Exposure Plan (see log for details)");
                 }
@@ -797,6 +801,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
                 if (updatedTarget != null) {
                     activeTreeDataItem.Data = updatedTarget;
                     SetTreeColorizeMode(SelectedColorizeMode);
+                    DitherManagerCache.Remove(target);
                 } else {
                     Notification.ShowError("Failed to delete all Scheduler Exposure Plans (see log for details)");
                 }
