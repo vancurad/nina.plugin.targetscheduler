@@ -2,6 +2,7 @@
 using NINA.Core.Model.Equipment;
 using NINA.Plugin.TargetScheduler.Database;
 using NINA.Plugin.TargetScheduler.Database.Schema;
+using NINA.Plugin.TargetScheduler.Grading;
 using NINA.Plugin.TargetScheduler.Shared.Utility;
 using NINA.Plugin.TargetScheduler.Test.Astrometry;
 using NINA.Plugin.TargetScheduler.Test.Planning;
@@ -143,13 +144,13 @@ namespace NINA.Plugin.TargetScheduler.Test.Database {
                 context.GetAcquiredImages(1, "nada").Count.Should().Be(0);
 
                 ImageSavedEventArgs msg = PlanMocks.GetImageSavedEventArgs(markDate.AddDays(1), "Ha");
-                context.AcquiredImageSet.Add(new AcquiredImage("abcd-1234", 1, 1, markDate.AddDays(1), "Ha", true, "rr1", new ImageMetadata(msg, 1, 100, 0)));
-                context.AcquiredImageSet.Add(new AcquiredImage("abcd-1234", 1, 1, markDate.AddDays(1).AddMinutes(1), "Ha", true, "rr2", new ImageMetadata(msg, 2, 100, 0)));
-                context.AcquiredImageSet.Add(new AcquiredImage("abcd-1234", 1, 1, markDate.AddDays(1).AddMinutes(2), "Ha", true, "rr3", new ImageMetadata(msg, 3, 100, 0)));
-                context.AcquiredImageSet.Add(new AcquiredImage("abcd-1234", 1, 1, markDate.AddDays(1).AddMinutes(3), "Ha", true, "rr4", new ImageMetadata(msg, 4, 100, 0)));
+                context.AcquiredImageSet.Add(new AcquiredImage("abcd-1234", 1, 1, 1, markDate.AddDays(1), "Ha", GradingStatus.Pending, "rr1", new ImageMetadata(msg, 1, 100, 0)));
+                context.AcquiredImageSet.Add(new AcquiredImage("abcd-1234", 1, 1, 1, markDate.AddDays(1).AddMinutes(1), "Ha", GradingStatus.Accepted, "rr2", new ImageMetadata(msg, 2, 100, 0)));
+                context.AcquiredImageSet.Add(new AcquiredImage("abcd-1234", 1, 1, 1, markDate.AddDays(1).AddMinutes(2), "Ha", GradingStatus.Accepted, "rr3", new ImageMetadata(msg, 3, 100, 0)));
+                context.AcquiredImageSet.Add(new AcquiredImage("abcd-1234", 1, 1, 1, markDate.AddDays(1).AddMinutes(3), "Ha", GradingStatus.Rejected, "rr4", new ImageMetadata(msg, 4, 100, 0)));
 
                 msg.MetaData.Rotator.MechanicalPosition = ImageMetadata.NO_ROTATOR_ANGLE;
-                context.AcquiredImageSet.Add(new AcquiredImage("abcd-1234", 1, 1, markDate.AddDays(1).AddMinutes(4), "Ha", true, "rr5", new ImageMetadata(msg, 5, 100, 0)));
+                context.AcquiredImageSet.Add(new AcquiredImage("abcd-1234", 1, 1, 1, markDate.AddDays(1).AddMinutes(4), "Ha", GradingStatus.Rejected, "rr5", new ImageMetadata(msg, 5, 100, 0)));
 
                 context.SaveChanges();
 
@@ -162,6 +163,12 @@ namespace NINA.Plugin.TargetScheduler.Test.Database {
                 ai[2].AcquiredDate.Should().BeExactly(markDate.AddDays(1).AddMinutes(2).TimeOfDay);
                 ai[3].AcquiredDate.Should().BeExactly(markDate.AddDays(1).AddMinutes(1).TimeOfDay);
                 ai[4].AcquiredDate.Should().BeExactly(markDate.AddDays(1).AddMinutes(0).TimeOfDay);
+
+                ai[0].GradingStatus.Should().Be(GradingStatus.Rejected);
+                ai[1].GradingStatus.Should().Be(GradingStatus.Rejected);
+                ai[2].GradingStatus.Should().Be(GradingStatus.Accepted);
+                ai[3].GradingStatus.Should().Be(GradingStatus.Accepted);
+                ai[4].GradingStatus.Should().Be(GradingStatus.Pending);
 
                 ai[0].RejectReason.Should().Be("rr5");
                 ai[1].RejectReason.Should().Be("rr4");
@@ -212,12 +219,12 @@ namespace NINA.Plugin.TargetScheduler.Test.Database {
                 context.GetImageData(ai[2].Id, "tag1").Should().BeNull();
 
                 // Test non-nullable filter column
-                context.AcquiredImageSet.Add(new AcquiredImage("abcd-1234", 1, 1, markDate.AddDays(1), null, true, "rr1", new ImageMetadata(msg, 1, 100, 0)));
+                context.AcquiredImageSet.Add(new AcquiredImage("abcd-1234", 1, 1, 1, markDate.AddDays(1), null, GradingStatus.Pending, "rr1", new ImageMetadata(msg, 1, 100, 0)));
                 context.Invoking(db => db.SaveChanges())
                     .Should().Throw<DbEntityValidationException>()
                     .WithMessage("Validation failed for one or more entities. See 'EntityValidationErrors' property for more details.");
 
-                context.AcquiredImageSet.Add(new AcquiredImage("abcd-1234", 1, 1, markDate.AddDays(1), "", true, "rr1", new ImageMetadata(msg, 1, 100, 0)));
+                context.AcquiredImageSet.Add(new AcquiredImage("abcd-1234", 1, 1, 1, markDate.AddDays(1), "", GradingStatus.Pending, "rr1", new ImageMetadata(msg, 1, 100, 0)));
                 context.Invoking(db => db.SaveChanges())
                     .Should().Throw<DbEntityValidationException>()
                     .WithMessage("Validation failed for one or more entities. See 'EntityValidationErrors' property for more details.");

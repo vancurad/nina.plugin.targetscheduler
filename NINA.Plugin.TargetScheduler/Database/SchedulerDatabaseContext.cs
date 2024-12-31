@@ -226,6 +226,10 @@ namespace NINA.Plugin.TargetScheduler.Database {
             return images.ToList();
         }*/
 
+        public AcquiredImage GetAcquiredImage(int id) {
+            return AcquiredImageSet.Where(p => p.Id == id).FirstOrDefault();
+        }
+
         public List<AcquiredImage> GetAcquiredImages(int targetId) {
             var images = AcquiredImageSet.Where(p => p.TargetId == targetId)
                 .AsNoTracking()
@@ -241,11 +245,11 @@ namespace NINA.Plugin.TargetScheduler.Database {
             return AcquiredImageSet.AsNoTracking().Where(predicate).ToList();
         }
 
-        public List<AcquiredImage> GetAcquiredImagesForGrading(int targetId, string filterName) {
+        public List<AcquiredImage> GetAcquiredImagesForGrading(ExposurePlan exposurePlan) {
             var images = AcquiredImageSet.AsNoTracking().Where(p =>
-                p.TargetId == targetId &&
-                p.FilterName == filterName &&
-                p.accepted == 1)
+                p.Id == exposurePlan.Id &&
+                p.TargetId == exposurePlan.TargetId &&
+                p.FilterName == exposurePlan.ExposureTemplate.FilterName)
               .OrderByDescending(p => p.acquiredDate);
             return images.ToList();
         }

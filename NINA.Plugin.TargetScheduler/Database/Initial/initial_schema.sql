@@ -137,9 +137,10 @@ CREATE TABLE IF NOT EXISTS "acquiredimage" (
 	"profileId"		TEXT,
 	"projectId"		INTEGER NOT NULL,
 	"targetId"		INTEGER NOT NULL,
+	"exposureId"	INTEGER NOT NULL,
 	"acquireddate"	INTEGER,
 	"filtername"	TEXT NOT NULL,
-	"accepted"		INTEGER NOT NULL,
+	"gradingStatus"	INTEGER,
     "rejectreason"	TEXT,
     "metadata"		TEXT NOT NULL,
 	PRIMARY KEY("Id")

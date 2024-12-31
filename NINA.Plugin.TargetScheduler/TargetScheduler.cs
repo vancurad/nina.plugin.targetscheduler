@@ -6,6 +6,7 @@ using NINA.Plugin.TargetScheduler.Controls.AcquiredImages;
 using NINA.Plugin.TargetScheduler.Controls.DatabaseManager;
 using NINA.Plugin.TargetScheduler.Controls.PlanPreview;
 using NINA.Plugin.TargetScheduler.Database;
+using NINA.Plugin.TargetScheduler.Grading;
 using NINA.Plugin.TargetScheduler.Shared.Utility;
 using NINA.Profile;
 using NINA.Profile.Interfaces;
@@ -153,6 +154,8 @@ namespace NINA.Plugin.TargetScheduler {
         }
 
         public override Task Teardown() {
+            ImageGradingController.Instance.Shutdown();
+
             /* TODO
             if (SyncManager.Instance.IsRunning) {
                 SyncManager.Instance.Shutdown();

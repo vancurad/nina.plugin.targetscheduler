@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using NINA.Plugin.TargetScheduler.Grading;
 using NINA.Plugin.TargetScheduler.Shared.Utility;
 using System;
 using System.Collections.Generic;
@@ -14,9 +15,10 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
         public string profileId { get; set; }
         [Required] public int ProjectId { get; set; }
         [Required] public int TargetId { get; set; }
+        [Required] public int ExposureId { get; set; }
         public long acquiredDate { get; set; }
         [Required] public string FilterName { get; set; }
-        [Required] public int accepted { get; set; }
+        public int gradingStatus { get; set; }
         public string rejectreason { get; set; }
         internal string _metadata { get; set; }
 
@@ -33,10 +35,19 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
         }
 
         [NotMapped]
-        public bool Accepted {
-            get { return accepted == 1; }
-            set { accepted = value ? 1 : 0; }
+        public GradingStatus GradingStatus {
+            get { return (GradingStatus)gradingStatus; }
+            set { gradingStatus = (int)value; }
         }
+
+        [NotMapped]
+        public bool Pending => GradingStatus == GradingStatus.Pending;
+
+        [NotMapped]
+        public bool Accepted => GradingStatus == GradingStatus.Accepted;
+
+        [NotMapped]
+        public bool Rejected => GradingStatus == GradingStatus.Rejected;
 
         [NotMapped]
         public string RejectReason {
@@ -63,13 +74,14 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
             this.Metadata = imageMetadata;
         }
 
-        public AcquiredImage(string profileId, int projectId, int targetId, DateTime acquiredDate, string filterName, bool accepted, string rejectReason, ImageMetadata imageMetadata) {
+        public AcquiredImage(string profileId, int projectId, int targetId, int exposureId, DateTime acquiredDate, string filterName, GradingStatus gradingStatus, string rejectReason, ImageMetadata imageMetadata) {
             this.ProfileId = profileId;
             this.ProjectId = projectId;
             this.TargetId = targetId;
+            this.ExposureId = exposureId;
             this.AcquiredDate = acquiredDate;
             this.FilterName = filterName;
-            this.Accepted = accepted;
+            this.GradingStatus = gradingStatus;
             this.RejectReason = rejectReason;
             this.Metadata = imageMetadata;
         }
@@ -79,7 +91,7 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
             sb.AppendLine($"ProfileId: {ProfileId}");
             sb.AppendLine($"AcquiredDate: {AcquiredDate}");
             sb.AppendLine($"FilterName: {FilterName}");
-            sb.AppendLine($"Accepted: {Accepted}");
+            sb.AppendLine($"Grading Status: {GradingStatus}");
             sb.AppendLine($"RejectReason: {RejectReason}");
             sb.AppendLine($"Metadata: {_metadata}");
 
