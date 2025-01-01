@@ -8,10 +8,10 @@ using System.Text;
 namespace NINA.Plugin.TargetScheduler.Planning.Entities {
 
     public class PlanningInstruction : IInstruction {
-        public IExposure planExposure { get; set; }
+        public IExposure exposure { get; set; }
 
-        public PlanningInstruction(IExposure planExposure) {
-            this.planExposure = planExposure;
+        public PlanningInstruction(IExposure exposure) {
+            this.exposure = exposure;
         }
 
         public static string InstructionsSummary(List<IInstruction> instructions) {
@@ -23,7 +23,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
             StringBuilder order = new StringBuilder();
             foreach (IInstruction instruction in instructions) {
                 if (instruction is PlanTakeExposure) {
-                    string filterName = instruction.planExposure.FilterName;
+                    string filterName = instruction.exposure.FilterName;
                     order.Append(filterName);
                     if (exposures.ContainsKey(filterName)) {
                         exposures[filterName]++;
@@ -79,7 +79,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
         }
 
         public override string ToString() {
-            return $"SwitchFilter: {planExposure.FilterName}";
+            return $"SwitchFilter: {exposure.FilterName}";
         }
     }
 
@@ -89,7 +89,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
         }
 
         public override string ToString() {
-            return $"Set readoutmode: mode={planExposure.ReadoutMode}";
+            return $"Set readoutmode: mode={exposure.ReadoutMode}";
         }
     }
 
@@ -99,7 +99,19 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
         }
 
         public override string ToString() {
-            return $"TakeExposure: {planExposure.FilterName} {planExposure.ExposureLength}";
+            return $"TakeExposure: {exposure.FilterName} {exposure.ExposureLength}";
+        }
+    }
+
+    public class PlanPostExposure : PlanningInstruction {
+        public ITarget target { get; private set; }
+
+        public PlanPostExposure(ITarget target) : base(target.SelectedExposure) {
+            this.target = target;
+        }
+
+        public override string ToString() {
+            return $"PostExposure: {target.Name} {exposure.FilterName}";
         }
     }
 
@@ -137,20 +149,20 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
 
     public class PlanOverrideItem {
         public bool IsDither { get; private set; }
-        public IExposure PlanExposure { get; private set; }
+        public IExposure exposure { get; private set; }
 
         public PlanOverrideItem() {
             IsDither = true;
-            PlanExposure = null;
+            exposure = null;
         }
 
-        public PlanOverrideItem(IExposure planExposure) {
+        public PlanOverrideItem(IExposure exposure) {
             IsDither = false;
-            PlanExposure = planExposure;
+            this.exposure = exposure;
         }
 
         public override string ToString() {
-            return IsDither ? OverrideExposureOrderAction.Dither.ToString() : PlanExposure.FilterName;
+            return IsDither ? OverrideExposureOrderAction.Dither.ToString() : exposure.FilterName;
         }
     }
 }

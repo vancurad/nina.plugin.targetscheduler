@@ -153,6 +153,12 @@ namespace NINA.Plugin.TargetScheduler.Grading {
             return variance <= (stddev * sigmaFactor);
         }
 
+        public virtual double GetHocusFocusMetric(IStarDetectionAnalysis starDetectionAnalysis, string propertyName) {
+            return starDetectionAnalysis.HasProperty(propertyName) ?
+                (Double)starDetectionAnalysis.GetType().GetProperty(propertyName).GetValue(starDetectionAnalysis) :
+                Double.NaN;
+        }
+
         /// <summary>
         /// Determine the mean and the sample (not population) standard deviation of a set of samples.
         /// </summary>
@@ -171,7 +177,7 @@ namespace NINA.Plugin.TargetScheduler.Grading {
             return (mean, stddev);
         }
 
-        public bool SamplesHaveData(List<double> samples) {
+        private bool SamplesHaveData(List<double> samples) {
             foreach (double sample in samples) {
                 if (sample <= 0 || Double.IsNaN(sample)) {
                     return false;
@@ -183,12 +189,6 @@ namespace NINA.Plugin.TargetScheduler.Grading {
 
         private bool NearZero(double value) {
             return Math.Abs(value) <= 0.001;
-        }
-
-        public virtual double GetHocusFocusMetric(IStarDetectionAnalysis starDetectionAnalysis, string propertyName) {
-            return starDetectionAnalysis.HasProperty(propertyName) ?
-                (Double)starDetectionAnalysis.GetType().GetProperty(propertyName).GetValue(starDetectionAnalysis) :
-                Double.NaN;
         }
 
         private double GetBinning() {

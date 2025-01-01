@@ -26,6 +26,7 @@ namespace NINA.Plugin.TargetScheduler.Planning {
             instructions.Add(new PlanSwitchFilter(selectedExposure));
             instructions.Add(new PlanSetReadoutMode(selectedExposure));
             instructions.Add(new PlanTakeExposure(selectedExposure));
+            instructions.Add(new PlanPostExposure(target));
 
             return instructions;
         }

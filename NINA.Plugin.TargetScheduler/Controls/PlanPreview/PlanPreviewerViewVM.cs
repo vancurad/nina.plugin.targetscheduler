@@ -257,7 +257,9 @@ namespace NINA.Plugin.TargetScheduler.Controls.PlanPreview {
                     foreach (IInstruction instruction in plan.PlanInstructions) {
                         TreeViewItem instructionItem = new TreeViewItem();
 
-                        if (instruction is PlanMessage || instruction is PlanBeforeNewTargetContainer) {
+                        if (instruction is PlanMessage
+                            || instruction is PlanBeforeNewTargetContainer
+                            || instruction is PlanPostExposure) {
                             continue;
                         }
 
@@ -268,7 +270,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.PlanPreview {
                         }
 
                         if (instruction is PlanSwitchFilter) {
-                            string filterName = ((PlanSwitchFilter)instruction).planExposure.FilterName;
+                            string filterName = ((PlanSwitchFilter)instruction).exposure.FilterName;
                             if (filterName != lastFilterName) {
                                 lastFilterName = filterName;
                                 instructionItem.Header = $"Switch Filter: {filterName}";
@@ -278,7 +280,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.PlanPreview {
                         }
 
                         if (instruction is PlanSetReadoutMode) {
-                            int? readoutMode = ((PlanSetReadoutMode)instruction).planExposure.ReadoutMode;
+                            int? readoutMode = ((PlanSetReadoutMode)instruction).exposure.ReadoutMode;
                             if (readoutMode != null && readoutMode > 0) {
                                 instructionItem.Header = $"Set readout mode: {readoutMode}";
                                 planItem.Items.Add(instructionItem);
@@ -392,7 +394,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.PlanPreview {
         }
 
         private string GetTakeExposureLabel(PlanTakeExposure instruction) {
-            IExposure planExposure = instruction.planExposure;
+            IExposure planExposure = instruction.exposure;
             StringBuilder sb = new StringBuilder();
             sb.Append("Take Exposure:");
             sb.Append($" {planExposure.ExposureLength} secs, ");

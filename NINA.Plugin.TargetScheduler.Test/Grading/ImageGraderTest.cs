@@ -7,6 +7,7 @@ using NINA.Profile.Interfaces;
 using NINA.WPF.Base.Interfaces.Mediator;
 using NUnit.Framework;
 using System.Collections.Generic;
+using System.IO;
 
 namespace NINA.Plugin.TargetScheduler.Test.Grading {
 
@@ -151,6 +152,22 @@ namespace NINA.Plugin.TargetScheduler.Test.Grading {
             sut.Grade(workData);
             results.Count.Should().Be(10);
             results.ForEach(r => r.Should().Be(GradingResult.Rejected_Stars));
+        }
+
+        [Test]
+        public void testMoveRejected() {
+            string tempDir = Path.Combine(Path.GetTempPath(), "imageGraderTest");
+            if (Directory.Exists(tempDir)) { Directory.Delete(tempDir, true); }
+            Directory.CreateDirectory(tempDir);
+            string srcDir = Path.Combine(tempDir, "srcDir");
+            Directory.CreateDirectory(srcDir);
+            string src = Path.Combine(srcDir, "image.fits");
+            File.Create(src).Close();
+
+            ImageGrader sut = new ImageGrader();
+            sut.MoveRejected(src);
+            string expectedPath = Path.Combine(srcDir, ImageGrader.REJECTED_SUBDIR, "image.fits");
+            File.Exists(expectedPath).Should().BeTrue();
         }
 
         [Test]

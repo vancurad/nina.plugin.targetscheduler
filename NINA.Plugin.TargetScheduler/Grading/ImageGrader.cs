@@ -1,11 +1,13 @@
 ﻿using NINA.Plugin.TargetScheduler.Database;
 using NINA.Plugin.TargetScheduler.Database.Schema;
 using NINA.Plugin.TargetScheduler.Shared.Utility;
+using NINA.Plugin.TargetScheduler.Util;
 using NINA.Profile.Interfaces;
 using NINA.WPF.Base.Interfaces.Mediator;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity.Migrations;
+using System.IO;
 using System.Linq;
 
 namespace NINA.Plugin.TargetScheduler.Grading {
@@ -19,6 +21,8 @@ namespace NINA.Plugin.TargetScheduler.Grading {
     };
 
     public class ImageGrader : IImageGrader {
+        public static readonly string REJECTED_SUBDIR = "rejected";
+
         public static readonly string REJECT_RMS = "Guiding RMS";
         public static readonly string REJECT_STARS = "Star Count";
         public static readonly string REJECT_HFR = "HFR";
@@ -53,6 +57,9 @@ namespace NINA.Plugin.TargetScheduler.Grading {
                         pending.ForEach(acquiredImage => {
                             GradingResult result = GradeImage(exposurePlan, acquiredImage, workData, population);
                             UpdateDatabase(result, exposurePlan, acquiredImage);
+                            if (graderPreferences.EnableMoveRejected && result != GradingResult.Accepted) {
+                                MoveRejected(acquiredImage.Metadata.FileName);
+                            }
                         });
                     } else {
                         TSLogger.Info($"delayed grading not yet triggered for {tag}");
@@ -62,6 +69,9 @@ namespace NINA.Plugin.TargetScheduler.Grading {
                     List<AcquiredImage> immediatePopulation = GetImmediatePopulation(graderPreferences.MaxGradingSampleSize, population);
                     GradingResult result = GradeImage(exposurePlan, acquiredImage, workData, immediatePopulation);
                     UpdateDatabase(result, exposurePlan, acquiredImage);
+                    if (graderPreferences.EnableMoveRejected && result != GradingResult.Accepted) {
+                        MoveRejected(acquiredImage.Metadata.FileName);
+                    }
                 }
             } catch (Exception ex) {
                 TSLogger.Error($"exception during image grading: {ex.Message}\n{ex.StackTrace}");
@@ -121,6 +131,12 @@ namespace NINA.Plugin.TargetScheduler.Grading {
                 TSLogger.Error(e);
                 return GradingResult.Exception;
             }
+        }
+
+        public void MoveRejected(string fileLocalPath) {
+            string dstDir = Path.Combine(Path.GetDirectoryName(fileLocalPath), REJECTED_SUBDIR);
+            TSLogger.Info($"moving rejected image to {dstDir}");
+            Utils.MoveFile(fileLocalPath, dstDir);
         }
 
         public virtual void UpdateDatabase(GradingResult result, ExposurePlan exposurePlan, AcquiredImage acquiredImage) {
@@ -237,6 +253,7 @@ namespace NINA.Plugin.TargetScheduler.Grading {
         public double FWHMSigmaFactor { get; private set; }
         public bool EnableGradeEccentricity { get; private set; }
         public double EccentricitySigmaFactor { get; private set; }
+        public bool EnableMoveRejected { get; private set; }
 
         public bool IsDelayEnabled { get { return DelayGradingThreshold > 0; } }
 
@@ -255,6 +272,7 @@ namespace NINA.Plugin.TargetScheduler.Grading {
             FWHMSigmaFactor = profilePreference.FWHMSigmaFactor;
             EnableGradeEccentricity = profilePreference.EnableGradeEccentricity;
             EccentricitySigmaFactor = profilePreference.EccentricitySigmaFactor;
+            EnableMoveRejected = profilePreference.EnableMoveRejected;
         }
 
         public ImageGraderPreferences(IProfile profile, double DelayGradingThreshold,
@@ -263,7 +281,8 @@ namespace NINA.Plugin.TargetScheduler.Grading {
                                     bool EnableGradeStars, double DetectedStarsSigmaFactor,
                                     bool EnableGradeHFR, double HFRSigmaFactor,
                                     bool EnableGradeFWHM, double FWHMSigmaFactor,
-                                    bool EnableGradeEccentricity, double EccentricitySigmaFactor) {
+                                    bool EnableGradeEccentricity, double EccentricitySigmaFactor,
+                                    bool EnableMoveRejected = false) {
             this.Profile = profile;
             this.DelayGradingThreshold = DelayGradingThreshold;
             this.MaxGradingSampleSize = MaxGradingSampleSize;
@@ -278,6 +297,7 @@ namespace NINA.Plugin.TargetScheduler.Grading {
             this.FWHMSigmaFactor = FWHMSigmaFactor;
             this.EnableGradeEccentricity = EnableGradeEccentricity;
             this.EccentricitySigmaFactor = EccentricitySigmaFactor;
+            this.EnableMoveRejected = EnableMoveRejected;
         }
     }
 }

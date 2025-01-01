@@ -17,7 +17,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Grading {
 
     [TestFixture]
     public class GraderExpertTest {
-        private static readonly Guid DefaultProfileId = new Guid("01234567-0000-0000-0000-000000000000");
+        public static readonly Guid DefaultProfileId = new Guid("01234567-0000-0000-0000-000000000000");
 
         [Test]
         public void testNoGradingMetricsEnabled() {
@@ -218,11 +218,14 @@ namespace NINA.Plugin.TargetScheduler.Test.Grading {
             ImageParameter imageParameter = new ImageParameter();
             CameraParameter cameraParameter = new CameraParameter();
 
+            msg.PathToImage = new Uri("C:\\image.fits");
+
             RMS rms = new RMS { Total = rmsTotal };
             rms.SetScale(rmsScale);
 
             imageParameter.RecordedRMS = rms;
             imageParameter.Binning = binning;
+            imageParameter.ImageType = "LIGHT";
             metadata.Rotator.Position = rotation;
             metadata.Image = imageParameter;
 
@@ -233,6 +236,9 @@ namespace NINA.Plugin.TargetScheduler.Test.Grading {
             msg.Duration = duration;
             msg.MetaData = metadata;
             msg.Filter = filter;
+
+            Mock<IImageStatistics> statMock = new Mock<IImageStatistics>();
+            msg.Statistics = statMock.Object;
 
             Mock<IStarDetectionAnalysis> sdMock = new Mock<IStarDetectionAnalysis>();
             sdMock.SetupProperty(m => m.DetectedStars, detectedStars);
