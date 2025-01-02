@@ -6,8 +6,10 @@ using NINA.Plugin.TargetScheduler.Controls.AcquiredImages;
 using NINA.Plugin.TargetScheduler.Controls.DatabaseManager;
 using NINA.Plugin.TargetScheduler.Controls.PlanPreview;
 using NINA.Plugin.TargetScheduler.Database;
+using NINA.Plugin.TargetScheduler.Database.Schema;
 using NINA.Plugin.TargetScheduler.Grading;
 using NINA.Plugin.TargetScheduler.Shared.Utility;
+using NINA.Plugin.TargetScheduler.SyncService.Sync;
 using NINA.Profile;
 using NINA.Profile.Interfaces;
 using NINA.WPF.Base.Interfaces.Mediator;
@@ -65,11 +67,9 @@ namespace NINA.Plugin.TargetScheduler {
         public override Task Initialize() {
             InitPluginHome();
 
-            // TODO
-            /*
             if (SyncEnabled(profileService)) {
                 SyncManager.Instance.Start(profileService);
-            }*/
+            }
 
             TSLogger.Info("plugin initialized");
             return Task.CompletedTask;
@@ -81,6 +81,11 @@ namespace NINA.Plugin.TargetScheduler {
             }
 
             SchedulerDatabaseInteraction.BackupDatabase();
+        }
+
+        public static bool SyncEnabled(IProfileService profileService) {
+            ProfilePreference profilePreference = new SchedulerPlanLoader(profileService.ActiveProfile).GetProfilePreferences();
+            return profilePreference.EnableSynchronization;
         }
 
         private DatabaseManagerVM databaseManagerVM;
@@ -156,10 +161,9 @@ namespace NINA.Plugin.TargetScheduler {
         public override Task Teardown() {
             ImageGradingController.Instance.Shutdown();
 
-            /* TODO
             if (SyncManager.Instance.IsRunning) {
                 SyncManager.Instance.Shutdown();
-            }*/
+            }
 
             profileService.ProfileChanged -= ProfileService_ProfileChanged;
             TSLogger.Info("closing log");
@@ -186,14 +190,12 @@ namespace NINA.Plugin.TargetScheduler {
                 profileService.ActiveProfile.AstrometrySettings.PropertyChanged -= ProfileService_ProfileChanged;
                 profileService.ActiveProfile.AstrometrySettings.PropertyChanged += ProfileService_ProfileChanged;
 
-                // TODO:
-                /*
                 if (SyncManager.Instance.IsRunning) {
                     SyncManager.Instance.Shutdown();
                     if (SyncEnabled(profileService)) {
                         SyncManager.Instance.Start(profileService);
                     }
-                }*/
+                }
             }
         }
     }

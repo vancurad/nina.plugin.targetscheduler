@@ -30,11 +30,9 @@ namespace NINA.Plugin.TargetScheduler.Test.Database.Schema {
             sut.EccentricitySigmaFactor.Should().BeApproximately(4, 0.001);
 
             sut.EnableSynchronization.Should().BeFalse();
-            /* TODO: wait for sync
             sut.SyncWaitTimeout.Should().Be(300);
             sut.SyncActionTimeout.Should().Be(300);
             sut.SyncSolveRotateTimeout.Should().Be(300);
-            */
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using NINA.Plugin.TargetScheduler.SyncService.Sync;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Runtime.CompilerServices;
@@ -62,11 +63,9 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
             EccentricitySigmaFactor = 4;
 
             EnableSynchronization = false;
-            /* TODO: wait for sync
             SyncWaitTimeout = SyncManager.DEFAULT_SYNC_WAIT_TIMEOUT;
             SyncActionTimeout = SyncManager.DEFAULT_SYNC_ACTION_TIMEOUT;
             SyncSolveRotateTimeout = SyncManager.DEFAULT_SYNC_SOLVEROTATE_TIMEOUT;
-            */
         }
 
         [NotMapped]

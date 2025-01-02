@@ -54,6 +54,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NINA.Plugin.TargetScheduler.Shared\NINA.Plugin.TargetScheduler.Shared.csproj" />
+    <ProjectReference Include="..\NINA.Plugin.TargetScheduler.SyncService\NINA.Plugin.TargetScheduler.SyncService.csproj" />
   </ItemGroup>
 
   <ItemGroup>

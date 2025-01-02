@@ -996,16 +996,12 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
         private void ActiveProfile_PropertyChanged(object sender, PropertyChangedEventArgs e) {
             ColorSchemaPrimaryColorBrush = new SolidColorBrush(profileService.ActiveProfile.ColorSchemaSettings.ColorSchema.PrimaryColor);
             ColorSchemaPrimaryColorBrush.Freeze();
-
-            // TODO: following not working?
             RaisePropertyChanged(nameof(ProjectsTreeViewVM));
         }
 
         private void ColorSchemaSettings_PropertyChanged(object sender, PropertyChangedEventArgs e) {
             ColorSchemaPrimaryColorBrush = new SolidColorBrush(profileService.ActiveProfile.ColorSchemaSettings.ColorSchema.PrimaryColor);
             ColorSchemaPrimaryColorBrush.Freeze();
-
-            // TODO: following not working?
             RaisePropertyChanged(nameof(ProjectsTreeViewVM));
         }
 

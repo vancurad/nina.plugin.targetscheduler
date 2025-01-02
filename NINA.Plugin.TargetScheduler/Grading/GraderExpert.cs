@@ -2,6 +2,7 @@
 using NINA.Image.Interfaces;
 using NINA.Plugin.TargetScheduler.Database.Schema;
 using NINA.Plugin.TargetScheduler.Shared.Utility;
+using NINA.Plugin.TargetScheduler.SyncService.Sync;
 using NINA.Profile.Interfaces;
 using NINA.WPF.Base.Interfaces.Mediator;
 using System;
@@ -220,11 +221,10 @@ namespace NINA.Plugin.TargetScheduler.Grading {
         }
 
         private bool enableGradeRMS() {
-            /* TODO: enable when sync implemented
             // Disable RMS grading if running as a sync client since no guiding data will be available
-            if (enableGradeRMS && SyncManager.Instance.IsRunning && !SyncManager.Instance.IsServer) {
+            if (preferences.EnableGradeRMS && SyncManager.Instance.IsRunning && !SyncManager.Instance.IsServer) {
                 return false;
-            }*/
+            }
 
             return preferences.EnableGradeRMS;
         }
