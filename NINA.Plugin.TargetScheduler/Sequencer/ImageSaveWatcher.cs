@@ -23,7 +23,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
     /// An instance of this is created for each plan (which contains a single exposure), so it ends after handling
     /// a single image.
     /// </summary>
-    public class ImageSaveWatcher {
+    public class ImageSaveWatcher : IImageSaveWatcher {
         private IProfile profile;
         private ProfilePreference profilePreference;
         private IImageSaveMediator imageSaveMediator;
@@ -134,4 +134,6 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             }
         }
     }
+
+    public interface IImageSaveWatcher { }
 }

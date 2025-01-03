@@ -347,6 +347,24 @@ namespace NINA.Plugin.TargetScheduler.Planning {
             return targets;
         }
 
+        public bool HasActiveProjects(List<IProject> projects) {
+            if (projects == null) {
+                projects = GetProjects();
+            }
+
+            if (NoProjects(projects)) {
+                return false;
+            }
+
+            foreach (IProject project in projects) {
+                if (ProjectIsInComplete(project)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private bool NoProjects(List<IProject> projects) {
             return projects == null || projects.Count == 0;
         }
