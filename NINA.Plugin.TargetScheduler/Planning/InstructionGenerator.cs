@@ -15,7 +15,7 @@ namespace NINA.Plugin.TargetScheduler.Planning {
 
             // If this target is different from the previous, add the slew and 'Before Target' instructions
             if (!target.Equals(previousTarget)) {
-                instructions.Add(new PlanSlew(true));
+                instructions.Add(new PlanSlew(target, true));
                 instructions.Add(new PlanBeforeNewTargetContainer());
             }
 

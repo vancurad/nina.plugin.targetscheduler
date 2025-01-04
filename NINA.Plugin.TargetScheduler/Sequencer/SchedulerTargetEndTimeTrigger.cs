@@ -15,7 +15,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
 
         public SchedulerTargetEndTimeTrigger(DateTime endTime) {
             Name = nameof(SchedulerTargetEndTimeTrigger);
-            Category = PlanTargetContainer.INSTRUCTION_CATEGORY;
+            Category = PlanContainer.INSTRUCTION_CATEGORY;
             this.EndTime = endTime;
         }
 

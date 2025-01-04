@@ -244,7 +244,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                         await ExecuteEventContainer(AfterAllTargetsContainer, progress, token);
                     }
 
-                    SchedulerProgress.End();
+                    SchedulerProgress.End(); // TODO: don't think this is right now
                     SetSyncServerState(ServerState.EndSyncContainers);
                     InformTSConditionChecks();
 
@@ -266,10 +266,9 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                     SetSyncServerState(ServerState.PlanWait);
                     SchedulerProgress.WaitStart(plan.WaitForNextTargetTime);
                     await ExecuteEventContainer(BeforeWaitContainer, progress, token);
+
                     SchedulerProgress.Add("Wait");
-
                     WaitForNextTarget(plan.WaitForNextTargetTime, progress, token);
-
                     await ExecuteEventContainer(AfterWaitContainer, progress, token);
                     SchedulerProgress.End();
                 } else {
@@ -284,8 +283,6 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                             await ExecuteEventContainer(AfterAllTargetsContainer, progress, token);
                         }
 
-                        SchedulerProgress.End();
-
                         TSLogger.Info("--BEGIN PLAN EXECUTION--------------------------------------------------------");
                         TSLogger.Info($"plan target: {target.Name}");
 
@@ -293,11 +290,9 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                         ResetCenterAfterDrift();
                         SetTargetForCustomEventContainers();
 
-                        SchedulerProgress.TargetStart(target.Project.Name, target.Name);
-
-                        // Create a container for this target, add the instructions, and execute
-                        PlanTargetContainer targetContainer = GetPlanTargetContainer(previousPlanTarget, plan, SchedulerProgress);
-                        targetContainer.Execute(progress, token).Wait();
+                        // Create a container for this exposure, add the instructions, and execute
+                        PlanContainer planContainer = GetPlanContainer(previousPlanTarget, plan, SchedulerProgress);
+                        planContainer.Execute(progress, token).Wait();
 
                         previousPlanTarget = target;
                         PreviousSchedulerPlan = plan;
@@ -382,13 +377,13 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             }
         }
 
-        private PlanTargetContainer GetPlanTargetContainer(ITarget previousPlanTarget, SchedulerPlan plan, SchedulerProgressVM schedulerProgress) {
-            PlanTargetContainer targetContainer = new PlanTargetContainer(this, profileService, dateTimeProviders, telescopeMediator,
+        private PlanContainer GetPlanContainer(ITarget previousPlanTarget, SchedulerPlan plan, SchedulerProgressVM schedulerProgress) {
+            PlanContainer planContainer = new PlanContainer(this, profileService, dateTimeProviders, telescopeMediator,
                 rotatorMediator, guiderMediator, cameraMediator, imagingMediator, imageSaveMediator,
                 imageHistoryVM, filterWheelMediator, domeMediator, domeFollower,
                 plateSolverFactory, windowServiceFactory, messageBroker,
                 synchronizationEnabled, previousPlanTarget, plan, schedulerProgress);
-            return targetContainer;
+            return planContainer;
         }
 
         private SchedulerProgressVM schedulerProgress;

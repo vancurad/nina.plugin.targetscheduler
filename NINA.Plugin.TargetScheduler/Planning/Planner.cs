@@ -1,6 +1,7 @@
 ﻿using NINA.Astrometry;
 using NINA.Core.Model;
 using NINA.Core.Utility;
+using NINA.Core.Utility.Notification;
 using NINA.Plugin.TargetScheduler.Astrometry;
 using NINA.Plugin.TargetScheduler.Database;
 using NINA.Plugin.TargetScheduler.Database.Schema;
@@ -45,12 +46,11 @@ namespace NINA.Plugin.TargetScheduler.Planning {
             TSLogger.Info($"-- BEGIN {title} ---------------------------------------------------");
             TSLogger.Debug($"getting current plan for {Utils.FormatDateTimeFull(atTime)}");
 
-            /*
             if (Common.USE_EMULATOR) {
                 Notification.ShowInformation("REMINDER: running plan emulation");
                 TSLogger.Info($"-- END {title} -----------------------------------------------------");
-                return new PlannerEmulator(atTime, activeProfile).GetPlan(previousPlanTarget);
-            }*/
+                return new PlannerEmulator(atTime, activeProfile).GetPlan(previousTarget);
+            }
 
             using (MyStopWatch.Measure("Scheduler Plan Generation")) {
                 try {

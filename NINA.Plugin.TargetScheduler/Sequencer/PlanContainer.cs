@@ -34,7 +34,7 @@ using System.Threading.Tasks;
 
 namespace NINA.Plugin.TargetScheduler.Sequencer {
 
-    public class PlanTargetContainer : SequenceContainer, IDeepSkyObjectContainer {
+    public class PlanContainer : SequentialContainer, IDeepSkyObjectContainer {
         public static readonly string INSTRUCTION_CATEGORY = "Scheduler";
 
         private readonly TargetSchedulerContainer parentContainer;
@@ -65,7 +65,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         private NewTargetStartPublisher newTargetStartPublisher;
         private TargetStartPublisher targetStartPublisher;
 
-        public PlanTargetContainer(
+        public PlanContainer(
                 TargetSchedulerContainer parentContainer,
                 IProfileService profileService,
                 IList<IDateTimeProvider> dateTimeProviders,
@@ -85,8 +85,8 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                 bool synchronizationEnabled,
                 ITarget previousPlanTarget,
                 SchedulerPlan plan,
-                SchedulerProgressVM schedulerProgress) : base(new PlanTargetContainerStrategy()) {
-            Name = nameof(PlanTargetContainer);
+                SchedulerProgressVM schedulerProgress) {
+            Name = nameof(PlanContainer);
             Description = "";
             Category = INSTRUCTION_CATEGORY;
 
@@ -112,8 +112,6 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             this.plan = plan;
             this.activeProfile = profileService.ActiveProfile;
 
-            PlanTargetContainerStrategy containerStrategy = Strategy as PlanTargetContainerStrategy;
-            containerStrategy.SetContext(parentContainer, plan, schedulerProgress);
             AttachNewParent(parentContainer);
 
             if (synchronizationEnabled) {
@@ -160,7 +158,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         }
 
         public override Task Interrupt() {
-            TSLogger.Warning("PlanTargetContainer: interrupt");
+            TSLogger.Warning("PlanContainer: interrupt");
             return base.Interrupt();
         }
 
@@ -175,6 +173,8 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                     TSLogger.Debug($"exp plan msg: {((PlanMessage)instruction).msg}");
                     continue;
                 }
+
+                Add(new PlanSchedulerProgress(schedulerProgress, instruction));
 
                 if (instruction is PlanSlew) {
                     AddSlew((PlanSlew)instruction, plan.PlanTarget);
@@ -191,18 +191,13 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                     continue;
                 }
 
-                if (instruction is PlanTakeExposure) {
+                if (instruction is Planning.Entities.PlanTakeExposure) {
                     AddTakeExposure(plan.PlanTarget, instruction.exposure);
                     continue;
                 }
 
                 if (instruction is PlanDither) {
                     AddDither();
-                    continue;
-                }
-
-                if (instruction is PlanWait) {
-                    AddWait(((PlanWait)instruction).waitForTime, plan.PlanTarget);
                     continue;
                 }
 
@@ -350,15 +345,15 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         }
 
         private int GetGain(int? gain) {
-            return (int)(gain == null ? cameraMediator.GetInfo().DefaultGain : gain);
+            return gain.HasValue ? (int)gain : cameraMediator.GetInfo().DefaultGain;
         }
 
         private int GetOffset(int? offset) {
-            return (int)((int)(offset == null ? cameraMediator.GetInfo().DefaultOffset : offset));
+            return offset.HasValue ? (int)offset : cameraMediator.GetInfo().DefaultOffset;
         }
 
         private short GetReadoutMode(int? readoutMode) {
-            return readoutMode != null ? (short)readoutMode : cameraMediator.GetInfo().ReadoutMode;
+            return readoutMode.HasValue ? (short)readoutMode : cameraMediator.GetInfo().ReadoutMode;
         }
 
         public override object Clone() {

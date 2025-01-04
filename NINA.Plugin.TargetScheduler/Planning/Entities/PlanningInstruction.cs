@@ -62,9 +62,11 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
     }
 
     public class PlanSlew : PlanningInstruction {
+        public ITarget target { get; private set; }
         public bool center { get; private set; }
 
-        public PlanSlew(bool center) : base(null) {
+        public PlanSlew(ITarget target, bool center) : base(null) {
+            this.target = target;
             this.center = center;
         }
 
