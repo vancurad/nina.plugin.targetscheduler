@@ -1,7 +1,6 @@
 ﻿using NINA.Astrometry;
 using NINA.Core.Model;
 using NINA.Core.Utility;
-using NINA.Core.Utility.Notification;
 using NINA.Plugin.TargetScheduler.Astrometry;
 using NINA.Plugin.TargetScheduler.Database;
 using NINA.Plugin.TargetScheduler.Database.Schema;
@@ -46,12 +45,6 @@ namespace NINA.Plugin.TargetScheduler.Planning {
             TSLogger.Info($"-- BEGIN {title} ---------------------------------------------------");
             TSLogger.Debug($"getting current plan for {Utils.FormatDateTimeFull(atTime)}");
 
-            if (Common.USE_EMULATOR) {
-                Notification.ShowInformation("REMINDER: running plan emulation");
-                TSLogger.Info($"-- END {title} -----------------------------------------------------");
-                return new PlannerEmulator(atTime, activeProfile).GetPlan(previousTarget);
-            }
-
             using (MyStopWatch.Measure("Scheduler Plan Generation")) {
                 try {
                     if (projects == null) {
@@ -72,12 +65,16 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                             ? readyTargets[0]
                             : SelectTargetByScore(readyTargets, new ScoringEngine(activeProfile, profilePreferences, atTime, previousTarget));
                         List<IInstruction> instructions = new InstructionGenerator().Generate(selectedTarget, previousTarget);
+
+                        // Target ready now
                         return new SchedulerPlan(atTime, projects, selectedTarget, instructions, !checkCondition);
                     } else {
                         ITarget nextTarget = GetNextPossibleTarget(projects);
                         if (nextTarget != null) {
+                            // Wait for next possible target
                             return new SchedulerPlan(atTime, projects, nextTarget, !checkCondition);
                         } else {
+                            // Otherwise done for the night
                             TSLogger.Info("Scheduler Planner: no target selected");
                             return null;
                         }

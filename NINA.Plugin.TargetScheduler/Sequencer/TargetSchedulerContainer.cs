@@ -4,6 +4,7 @@ using NINA.Astrometry.Interfaces;
 using NINA.Core.Enum;
 using NINA.Core.Model;
 using NINA.Core.Utility;
+using NINA.Core.Utility.Notification;
 using NINA.Core.Utility.WindowService;
 using NINA.Equipment.Interfaces;
 using NINA.Equipment.Interfaces.Mediator;
@@ -227,13 +228,21 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
 
         public override async Task Execute(IProgress<ApplicationStatus> progress, CancellationToken token) {
             TSLogger.Debug("TargetSchedulerContainer: Execute");
+            profilePreferences = GetProfilePreferences();
+
+            if (profilePreferences.EnableSimulatedRun) {
+                string msg = $"Target Scheduler simulated execution is enabled: skip waits: {profilePreferences.SkipSimulatedWaits}, skip updates: {profilePreferences.SkipSimulatedUpdates}";
+                TSLogger.Warning(msg);
+                Notification.ShowWarning(msg);
+            }
 
             ITarget previousPlanTarget = null;
             PreviousSchedulerPlan = null;
             synchronizationEnabled = IsSynchronizationEnabled();
+            DateTime atTime = DateTime.Now;
+            atTime = atTime.Date.AddHours(13); // FIXME FIXME FIXME FIXME FIXME FIXME
 
             while (true) {
-                DateTime atTime = DateTime.Now;
                 profilePreferences = GetProfilePreferences();
                 SchedulerPlan plan = new Planner(atTime, profileService.ActiveProfile, profilePreferences, false).GetPlan(previousPlanTarget);
                 SetSyncServerState(ServerState.Ready);
@@ -244,7 +253,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                         await ExecuteEventContainer(AfterAllTargetsContainer, progress, token);
                     }
 
-                    SchedulerProgress.End(); // TODO: don't think this is right now
+                    SchedulerProgress.End();
                     SetSyncServerState(ServerState.EndSyncContainers);
                     InformTSConditionChecks();
 
@@ -260,17 +269,23 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                         PreviousSchedulerPlan = null;
                     }
 
-                    TSLogger.Info($"planner waiting for next target to become available: {Utils.FormatDateTimeFull(plan.WaitForNextTargetTime)}");
-                    waitStartPublisher.Publish((DateTime)plan.WaitForNextTargetTime);
+                    if (!profilePreferences.DoSkipSimulatedWaits) {
+                        TSLogger.Info($"waiting for next target to become available: {Utils.FormatDateTimeFull(plan.WaitForNextTargetTime)}");
+                        waitStartPublisher.Publish((DateTime)plan.WaitForNextTargetTime);
 
-                    SetSyncServerState(ServerState.PlanWait);
-                    SchedulerProgress.WaitStart(plan.WaitForNextTargetTime);
-                    await ExecuteEventContainer(BeforeWaitContainer, progress, token);
+                        SetSyncServerState(ServerState.PlanWait);
+                        SchedulerProgress.WaitStart(plan.WaitForNextTargetTime);
+                        await ExecuteEventContainer(BeforeWaitContainer, progress, token);
 
-                    SchedulerProgress.Add("Wait");
-                    WaitForNextTarget(plan.WaitForNextTargetTime, progress, token);
-                    await ExecuteEventContainer(AfterWaitContainer, progress, token);
-                    SchedulerProgress.End();
+                        SchedulerProgress.Add("Wait");
+                        WaitForNextTarget(plan.WaitForNextTargetTime, progress, token);
+                        await ExecuteEventContainer(AfterWaitContainer, progress, token);
+                        SchedulerProgress.End();
+                        atTime = DateTime.Now;
+                    } else {
+                        atTime = (DateTime)plan.WaitForNextTargetTime;
+                        TSLogger.Info($"simulated run enabled, skipping planned wait and advancing time to {atTime}");
+                    }
                 } else {
                     try {
                         ITarget target = plan.PlanTarget;

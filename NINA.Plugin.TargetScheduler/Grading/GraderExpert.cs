@@ -173,7 +173,7 @@ namespace NINA.Plugin.TargetScheduler.Grading {
 
             double mean = samples.Average();
             double sum = samples.Sum(d => Math.Pow(d - mean, 2));
-            double stddev = Math.Sqrt((sum) / (samples.Count() - 1));
+            double stddev = Math.Sqrt((sum) / (samples.Count - 1));
 
             return (mean, stddev);
         }

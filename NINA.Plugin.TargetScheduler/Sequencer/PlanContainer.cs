@@ -133,7 +133,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                 AddEndTimeTrigger(plan.PlanTarget);
                 AddInstructions(plan);
                 EnsureUnparked(progress, token);
-                new ImageSaveWatcher(activeProfile, imageSaveMediator, plan.PlanTarget, plan.PlanTarget.SelectedExposure, token);
+                //new ImageSaveWatcher(activeProfile, imageSaveMediator, plan.PlanTarget, plan.PlanTarget.SelectedExposure, token);
 
                 targetStartPublisher.Publish(plan);
 
@@ -198,6 +198,11 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
 
                 if (instruction is PlanDither) {
                     AddDither();
+                    continue;
+                }
+
+                if (instruction is PlanPostExposure) {
+                    // currently a no-op
                     continue;
                 }
 
@@ -284,6 +289,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                         imagingMediator,
                         imageSaveMediator,
                         imageHistoryVM,
+                        null, // TODO: fixme should imageSaveWatcher
                         target.DatabaseId,
                         exposure.DatabaseId);
             SetItemDefaults(takeExposure, nameof(TakeExposure));

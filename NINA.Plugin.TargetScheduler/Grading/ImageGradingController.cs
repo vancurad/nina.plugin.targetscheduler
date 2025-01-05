@@ -31,11 +31,9 @@ namespace NINA.Plugin.TargetScheduler.Grading {
             worker = Task.Run(DoWork);
         }
 
-        // Usage: await ImageGradingController.Instance.Enqueue(pkg,ct)
-
         public Task Enqueue(GradingWorkData workPackage, CancellationToken token) {
             var mergedCts = CancellationTokenSource.CreateLinkedTokenSource(token, workerCTS.Token);
-            TSLogger.Debug($"queuing image grading task <DETAILS>");
+            TSLogger.Debug($"queuing image grading task: targetId={workPackage.TargetId}, exposureId={workPackage.ExposurePlanId}, imageId={workPackage.ImageSavedEventArgs.MetaData.Image.Id}");
             return queue.EnqueueAsync(workPackage, mergedCts.Token);
         }
 

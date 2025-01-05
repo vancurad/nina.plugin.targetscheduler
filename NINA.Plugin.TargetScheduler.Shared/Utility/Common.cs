@@ -5,7 +5,6 @@ namespace NINA.Plugin.TargetScheduler.Shared.Utility {
 
     public class Common {
         public static readonly string PLUGIN_HOME = Path.Combine(CoreUtil.APPLICATIONTEMPPATH, "TSPlugin");
-        public static readonly bool USE_EMULATOR = false;
 
         public static long DateTimeToUnixSeconds(DateTime? dateTime) {
             return dateTime == null ? 0 : CoreUtil.DateTimeToUnixTimeStamp((DateTime)dateTime);

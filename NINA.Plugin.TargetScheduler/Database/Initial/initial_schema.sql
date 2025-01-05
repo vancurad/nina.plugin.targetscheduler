@@ -26,6 +26,9 @@ CREATE TABLE IF NOT EXISTS "profilepreference" (
 	"syncActionTimeout"						INTEGER DEFAULT 300,
 	"syncSolveRotateTimeout"				INTEGER DEFAULT 300,
 	"syncEventContainerTimeout"				INTEGER DEFAULT 300,
+	"enableSimulatedRun"					INTEGER DEFAULT 0,
+	"skipSimulatedWaits"					INTEGER DEFAULT 0,
+	"skipSimulatedUpdates"					INTEGER DEFAULT 0,
 	PRIMARY KEY("id")
 );
 

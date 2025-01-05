@@ -33,6 +33,10 @@ namespace NINA.Plugin.TargetScheduler.Test.Database.Schema {
             sut.SyncWaitTimeout.Should().Be(300);
             sut.SyncActionTimeout.Should().Be(300);
             sut.SyncSolveRotateTimeout.Should().Be(300);
+
+            sut.EnableSimulatedRun.Should().BeFalse();
+            sut.SkipSimulatedWaits.Should().BeTrue();
+            sut.SkipSimulatedUpdates.Should().BeTrue();
         }
     }
 }

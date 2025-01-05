@@ -37,7 +37,7 @@ namespace NINA.Plugin.TargetScheduler.Grading {
 
             ExposurePlan exposurePlan = GetExposurePlan(workData.ExposurePlanId);
             Target target = GetTarget(workData.TargetId);
-            string tag = $"target {target.Name}, expId={exposurePlan.Id}";
+            string tag = $"target {target.Name}, expId={exposurePlan.Id}, imageId={workData.ImageSavedEventArgs.MetaData.Image.Id}";
 
             try {
                 TSLogger.Info($"starting image grading on {tag}");

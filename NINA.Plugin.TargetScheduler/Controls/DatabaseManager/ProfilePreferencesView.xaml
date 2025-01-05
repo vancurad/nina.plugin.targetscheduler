@@ -110,7 +110,7 @@
                             FontWeight="Bold" />
                         <UniformGrid
                             Width="320"
-                            Height="100"
+                            Height="88"
                             Margin="12,0,0,6"
                             HorizontalAlignment="Left"
                             Columns="2"
@@ -200,7 +200,7 @@
                             FontWeight="Bold" />
                         <UniformGrid
                             Width="320"
-                            Height="350"
+                            Height="286"
                             Margin="12,0,0,6"
                             HorizontalAlignment="Left"
                             Columns="2"
@@ -603,6 +603,69 @@
                                 MaxHeight="20"
                                 Margin="3,3,0,0"
                                 Text="{Binding ProfilePreferenceProxy.ProfilePreference.SyncEventContainerTimeout}"
+                                Visibility="{Binding ShowEditView, Converter={StaticResource InverseBooleanToVisibilityCollapsedConverter}}" />
+                        </UniformGrid>
+
+                        <Label
+                            Margin="0,40,0,6"
+                            VerticalAlignment="Center"
+                            Content="Simulation Preferences"
+                            FontSize="16"
+                            FontWeight="Bold" />
+                        <UniformGrid
+                            Width="320"
+                            Height="66"
+                            Margin="12,0,0,6"
+                            HorizontalAlignment="Left"
+                            Columns="2"
+                            Rows="3">
+
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontWeight="Bold"
+                                Text="Enable Simulated Execution"
+                                ToolTip="If true, then runtime execution is in simulation mode.  Read the documentation before using." />
+                            <CheckBox
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                IsChecked="{Binding Path=ProfilePreferenceProxy.ProfilePreference.EnableSimulatedRun, Mode=TwoWay}"
+                                Visibility="{Binding ShowEditView, Converter={StaticResource BooleanToVisibilityCollapsedConverter}}" />
+                            <TextBlock
+                                MaxHeight="20"
+                                Margin="3,3,0,0"
+                                Text="{Binding ProfilePreferenceProxy.ProfilePreference.EnableSimulatedRun}"
+                                Visibility="{Binding ShowEditView, Converter={StaticResource InverseBooleanToVisibilityCollapsedConverter}}" />
+
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontWeight="Bold"
+                                Text="Skip Waits"
+                                ToolTip="If simulating, then skip planned waits" />
+                            <CheckBox
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                IsChecked="{Binding Path=ProfilePreferenceProxy.ProfilePreference.SkipSimulatedWaits, Mode=TwoWay}"
+                                Visibility="{Binding ShowEditView, Converter={StaticResource BooleanToVisibilityCollapsedConverter}}" />
+                            <TextBlock
+                                MaxHeight="20"
+                                Margin="3,3,0,0"
+                                Text="{Binding ProfilePreferenceProxy.ProfilePreference.SkipSimulatedWaits}"
+                                Visibility="{Binding ShowEditView, Converter={StaticResource InverseBooleanToVisibilityCollapsedConverter}}" />
+
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontWeight="Bold"
+                                Text="Skip Database Updates"
+                                ToolTip="If simulating, then skip database updates during imaging" />
+                            <CheckBox
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                IsChecked="{Binding Path=ProfilePreferenceProxy.ProfilePreference.SkipSimulatedUpdates, Mode=TwoWay}"
+                                Visibility="{Binding ShowEditView, Converter={StaticResource BooleanToVisibilityCollapsedConverter}}" />
+                            <TextBlock
+                                MaxHeight="20"
+                                Margin="3,3,0,0"
+                                Text="{Binding ProfilePreferenceProxy.ProfilePreference.SkipSimulatedUpdates}"
                                 Visibility="{Binding ShowEditView, Converter={StaticResource InverseBooleanToVisibilityCollapsedConverter}}" />
                         </UniformGrid>
                     </StackPanel>

@@ -10,6 +10,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NINA.Plugin.TargetScheduler.Shared", "NINA.Plugin.TargetScheduler.Shared\NINA.Plugin.TargetScheduler.Shared.csproj", "{EA979EBD-3C08-4DC7-BB5F-D90539B113E8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{97353EA6-D831-44B5-8F6F-216A3A3BD34B}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NINA.Plugin.TargetScheduler.SyncService", "NINA.Plugin.TargetScheduler.SyncService\NINA.Plugin.TargetScheduler.SyncService.csproj", "{B79C1FD8-965F-4CB1-A683-29BCB4AF4D89}"
 EndProject

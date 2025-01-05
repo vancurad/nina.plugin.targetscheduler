@@ -9,12 +9,6 @@ namespace NINA.Plugin.TargetScheduler.Test.Shared.Utility {
     public class CommonTest {
 
         [Test]
-        public void testNotEmulator() {
-            // prevent commits with emulator on
-            Common.USE_EMULATOR.Should().BeFalse();
-        }
-
-        [Test]
         public void testListEmpty() {
             Common.IsEmpty(null).Should().BeTrue();
             Common.IsEmpty(new List<int>()).Should().BeTrue();

@@ -37,6 +37,10 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
         public double fwhmSigmaFactor { get; set; }
         public double eccentricitySigmaFactor { get; set; }
 
+        public int enableSimulatedRun { get; set; }
+        public int skipSimulatedWaits { get; set; }
+        public int skipSimulatedUpdates { get; set; }
+
         public ProfilePreference() {
         }
 
@@ -66,6 +70,10 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
             SyncWaitTimeout = SyncManager.DEFAULT_SYNC_WAIT_TIMEOUT;
             SyncActionTimeout = SyncManager.DEFAULT_SYNC_ACTION_TIMEOUT;
             SyncSolveRotateTimeout = SyncManager.DEFAULT_SYNC_SOLVEROTATE_TIMEOUT;
+
+            EnableSimulatedRun = false;
+            SkipSimulatedWaits = true;
+            SkipSimulatedUpdates = true;
         }
 
         [NotMapped]
@@ -274,6 +282,39 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
                 RaisePropertyChanged(nameof(EccentricitySigmaFactor));
             }
         }
+
+        [NotMapped]
+        public bool EnableSimulatedRun {
+            get { return enableSimulatedRun == 1; }
+            set {
+                enableSimulatedRun = value ? 1 : 0;
+                RaisePropertyChanged(nameof(EnableSimulatedRun));
+            }
+        }
+
+        [NotMapped]
+        public bool SkipSimulatedWaits {
+            get { return skipSimulatedWaits == 1; }
+            set {
+                skipSimulatedWaits = value ? 1 : 0;
+                RaisePropertyChanged(nameof(SkipSimulatedWaits));
+            }
+        }
+
+        [NotMapped]
+        public bool SkipSimulatedUpdates {
+            get { return skipSimulatedUpdates == 1; }
+            set {
+                skipSimulatedUpdates = value ? 1 : 0;
+                RaisePropertyChanged(nameof(SkipSimulatedUpdates));
+            }
+        }
+
+        [NotMapped]
+        public bool DoSkipSimulatedWaits => EnableSimulatedRun && SkipSimulatedWaits;
+
+        [NotMapped]
+        public bool DoSkipSimulatedUpdates => EnableSimulatedRun && SkipSimulatedUpdates;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
