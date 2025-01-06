@@ -20,7 +20,7 @@ namespace NINA.Plugin.TargetScheduler.Shared.Utility {
         static TSLogger() {
             var logDate = DateTime.Now.ToString("yyyyMMdd-HHmmss");
             var logDir = Path.Combine(Common.PLUGIN_HOME, "Logs");
-            var processId = System.Diagnostics.Process.GetCurrentProcess().Id;
+            var processId = Environment.ProcessId;
             var logFilePath = Path.Combine(logDir, $"TS-{logDate}-{CoreUtil.Version}.{processId}.log");
 
             levelSwitch = new LoggingLevelSwitch();

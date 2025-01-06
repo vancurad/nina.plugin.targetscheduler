@@ -14,7 +14,7 @@ namespace NINA.Plugin.TargetScheduler.Grading {
 
     public class GraderExpert {
         private IProfile profile;
-        private ImageGraderPreferences preferences;
+        private IImageGraderPreferences preferences;
         private ImageSavedEventArgs imageData;
 
         public bool NoGradingMetricsEnabled => noGradingMetricsEnabled();
@@ -23,7 +23,7 @@ namespace NINA.Plugin.TargetScheduler.Grading {
         public GraderExpert(GradingWorkData workData) : this(workData.GraderPreferences, workData.ImageSavedEventArgs) {
         }
 
-        public GraderExpert(ImageGraderPreferences preferences, ImageSavedEventArgs imageData) {
+        public GraderExpert(IImageGraderPreferences preferences, ImageSavedEventArgs imageData) {
             this.profile = preferences.Profile;
             this.preferences = preferences;
             this.imageData = imageData;
@@ -74,9 +74,14 @@ namespace NINA.Plugin.TargetScheduler.Grading {
         public bool GradeHFR(List<AcquiredImage> population) {
             if (!preferences.EnableGradeHFR) return true;
 
+            double hfr = imageData.StarDetectionAnalysis.HFR;
+            if (preferences.AutoAcceptLevelHFR > 0 && hfr <= preferences.AutoAcceptLevelHFR) {
+                TSLogger.Info($"image grading: HFR auto accepted: actual ({hfr}) <= level ({preferences.AutoAcceptLevelHFR})");
+                return true;
+            }
+
             List<double> samples = GetSamples(population, i => { return i.Metadata.HFR; });
             TSLogger.Info("image grading: HFR ->");
-            double hfr = imageData.StarDetectionAnalysis.HFR;
             if (NearZero(hfr) || !WithinAcceptableVariance(samples, hfr, preferences.HFRSigmaFactor, false)) {
                 return false;
             }
@@ -91,6 +96,11 @@ namespace NINA.Plugin.TargetScheduler.Grading {
             if (Double.IsNaN(fwhm)) {
                 TSLogger.Warning("image grading: FWHM grading is enabled but image doesn't have FWHM metric.  Is Hocus Focus installed, enabled, and configured for star detection?");
             } else {
+                if (preferences.AutoAcceptLevelFWHM > 0 && fwhm <= preferences.AutoAcceptLevelFWHM) {
+                    TSLogger.Info($"image grading: FWHM auto accepted: actual ({fwhm}) <= level ({preferences.AutoAcceptLevelFWHM})");
+                    return true;
+                }
+
                 List<double> samples = GetSamples(population, i => { return i.Metadata.FWHM; });
                 if (SamplesHaveData(samples)) {
                     TSLogger.Info("image grading: FWHM ->");
@@ -113,6 +123,11 @@ namespace NINA.Plugin.TargetScheduler.Grading {
             if (eccentricity == Double.NaN) {
                 TSLogger.Warning("image grading: eccentricity grading is enabled but image doesn't have eccentricity metric.  Is Hocus Focus installed, enabled, and configured for star detection?");
             } else {
+                if (preferences.AutoAcceptLevelEccentricity > 0 && eccentricity <= preferences.AutoAcceptLevelEccentricity) {
+                    TSLogger.Info($"image grading: eccentricity auto accepted: actual ({eccentricity}) <= level ({preferences.AutoAcceptLevelEccentricity})");
+                    return true;
+                }
+
                 List<double> samples = GetSamples(population, i => { return i.Metadata.Eccentricity; });
                 if (SamplesHaveData(samples)) {
                     TSLogger.Info("image grading: eccentricity ->");

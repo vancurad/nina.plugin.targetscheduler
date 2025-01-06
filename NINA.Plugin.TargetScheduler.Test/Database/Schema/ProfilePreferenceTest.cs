@@ -28,6 +28,9 @@ namespace NINA.Plugin.TargetScheduler.Test.Database.Schema {
             sut.HFRSigmaFactor.Should().BeApproximately(4, 0.001);
             sut.FWHMSigmaFactor.Should().BeApproximately(4, 0.001);
             sut.EccentricitySigmaFactor.Should().BeApproximately(4, 0.001);
+            sut.AutoAcceptLevelHFR.Should().Be(0);
+            sut.AutoAcceptLevelFWHM.Should().Be(0);
+            sut.AutoAcceptLevelEccentricity.Should().Be(0);
 
             sut.EnableSynchronization.Should().BeFalse();
             sut.SyncWaitTimeout.Should().Be(300);

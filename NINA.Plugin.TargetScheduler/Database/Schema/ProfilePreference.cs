@@ -36,6 +36,9 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
         public double hfrSigmaFactor { get; set; }
         public double fwhmSigmaFactor { get; set; }
         public double eccentricitySigmaFactor { get; set; }
+        public double autoAcceptLevelHFR { get; set; }
+        public double autoAcceptLevelFWHM { get; set; }
+        public double autoAcceptLevelEccentricity { get; set; }
 
         public int enableSimulatedRun { get; set; }
         public int skipSimulatedWaits { get; set; }
@@ -65,6 +68,9 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
             HFRSigmaFactor = 4;
             FWHMSigmaFactor = 4;
             EccentricitySigmaFactor = 4;
+            autoAcceptLevelHFR = 0;
+            autoAcceptLevelFWHM = 0;
+            autoAcceptLevelEccentricity = 0;
 
             EnableSynchronization = false;
             SyncWaitTimeout = SyncManager.DEFAULT_SYNC_WAIT_TIMEOUT;
@@ -280,6 +286,33 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
             set {
                 eccentricitySigmaFactor = value;
                 RaisePropertyChanged(nameof(EccentricitySigmaFactor));
+            }
+        }
+
+        [NotMapped]
+        public double AutoAcceptLevelHFR {
+            get { return autoAcceptLevelHFR; }
+            set {
+                autoAcceptLevelHFR = value;
+                RaisePropertyChanged(nameof(AutoAcceptLevelHFR));
+            }
+        }
+
+        [NotMapped]
+        public double AutoAcceptLevelFWHM {
+            get { return autoAcceptLevelFWHM; }
+            set {
+                autoAcceptLevelFWHM = value;
+                RaisePropertyChanged(nameof(AutoAcceptLevelFWHM));
+            }
+        }
+
+        [NotMapped]
+        public double AutoAcceptLevelEccentricity {
+            get { return autoAcceptLevelEccentricity; }
+            set {
+                autoAcceptLevelEccentricity = value;
+                RaisePropertyChanged(nameof(AutoAcceptLevelEccentricity));
             }
         }
 

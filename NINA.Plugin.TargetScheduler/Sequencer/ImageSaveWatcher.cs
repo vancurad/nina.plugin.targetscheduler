@@ -81,6 +81,8 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         }
 
         public async void ImageSaved(object sender, ImageSavedEventArgs imageSavedEventArgs) {
+            // NINA code comment says image patterns CAN be injected here ... how?
+
             /*
             if (imageSavedEventArgs.MetaData.Image.ImageType != "LIGHT") {
                 return;

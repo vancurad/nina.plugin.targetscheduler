@@ -190,6 +190,91 @@ namespace NINA.Plugin.TargetScheduler.Test.Grading {
             stddev.Should().BeApproximately(32.0364, 0.001);
         }
 
+        [Test]
+        public void testAutoAcceptLevelHFR() {
+            Mock<IImageGraderPreferences> mock = new Mock<IImageGraderPreferences>();
+            mock.SetupAllProperties();
+            mock.SetupProperty(m => m.EnableGradeHFR, true);
+            mock.SetupProperty(m => m.AutoAcceptLevelHFR, 4);
+            List<AcquiredImage> pop = GetTestImages(10, 1, "L", 60);
+
+            // auto enabled and permissive
+            GraderExpert sut = new GraderExpert(mock.Object, GetMockImageData(0, 0, "L", 0, 3.99));
+            sut.GradeHFR(pop).Should().BeTrue();
+
+            // auto disabled
+            mock.SetupProperty(m => m.AutoAcceptLevelHFR, 0);
+            sut = new GraderExpert(mock.Object, GetMockImageData(0, 0, "L", 0, 3.99));
+            sut.GradeHFR(pop).Should().BeFalse();
+
+            // auto enabled but too tight
+            mock.SetupProperty(m => m.AutoAcceptLevelHFR, 1);
+            sut = new GraderExpert(mock.Object, GetMockImageData(0, 0, "L", 0, 3.99));
+            sut.GradeHFR(pop).Should().BeFalse();
+        }
+
+        [Test]
+        public void testAutoAcceptLevelFWHM() {
+            Mock<IImageGraderPreferences> mockPrefs = new Mock<IImageGraderPreferences>();
+            mockPrefs.SetupAllProperties();
+            mockPrefs.SetupProperty(m => m.EnableGradeFWHM, true);
+            mockPrefs.SetupProperty(m => m.AutoAcceptLevelFWHM, 4);
+            List<AcquiredImage> pop = GetTestImages(10, 1, "L", 60);
+            ImageSavedEventArgs imageData = GetMockImageData(0, 0, "L", 0, 0, 1.5, 0);
+
+            Mock<GraderExpert> mock = new Mock<GraderExpert>(mockPrefs.Object, imageData) { CallBase = true };
+            mock.Setup(m => m.GetHocusFocusMetric(imageData.StarDetectionAnalysis, "FWHM")).Returns(3.99);
+
+            // auto enabled and permissive
+            GraderExpert sut = mock.Object;
+            sut.GradeFWHM(pop).Should().BeTrue();
+
+            // auto disabled
+            mockPrefs.SetupProperty(m => m.AutoAcceptLevelFWHM, 0);
+            mock = new Mock<GraderExpert>(mockPrefs.Object, imageData) { CallBase = true };
+            mock.Setup(m => m.GetHocusFocusMetric(imageData.StarDetectionAnalysis, "FWHM")).Returns(3.99);
+            sut = mock.Object;
+            sut.GradeFWHM(pop).Should().BeFalse();
+
+            // auto enabled but too tight
+            mockPrefs.SetupProperty(m => m.AutoAcceptLevelFWHM, 3.9);
+            mock = new Mock<GraderExpert>(mockPrefs.Object, imageData) { CallBase = true };
+            mock.Setup(m => m.GetHocusFocusMetric(imageData.StarDetectionAnalysis, "FWHM")).Returns(3.99);
+            sut = mock.Object;
+            sut.GradeFWHM(pop).Should().BeFalse();
+        }
+
+        [Test]
+        public void testAutoAcceptLevelEccentricity() {
+            Mock<IImageGraderPreferences> mockPrefs = new Mock<IImageGraderPreferences>();
+            mockPrefs.SetupAllProperties();
+            mockPrefs.SetupProperty(m => m.EnableGradeEccentricity, true);
+            mockPrefs.SetupProperty(m => m.AutoAcceptLevelEccentricity, 4);
+            List<AcquiredImage> pop = GetTestImages(10, 1, "L", 60);
+            ImageSavedEventArgs imageData = GetMockImageData(0, 0, "L", 0, 0, 1.5, 0);
+
+            Mock<GraderExpert> mock = new Mock<GraderExpert>(mockPrefs.Object, imageData) { CallBase = true };
+            mock.Setup(m => m.GetHocusFocusMetric(imageData.StarDetectionAnalysis, "Eccentricity")).Returns(3.99);
+
+            // auto enabled and permissive
+            GraderExpert sut = mock.Object;
+            sut.GradeEccentricity(pop).Should().BeTrue();
+
+            // auto disabled
+            mockPrefs.SetupProperty(m => m.AutoAcceptLevelEccentricity, 0);
+            mock = new Mock<GraderExpert>(mockPrefs.Object, imageData) { CallBase = true };
+            mock.Setup(m => m.GetHocusFocusMetric(imageData.StarDetectionAnalysis, "Eccentricity")).Returns(3.99);
+            sut = mock.Object;
+            sut.GradeEccentricity(pop).Should().BeFalse();
+
+            // auto enabled but too tight
+            mockPrefs.SetupProperty(m => m.AutoAcceptLevelEccentricity, 3.9);
+            mock = new Mock<GraderExpert>(mockPrefs.Object, imageData) { CallBase = true };
+            mock.Setup(m => m.GetHocusFocusMetric(imageData.StarDetectionAnalysis, "Eccentricity")).Returns(3.99);
+            sut = mock.Object;
+            sut.GradeEccentricity(pop).Should().BeFalse();
+        }
+
         public static IProfile GetMockProfile(double pixelSize, double focalLength) {
             Mock<IProfileService> mock = new Mock<IProfileService>();
             mock.SetupProperty(m => m.ActiveProfile.Id, DefaultProfileId);

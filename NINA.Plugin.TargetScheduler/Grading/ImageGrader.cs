@@ -41,7 +41,7 @@ namespace NINA.Plugin.TargetScheduler.Grading {
 
             try {
                 TSLogger.Info($"starting image grading on {tag}");
-                ImageGraderPreferences graderPreferences = workData.GraderPreferences;
+                IImageGraderPreferences graderPreferences = workData.GraderPreferences;
                 List<AcquiredImage> population = GetMatchingAcquired(workData, target, GetAllAcquired(exposurePlan));
 
                 if (DelayedGradingEnabled(graderPreferences)) {
@@ -79,7 +79,7 @@ namespace NINA.Plugin.TargetScheduler.Grading {
         }
 
         private GradingResult GradeImage(ExposurePlan exposurePlan, AcquiredImage acquiredImage, GradingWorkData workData, List<AcquiredImage> population) {
-            ImageGraderPreferences prefs = workData.GraderPreferences;
+            IImageGraderPreferences prefs = workData.GraderPreferences;
             GraderExpert expert = new GraderExpert(workData);
 
             try {
@@ -224,7 +224,7 @@ namespace NINA.Plugin.TargetScheduler.Grading {
             return population.Take(maxSampleSize).ToList();
         }
 
-        private bool DelayedGradingEnabled(ImageGraderPreferences graderPreferences) {
+        private bool DelayedGradingEnabled(IImageGraderPreferences graderPreferences) {
             return graderPreferences.DelayGradingThreshold > 0;
         }
 
@@ -238,24 +238,55 @@ namespace NINA.Plugin.TargetScheduler.Grading {
         void Grade(GradingWorkData workPackage);
     }
 
-    public class ImageGraderPreferences {
-        public IProfile Profile { get; private set; }
-        public double DelayGradingThreshold { get; private set; }
-        public int MaxGradingSampleSize { get; private set; }
-        public bool AcceptImprovement { get; private set; }
-        public bool EnableGradeRMS { get; private set; }
-        public double RMSPixelThreshold { get; private set; }
-        public bool EnableGradeStars { get; private set; }
-        public double DetectedStarsSigmaFactor { get; private set; }
-        public bool EnableGradeHFR { get; private set; }
-        public double HFRSigmaFactor { get; private set; }
-        public bool EnableGradeFWHM { get; private set; }
-        public double FWHMSigmaFactor { get; private set; }
-        public bool EnableGradeEccentricity { get; private set; }
-        public double EccentricitySigmaFactor { get; private set; }
-        public bool EnableMoveRejected { get; private set; }
+    public interface IImageGraderPreferences {
+        IProfile Profile { get; set; }
+        double DelayGradingThreshold { get; set; }
+        int MaxGradingSampleSize { get; set; }
+        bool AcceptImprovement { get; set; }
+        bool EnableGradeRMS { get; set; }
+        double RMSPixelThreshold { get; set; }
+        bool EnableGradeStars { get; set; }
+        double DetectedStarsSigmaFactor { get; set; }
+        bool EnableGradeHFR { get; set; }
+        double HFRSigmaFactor { get; set; }
+        bool EnableGradeFWHM { get; set; }
+        double FWHMSigmaFactor { get; set; }
+        bool EnableGradeEccentricity { get; set; }
+        double EccentricitySigmaFactor { get; set; }
+        bool EnableMoveRejected { get; set; }
+        double AutoAcceptLevelHFR { get; set; }
+        double AutoAcceptLevelFWHM { get; set; }
+        double AutoAcceptLevelEccentricity { get; set; }
 
-        public bool IsDelayEnabled { get { return DelayGradingThreshold > 0; } }
+        bool IsDelayEnabled { get; }
+    }
+
+    public class ImageGraderPreferences : IImageGraderPreferences {
+        public IProfile Profile { get; set; }
+        public double DelayGradingThreshold { get; set; }
+        public int MaxGradingSampleSize { get; set; }
+        public bool AcceptImprovement { get; set; }
+        public bool EnableGradeRMS { get; set; }
+        public double RMSPixelThreshold { get; set; }
+        public bool EnableGradeStars { get; set; }
+        public double DetectedStarsSigmaFactor { get; set; }
+        public bool EnableGradeHFR { get; set; }
+        public double HFRSigmaFactor { get; set; }
+        public bool EnableGradeFWHM { get; set; }
+        public double FWHMSigmaFactor { get; set; }
+        public bool EnableGradeEccentricity { get; set; }
+        public double EccentricitySigmaFactor { get; set; }
+        public bool EnableMoveRejected { get; set; }
+        public double AutoAcceptLevelHFR { get; set; }
+        public double AutoAcceptLevelFWHM { get; set; }
+        public double AutoAcceptLevelEccentricity { get; set; }
+
+        public bool IsDelayEnabled {
+            get { return DelayGradingThreshold > 0; }
+        }
+
+        public ImageGraderPreferences() {
+        }
 
         public ImageGraderPreferences(IProfile profile, ProfilePreference profilePreference) {
             Profile = profile;
@@ -272,6 +303,9 @@ namespace NINA.Plugin.TargetScheduler.Grading {
             FWHMSigmaFactor = profilePreference.FWHMSigmaFactor;
             EnableGradeEccentricity = profilePreference.EnableGradeEccentricity;
             EccentricitySigmaFactor = profilePreference.EccentricitySigmaFactor;
+            AutoAcceptLevelHFR = profilePreference.AutoAcceptLevelHFR;
+            AutoAcceptLevelFWHM = profilePreference.AutoAcceptLevelFWHM;
+            AutoAcceptLevelEccentricity = profilePreference.AutoAcceptLevelEccentricity;
             EnableMoveRejected = profilePreference.EnableMoveRejected;
         }
 
@@ -297,6 +331,9 @@ namespace NINA.Plugin.TargetScheduler.Grading {
             this.FWHMSigmaFactor = FWHMSigmaFactor;
             this.EnableGradeEccentricity = EnableGradeEccentricity;
             this.EccentricitySigmaFactor = EccentricitySigmaFactor;
+            this.AutoAcceptLevelHFR = 0;
+            this.AutoAcceptLevelFWHM = 0;
+            this.AutoAcceptLevelEccentricity = 0;
             this.EnableMoveRejected = EnableMoveRejected;
         }
     }
