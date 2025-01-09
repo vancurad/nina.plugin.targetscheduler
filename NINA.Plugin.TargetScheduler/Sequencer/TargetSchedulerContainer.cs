@@ -70,6 +70,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         private readonly IFramingAssistantVM framingAssistantVM;
         private readonly IApplicationMediator applicationMediator;
         private readonly IMessageBroker messageBroker;
+        private IImageSaveWatcher imageSaveWatcher;
         private bool synchronizationEnabled;
         private WaitStartPublisher waitStartPublisher;
 
@@ -140,6 +141,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             TotalExposureCount = -1;
             ClearTarget();
 
+            imageSaveWatcher = new ImageSaveWatcher(profileService.ActiveProfile, imageSaveMediator);
             waitStartPublisher = new WaitStartPublisher(messageBroker);
 
             WeakEventManager<IProfileService, EventArgs>.AddHandler(profileService, nameof(profileService.LocationChanged), ProfileService_LocationChanged);
@@ -196,6 +198,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                 SchedulerProgress.Reset();
             }
 
+            imageSaveWatcher.Stop();
             ClearTarget();
 
             base.ResetProgress();
@@ -223,6 +226,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         }
 
         public override void Teardown() {
+            imageSaveWatcher.Stop();
             TSLogger.Debug("TargetSchedulerContainer: Teardown");
         }
 
@@ -230,17 +234,19 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             TSLogger.Debug("TargetSchedulerContainer: Execute");
             profilePreferences = GetProfilePreferences();
 
+            DateTime atTime = DateTime.Now;
+
             if (profilePreferences.EnableSimulatedRun) {
+                atTime = atTime.Date.AddHours(13);
                 string msg = $"Target Scheduler simulated execution is enabled: skip waits: {profilePreferences.SkipSimulatedWaits}, skip updates: {profilePreferences.SkipSimulatedUpdates}";
                 TSLogger.Warning(msg);
                 Notification.ShowWarning(msg);
             }
 
+            imageSaveWatcher.Start();
             ITarget previousPlanTarget = null;
             PreviousSchedulerPlan = null;
             synchronizationEnabled = IsSynchronizationEnabled();
-            DateTime atTime = DateTime.Now;
-            atTime = atTime.Date.AddHours(13); // FIXME FIXME FIXME FIXME FIXME FIXME
 
             while (true) {
                 profilePreferences = GetProfilePreferences();
@@ -396,7 +402,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             PlanContainer planContainer = new PlanContainer(this, profileService, dateTimeProviders, telescopeMediator,
                 rotatorMediator, guiderMediator, cameraMediator, imagingMediator, imageSaveMediator,
                 imageHistoryVM, filterWheelMediator, domeMediator, domeFollower,
-                plateSolverFactory, windowServiceFactory, messageBroker,
+                plateSolverFactory, windowServiceFactory, messageBroker, imageSaveWatcher,
                 synchronizationEnabled, previousPlanTarget, plan, schedulerProgress);
             return planContainer;
         }

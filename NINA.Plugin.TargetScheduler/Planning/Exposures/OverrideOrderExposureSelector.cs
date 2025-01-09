@@ -10,7 +10,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
     /// </summary>
     public class OverrideOrderExposureSelector : BaseExposureSelector, IExposureSelector {
 
-        public OverrideOrderExposureSelector(IProject project, ITarget target, Target databaseTarget) : base() {
+        public OverrideOrderExposureSelector(IProject project, ITarget target, Target databaseTarget) : base(target) {
             FilterCadence = new FilterCadenceFactory().Generate(project, target, databaseTarget);
         }
 
@@ -26,22 +26,25 @@ namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
                     continue;
                 }
 
-                IExposure exposure = target.ExposurePlans[item.ReferenceIdx];
-                if (!exposure.Rejected) {
-                    exposure.PreDither = preDither;
-                    FilterCadence.SetLastSelected(item);
-                    return exposure;
+                IExposure exposure = target.AllExposurePlans[item.ReferenceIdx];
+                if (exposure.Rejected || target.CompletedExposurePlans.Contains(exposure)) {
+                    continue;
                 }
+
+                exposure.PreDither = preDither;
+                FilterCadence.SetLastSelected(item);
+                return exposure;
             }
 
             // Fail safe ... should not happen
-            string msg = $"no acceptable exposure plan in override exposure selector for target '{target.Name}' at time {atTime}";
+            string msg = $"unexpected: no acceptable exposure plan in override exposure selector for target '{target.Name}' at time {atTime}";
             TSLogger.Error(msg);
             throw new Exception(msg);
         }
 
         public void ExposureTaken(IExposure exposure) {
             FilterCadence.Advance();
+            UpdateFilterCadences(FilterCadence);
         }
 
         public void TargetReset() {

@@ -3,8 +3,8 @@ using NINA.Core.Model;
 using NINA.Core.Utility;
 using NINA.Equipment.Interfaces.Mediator;
 using NINA.Equipment.Model;
-using NINA.Image.ImageData;
 using NINA.Image.Interfaces;
+using NINA.Plugin.TargetScheduler.Planning.Interfaces;
 using NINA.Plugin.TargetScheduler.Shared.Utility;
 using NINA.Plugin.TargetScheduler.SyncService.Sync;
 using NINA.Profile.Interfaces;
@@ -38,8 +38,8 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         private int syncExposureTimeout;
         private IImageSaveWatcher imageSaveWatcher;
         private IDeepSkyObjectContainer dsoContainer;
-        private int targetDatabaseId;
-        private int exposureDatabaseId;
+        private ITarget target;
+        private IExposure exposure;
         private Task imageProcessingTask;
 
         public PlanTakeExposure(
@@ -52,14 +52,14 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             IImageSaveMediator imageSaveMediator,
             IImageHistoryVM imageHistoryVM,
             IImageSaveWatcher imageSaveWatcher,
-            int targetDatabaseId,
-            int exposureDatabaseId) : base(profileService, cameraMediator, imagingMediator, imageSaveMediator, imageHistoryVM) {
+            ITarget target,
+            IExposure exposure) : base(profileService, cameraMediator, imagingMediator, imageSaveMediator, imageHistoryVM) {
             this.dsoContainer = dsoContainer;
             this.synchronizationEnabled = synchronizationEnabled;
             this.syncExposureTimeout = syncExposureTimeout;
             this.imageSaveWatcher = imageSaveWatcher;
-            this.targetDatabaseId = targetDatabaseId;
-            this.exposureDatabaseId = exposureDatabaseId;
+            this.target = target;
+            this.exposure = exposure;
         }
 
         public override async Task Execute(IProgress<ApplicationStatus> progress, CancellationToken token) {
@@ -79,13 +79,14 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                 capture.SubSambleRectangle = rect;
             }
 
-            var target = RetrieveTarget(dsoContainer);
+            var inputTarget = RetrieveTarget(dsoContainer);
             string exposureId = "";
+            target.ExposureSelector.ExposureTaken(exposure);
 
             if (synchronizationEnabled) {
                 exposureId = Guid.NewGuid().ToString();
                 progress?.Report(new ApplicationStatus() { Status = "Target Scheduler: waiting for sync clients to accept exposure" });
-                await TrySendExposureToClients(exposureId, target, token);
+                await TrySendExposureToClients(exposureId, inputTarget, token);
                 progress?.Report(new ApplicationStatus() { Status = "" });
             }
 
@@ -95,10 +96,8 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                 imageHistoryVM.Add(exposureData.MetaData.Image.Id, ImageType);
             }
 
-            if (imageProcessingTask != null) {
-                await imageProcessingTask;
-            }
-            imageProcessingTask = ProcessImageData(target, exposureData, progress, token);
+            imageProcessingTask = ProcessImageData(inputTarget, exposureData, progress, token);
+            await imageProcessingTask;
 
             // If any sync clients accepted this exposure, we have to wait for them to finish before continuing
             if (synchronizationEnabled) {
@@ -111,7 +110,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         }
 
         // Cobbled from NINA TakeExposure - private method
-        private async Task ProcessImageData(InputTarget target, IExposureData exposureData, IProgress<ApplicationStatus> progress, CancellationToken token) {
+        private async Task ProcessImageData(InputTarget inputTarget, IExposureData exposureData, IProgress<ApplicationStatus> progress, CancellationToken token) {
             try {
                 var imageParams = new PrepareImageParameters(null, false);
                 if (IsLightSequence()) {
@@ -126,10 +125,10 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                     imageHistoryVM.PopulateStatistics(imageData.MetaData.Image.Id, await imageData.Statistics);
                 }
 
-                if (target != null) {
-                    imageData.MetaData.Target.Name = target.DeepSkyObject.NameAsAscii;
-                    imageData.MetaData.Target.Coordinates = target.InputCoordinates.Coordinates;
-                    imageData.MetaData.Target.PositionAngle = target.PositionAngle;
+                if (inputTarget != null) {
+                    imageData.MetaData.Target.Name = inputTarget.DeepSkyObject.NameAsAscii;
+                    imageData.MetaData.Target.Coordinates = inputTarget.InputCoordinates.Coordinates;
+                    imageData.MetaData.Target.PositionAngle = inputTarget.PositionAngle;
                 }
 
                 var root = ItemUtility.GetRootContainer(this.Parent);
@@ -137,12 +136,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                     imageData.MetaData.Sequence.Title = root.SequenceTitle;
                 }
 
-                // WAIT TRIGGERED HERE
-                // imageSaveWatcher.WaitForExposure(imageData.MetaData.Image.Id, exposureDatabaseId);
-                string guid = Guid.NewGuid().ToString();
-                imageSaveWatcher.WaitForExposure(guid, new ExposureWaitData(targetDatabaseId, exposureDatabaseId, imageData.MetaData.Image.Id));
-
-                imageData.MetaData.GenericHeaders.Add(new StringMetaDataHeader("TS_IMAGE_SAVE_TRACKING", guid));
+                imageSaveWatcher.WaitForExposure(imageData.MetaData.Image.Id, new ExposureWaitData(target, exposure, imageData.MetaData.Image.Id, token));
 
                 await imageSaveMediator.Enqueue(imageData, prepareTask, progress, token);
             } catch (Exception ex) {
@@ -151,8 +145,8 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             }
         }
 
-        private async Task TrySendExposureToClients(string exposureId, InputTarget target, CancellationToken token) {
-            await SyncServer.Instance.SyncExposure(exposureId, target, targetDatabaseId, exposureDatabaseId, syncExposureTimeout, token);
+        private async Task TrySendExposureToClients(string exposureId, InputTarget inputTarget, CancellationToken token) {
+            await SyncServer.Instance.SyncExposure(exposureId, inputTarget, target.DatabaseId, exposure.DatabaseId, syncExposureTimeout, token);
         }
 
         private InputTarget RetrieveTarget(ISequenceContainer parent) {

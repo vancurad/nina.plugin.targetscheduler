@@ -1,12 +1,18 @@
-﻿using NINA.Plugin.TargetScheduler.Planning.Interfaces;
+﻿using LinqKit;
+using NINA.Plugin.TargetScheduler.Database;
+using NINA.Plugin.TargetScheduler.Database.Schema;
+using NINA.Plugin.TargetScheduler.Planning.Interfaces;
+using System.Collections.Generic;
 
 namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
 
     public abstract class BaseExposureSelector {
+        protected ITarget Target;
         protected FilterCadence FilterCadence;
         protected DitherManager DitherManager;
 
-        public BaseExposureSelector() {
+        public BaseExposureSelector(ITarget target) {
+            this.Target = target;
         }
 
         /// <summary>
@@ -37,6 +43,27 @@ namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
             bool atLeastOneAccepted = false;
             target.ExposurePlans.ForEach(e => { if (!e.Rejected) atLeastOneAccepted = true; });
             return !atLeastOneAccepted;
+        }
+
+        public void UpdateFilterCadences(FilterCadence filterCadence) {
+            List<FilterCadenceItem> items = new List<FilterCadenceItem>(filterCadence.Count);
+            filterCadence.List.ForEach(fci => {
+                items.Add(new FilterCadenceItem {
+                    TargetId = Target.DatabaseId,
+                    Order = fci.Order,
+                    Next = fci.Next,
+                    Action = fci.Action,
+                    ReferenceIdx = fci.ReferenceIdx,
+                });
+            });
+
+            using (var context = GetSchedulerDatabaseContext()) {
+                context.ReplaceFilterCadences(Target.DatabaseId, items);
+            }
+        }
+
+        public virtual SchedulerDatabaseContext GetSchedulerDatabaseContext() {
+            return new SchedulerDatabaseInteraction().GetContext();
         }
     }
 }

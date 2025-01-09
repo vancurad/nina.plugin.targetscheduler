@@ -58,6 +58,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         private readonly IProfile activeProfile;
         private SchedulerProgressVM schedulerProgress;
 
+        private IImageSaveWatcher imageSaveWatcher;
         private bool synchronizationEnabled;
         private int syncActionTimeout;
         private int syncSolveRotateTimeout;
@@ -82,6 +83,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                 IPlateSolverFactory plateSolverFactory,
                 IWindowServiceFactory windowServiceFactory,
                 IMessageBroker messageBroker,
+                IImageSaveWatcher imageSaveWatcher,
                 bool synchronizationEnabled,
                 ITarget previousPlanTarget,
                 SchedulerPlan plan,
@@ -106,6 +108,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             this.plateSolverFactory = plateSolverFactory;
             this.windowServiceFactory = windowServiceFactory;
 
+            this.imageSaveWatcher = imageSaveWatcher;
             this.synchronizationEnabled = synchronizationEnabled;
             this.schedulerProgress = schedulerProgress;
             this.previousPlanTarget = previousPlanTarget;
@@ -133,7 +136,6 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                 AddEndTimeTrigger(plan.PlanTarget);
                 AddInstructions(plan);
                 EnsureUnparked(progress, token);
-                //new ImageSaveWatcher(activeProfile, imageSaveMediator, plan.PlanTarget, plan.PlanTarget.SelectedExposure, token);
 
                 targetStartPublisher.Publish(plan);
 
@@ -141,6 +143,8 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             } catch (Exception ex) {
                 throw;
             } finally {
+                imageSaveWatcher.WaitForAllImagesSaved();
+
                 foreach (var item in Items) {
                     item.AttachNewParent(null);
                 }
@@ -289,9 +293,9 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                         imagingMediator,
                         imageSaveMediator,
                         imageHistoryVM,
-                        null, // TODO: fixme should imageSaveWatcher
-                        target.DatabaseId,
-                        exposure.DatabaseId);
+                        imageSaveWatcher,
+                        target,
+                        exposure);
             SetItemDefaults(takeExposure, nameof(TakeExposure));
 
             takeExposure.ExposureCount = GetExposureCount();

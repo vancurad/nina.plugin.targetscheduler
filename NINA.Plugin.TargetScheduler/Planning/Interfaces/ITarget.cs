@@ -14,6 +14,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Interfaces {
         Epoch Epoch { get; set; }
         double Rotation { get; set; }
         double ROI { get; set; }
+        List<IExposure> AllExposurePlans { get; set; }
         List<IExposure> ExposurePlans { get; set; }
         List<IExposure> CompletedExposurePlans { get; set; }
         IExposureSelector ExposureSelector { get; set; }

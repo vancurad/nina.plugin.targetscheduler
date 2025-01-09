@@ -3,6 +3,7 @@ using NINA.Plugin.TargetScheduler.Util;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
@@ -10,6 +11,11 @@ using System.Windows.Media;
 namespace NINA.Plugin.TargetScheduler.Sequencer {
 
     public class SchedulerProgressVM : BaseINPC {
+        public const string SlewLabel = "Slew";
+        public const string BeforeTargetLabel = "BeforeTarget";
+        public const string SwitchFilterLabel = "SwitchFilter";
+        public const string TakeExposureLabel = "TakeExposure";
+        public const string DitherLabel = "Dither";
 
         public SchedulerProgressVM() {
         }
@@ -60,6 +66,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         }
 
         public void Add(string name, string filter = "") {
+            if (SameSwitchFilter(name, filter)) { return; }
             Application.Current.Dispatcher.Invoke(() => {
                 EndCurrent();
                 CurrentRow = new SchedulerProgressRow(CurrentGroup, name, filter);
@@ -67,6 +74,18 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             });
 
             RaisePropertyChanged(nameof(ItemsView));
+        }
+
+        private bool SameSwitchFilter(string name, string filter) {
+            if (name != SwitchFilterLabel) { return false; }
+
+            foreach (var item in ProgressItemList.Reverse()) {
+                if (item.ItemName == SwitchFilterLabel) {
+                    return item.FilterName == filter;
+                }
+            }
+
+            return false;
         }
 
         public void End() {

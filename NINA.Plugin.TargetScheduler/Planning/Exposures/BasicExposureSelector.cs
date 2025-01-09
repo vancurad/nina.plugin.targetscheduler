@@ -11,7 +11,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
     /// </summary>
     public class BasicExposureSelector : BaseExposureSelector, IExposureSelector {
 
-        public BasicExposureSelector(IProject project, ITarget target, Target databaseTarget) : base() {
+        public BasicExposureSelector(IProject project, ITarget target, Target databaseTarget) : base(target) {
             FilterCadence = new FilterCadenceFactory().Generate(project, target, databaseTarget);
             DitherManager = new DitherManager(project.DitherEvery);
         }
@@ -22,22 +22,26 @@ namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
             }
 
             foreach (IFilterCadenceItem item in FilterCadence) {
-                IExposure exposure = target.ExposurePlans[item.ReferenceIdx];
-                if (!exposure.Rejected) {
-                    exposure.PreDither = DitherManager.DitherRequired(exposure);
-                    FilterCadence.SetLastSelected(item);
-                    return exposure;
+                IExposure exposure = target.AllExposurePlans[item.ReferenceIdx];
+                if (exposure.Rejected || target.CompletedExposurePlans.Contains(exposure)) {
+                    continue;
                 }
+
+                exposure.PreDither = DitherManager.DitherRequired(exposure);
+                FilterCadence.SetLastSelected(item);
+                return exposure;
             }
 
             // Fail safe ... should not happen
-            string msg = $"no acceptable exposure plan in basic exposure selector for target '{target.Name}' at time {atTime}";
+            string msg = $"unexpected: no acceptable exposure plan in basic exposure selector for target '{target.Name}' at time {atTime}";
             TSLogger.Error(msg);
             throw new Exception(msg);
         }
 
         public void ExposureTaken(IExposure exposure) {
             FilterCadence.Advance();
+            UpdateFilterCadences(FilterCadence);
+
             if (exposure.PreDither) DitherManager.Reset();
             DitherManager.AddExposure(exposure);
         }

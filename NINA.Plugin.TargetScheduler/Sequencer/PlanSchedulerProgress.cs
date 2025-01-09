@@ -27,27 +27,26 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                     ITarget target = ((PlanSlew)nextInstruction).target;
                     schedulerProgress.End();
                     schedulerProgress.TargetStart(target.Project.Name, target.Name);
-                    schedulerProgress.Add("Slew");
+                    schedulerProgress.Add(SchedulerProgressVM.SlewLabel);
                     break;
 
                 case PlanBeforeNewTargetContainer:
-                    schedulerProgress.Add("BeforeTarget");
+                    schedulerProgress.Add(SchedulerProgressVM.BeforeTargetLabel);
                     break;
 
                 case PlanDither:
-                    schedulerProgress.Add("Dither");
+                    schedulerProgress.Add(SchedulerProgressVM.DitherLabel);
                     break;
 
                 case PlanSwitchFilter:
-                    schedulerProgress.Add("SwitchFilter", nextInstruction.exposure.FilterName);
+                    schedulerProgress.Add(SchedulerProgressVM.SwitchFilterLabel, nextInstruction.exposure.FilterName);
                     break;
 
                 case PlanSetReadoutMode:
-                    schedulerProgress.Add("SetReadoutMode");
                     break;
 
                 case Planning.Entities.PlanTakeExposure:
-                    schedulerProgress.Add("TakeExposure", nextInstruction.exposure.FilterName);
+                    schedulerProgress.Add(SchedulerProgressVM.TakeExposureLabel, nextInstruction.exposure.FilterName);
                     break;
             }
 

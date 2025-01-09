@@ -9,7 +9,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
     /// </summary>
     public class SmartExposureSelector : BaseExposureSelector, IExposureSelector {
 
-        public SmartExposureSelector(IProject project, ITarget target, Target databaseTarget) : base() {
+        public SmartExposureSelector(IProject project, ITarget target, Target databaseTarget) : base(target) {
             DitherManager = GetDitherManager(project, target);
         }
 

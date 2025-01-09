@@ -12,7 +12,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
     /// </summary>
     public class RepeatUntilDoneExposureSelector : BaseExposureSelector, IExposureSelector {
 
-        public RepeatUntilDoneExposureSelector(IProject project, ITarget target, Target databaseTarget) : base() {
+        public RepeatUntilDoneExposureSelector(IProject project, ITarget target, Target databaseTarget) : base(target) {
             DitherManager = GetDitherManager(project, target);
         }
 
@@ -28,7 +28,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
             }
 
             // Fail safe ... should not happen
-            string msg = $"no acceptable exposure plan in repeat until done exposure selector for target '{target.Name}' at time {atTime}";
+            string msg = $"unexpected: no acceptable exposure plan in repeat until done exposure selector for target '{target.Name}' at time {atTime}";
             TSLogger.Error(msg);
             throw new Exception(msg);
         }

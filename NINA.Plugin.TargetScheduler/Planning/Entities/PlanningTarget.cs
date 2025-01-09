@@ -18,6 +18,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
         public Epoch Epoch { get; set; }
         public double Rotation { get; set; }
         public double ROI { get; set; }
+        public List<IExposure> AllExposurePlans { get; set; }
         public List<IExposure> ExposurePlans { get; set; }
         public List<IExposure> CompletedExposurePlans { get; set; }
         public IExposureSelector ExposureSelector { get; set; }
@@ -44,17 +45,19 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
             this.Project = planProject;
             this.Rejected = false;
 
+            this.AllExposurePlans = new List<IExposure>();
             this.ExposurePlans = new List<IExposure>();
             this.CompletedExposurePlans = new List<IExposure>();
             ExposureCompletionHelper helper = planProject.ExposureCompletionHelper;
 
             foreach (ExposurePlan plan in GetActiveExposurePlans(target)) {
-                PlanningExposure planExposure = new PlanningExposure(this, plan, plan.ExposureTemplate);
+                IExposure exposure = new PlanningExposure(this, plan, plan.ExposureTemplate);
+                this.AllExposurePlans.Add(exposure);
 
-                if (helper.IsIncomplete(planExposure)) {
-                    this.ExposurePlans.Add(planExposure);
+                if (helper.IsIncomplete(exposure)) {
+                    this.ExposurePlans.Add(exposure);
                 } else {
-                    this.CompletedExposurePlans.Add(planExposure);
+                    this.CompletedExposurePlans.Add(exposure);
                 }
             }
 

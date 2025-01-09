@@ -478,8 +478,8 @@ namespace NINA.Plugin.TargetScheduler.Test.Database {
             using (var context = db.GetContext()) {
                 FilterCadenceItem fc1 = new(2, 1, true, FilterCadenceAction.Exposure, 1);
                 FilterCadenceItem fc2 = new(2, 2, false, FilterCadenceAction.Dither, -1);
-                context.FilterCadenceSet.Add(fc1);
-                context.FilterCadenceSet.Add(fc2);
+                List<FilterCadenceItem> list = new List<FilterCadenceItem>() { fc1, fc2 };
+                context.ReplaceFilterCadences(2, list);
                 context.SaveChanges();
 
                 Target t1 = context.GetTarget(1, 1);
@@ -495,6 +495,60 @@ namespace NINA.Plugin.TargetScheduler.Test.Database {
 
                 t2 = context.GetTarget(2, 2);
                 t2.FilterCadences.Count.Should().Be(0);
+            }
+        }
+
+        [Test, Order(12)]
+        [NonParallelizable]
+        public void TestFilterSwitchFrequencyChange() {
+            using (var context = db.GetContext()) {
+                Project p1 = new Project(profileId);
+                p1.Name = "Project: FSF Change";
+                p1.Description = "";
+                p1.State = ProjectState.Active;
+                p1.ActiveDate = markDate;
+                p1.MinimumTime = 60;
+                p1.MinimumAltitude = 23;
+                p1.UseCustomHorizon = false;
+                p1.HorizonOffset = 11;
+                p1.FilterSwitchFrequency = 12;
+                p1.DitherEvery = 14;
+                p1.EnableGrader = false;
+                p1.IsMosaic = true;
+                p1.FlatsHandling = Project.FLATS_HANDLING_OFF;
+
+                p1.RuleWeights = new List<RuleWeight> {
+                        {new RuleWeight("a", .1) },
+                        {new RuleWeight("b", .2) },
+                        {new RuleWeight("c", .3) }
+                    };
+
+                Target t1 = new Target();
+                t1.Name = "T10";
+                t1.ra = TestData.M42.RADegrees;
+                t1.dec = TestData.M42.Dec;
+                p1.Targets.Add(t1);
+
+                p1 = context.AddNewProject(p1);
+
+                FilterCadenceItem fc1 = new(t1.Id, 1, true, FilterCadenceAction.Exposure, 1);
+                FilterCadenceItem fc2 = new(t1.Id, 2, false, FilterCadenceAction.Dither, -1);
+                List<FilterCadenceItem> list = new List<FilterCadenceItem>() { fc1, fc2 };
+                context.ReplaceFilterCadences(t1.Id, list);
+                context.SaveChanges();
+
+                var fcs = context.GetFilterCadences(t1.Id);
+                fcs.Count.Should().Be(2);
+
+                p1.MinimumAltitude++; // does not trigger FC clear
+                p1 = context.SaveProject(p1);
+                fcs = context.GetFilterCadences(t1.Id);
+                fcs.Count.Should().Be(2);
+
+                p1.FilterSwitchFrequency++; // should trigger FC clear
+                p1 = context.SaveProject(p1);
+                fcs = context.GetFilterCadences(t1.Id);
+                fcs.Count.Should().Be(0);
             }
         }
 

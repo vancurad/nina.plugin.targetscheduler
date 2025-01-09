@@ -59,6 +59,7 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
             State = ProjectState.Draft;
             Priority = ProjectPriority.Normal;
             CreateDate = DateTime.Now;
+            FilterCadenceBreakingChange = false;
 
             MinimumTime = 30;
             MinimumAltitude = 0;
@@ -72,6 +73,7 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
             EnableGrader = true;
             IsMosaic = false;
             FlatsHandling = FLATS_HANDLING_OFF;
+            FilterCadenceBreakingChange = false;
 
             ruleWeights = ScoringRule.GetDefaultRuleWeights();
             Targets = new List<Target>();
@@ -223,9 +225,19 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
         public int FilterSwitchFrequency {
             get => filterSwitchFrequency;
             set {
+                if (filterSwitchFrequency != value) { FilterCadenceBreakingChange = true; }
                 filterSwitchFrequency = value;
                 RaisePropertyChanged(nameof(FilterSwitchFrequency));
             }
+        }
+
+        [NotMapped]
+        private bool filterCadenceBreakingChange = false;
+
+        [NotMapped]
+        public bool FilterCadenceBreakingChange {
+            get => filterCadenceBreakingChange;
+            set { filterCadenceBreakingChange = value; }
         }
 
         [NotMapped]

@@ -131,6 +131,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
 
             project.Targets.ForEach(t => t.OverrideExposureOrders = GetOverrideExposureOrders(t.Id));
             project.Targets.ForEach(t => t.FilterCadences = GetFilterCadences(t.Id));
+            project.FilterCadenceBreakingChange = false;
             return project;
         }
 
@@ -185,6 +186,25 @@ namespace NINA.Plugin.TargetScheduler.Database {
                     transaction.Commit();
                 } catch (Exception e) {
                     TSLogger.Error($"error clearing override exposure order for target ID {targetId}: {e.Message} {e.StackTrace}");
+                    RollbackTransaction(transaction);
+                }
+            }
+        }
+
+        public void ReplaceFilterCadences(int targetId, List<FilterCadenceItem> items) {
+            ClearExistingFilterCadences(targetId);
+
+            if (Common.IsEmpty(items)) {
+                return;
+            }
+
+            using (var transaction = Database.BeginTransaction()) {
+                try {
+                    items.ForEach(item => { FilterCadenceSet.Add(item); });
+                    SaveChanges();
+                    transaction.Commit();
+                } catch (Exception e) {
+                    TSLogger.Error($"error adding filter cadence items for target ID {targetId}: {e.Message} {e.StackTrace}");
                     RollbackTransaction(transaction);
                 }
             }
@@ -381,10 +401,17 @@ namespace NINA.Plugin.TargetScheduler.Database {
             TSLogger.Debug($"saving Project Id={project.Id} Name={project.Name}");
             using (var transaction = Database.BeginTransaction()) {
                 try {
+                    bool fcBreakingChange = project.FilterCadenceBreakingChange;
                     ProjectSet.AddOrUpdate(project);
                     project.RuleWeights.ForEach(item => RuleWeightSet.AddOrUpdate(item));
                     SaveChanges();
                     transaction.Commit();
+
+                    if (fcBreakingChange) {
+                        project.Targets.ForEach(t => { ClearExistingFilterCadences(t.Id); });
+                        project.FilterCadenceBreakingChange = false;
+                    }
+
                     return GetProject(project.Id);
                 } catch (Exception e) {
                     TSLogger.Error($"error persisting project: {e.Message} {e.StackTrace}");
