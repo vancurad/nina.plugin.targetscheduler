@@ -57,6 +57,8 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
                 if (helper.IsIncomplete(exposure)) {
                     this.ExposurePlans.Add(exposure);
                 } else {
+                    exposure.Rejected = true;
+                    exposure.RejectedReason = Reasons.FilterComplete;
                     this.CompletedExposurePlans.Add(exposure);
                 }
             }

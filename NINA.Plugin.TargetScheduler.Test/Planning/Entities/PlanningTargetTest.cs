@@ -13,7 +13,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Entities {
     public class PlanningTargetTest {
 
         [Test]
-        public void TestPlanningTarget() {
+        public void testPlanningTarget() {
             IProject project = PlanMocks.GetMockPlanProject("project", ProjectState.Active).Object;
             project.FilterSwitchFrequency = 1;
             Target target = new Target();
@@ -34,6 +34,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Entities {
             sut.Rotation.Should().Be(14);
             sut.ROI.Should().Be(.8);
             sut.Rejected.Should().BeFalse();
+            sut.AllExposurePlans.Should().NotBeNull().And.HaveCount(0);
             sut.ExposurePlans.Should().NotBeNull().And.HaveCount(0);
             sut.CompletedExposurePlans.Should().NotBeNull().And.HaveCount(0);
             sut.ExposureSelector.Should().NotBeNull();
@@ -41,7 +42,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Entities {
         }
 
         [Test]
-        public void TestWithOverrideExposureOrder() {
+        public void testWithOverrideExposureOrder() {
             IProject project = PlanMocks.GetMockPlanProject("project", ProjectState.Active).Object;
             Target target = new Target();
             target.Id = 101;
@@ -56,11 +57,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Entities {
             ExposurePlan R = GetEP("R");
             ExposurePlan G = GetEP("G");
             ExposurePlan B = GetEP("B");
-            target.ExposurePlans = new List<ExposurePlan>();
-            target.ExposurePlans.Add(L);
-            target.ExposurePlans.Add(R);
-            target.ExposurePlans.Add(G);
-            target.ExposurePlans.Add(B);
+            target.ExposurePlans = new List<ExposurePlan>() { L, R, G, B };
 
             target.OverrideExposureOrders = new List<OverrideExposureOrderItem>();
             target.OverrideExposureOrders.Add(GetOEO(1, 1, OverrideExposureOrderAction.Exposure, 0));
@@ -77,6 +74,52 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Entities {
 
             sut.ExposureSelector.Should().NotBeNull();
             (sut.ExposureSelector is OverrideOrderExposureSelector).Should().BeTrue();
+        }
+
+        [Test]
+        public void testExposureClassification() {
+            IProject project = PlanMocks.GetMockPlanProject("project", ProjectState.Active).Object;
+            project.FilterSwitchFrequency = 1;
+            Target target = new Target();
+            target.Id = 101;
+            target.Name = "target";
+            target.ra = 12;
+            target.dec = 13;
+            target.rotation = 14;
+            target.roi = .8;
+            target.OverrideExposureOrders = new List<OverrideExposureOrderItem>();
+            target.FilterCadences = new List<FilterCadenceItem>();
+
+            ExposureTemplate et = new ExposureTemplate();
+            et.FilterName = "L";
+            et.BinningMode = new BinningMode(1, 1);
+            ExposurePlan e1 = new ExposurePlan();
+            e1.Desired = 2;
+            e1.Accepted = 2;
+            e1.Acquired = 2;
+            e1.ExposureTemplate = et;
+            ExposurePlan e2 = new ExposurePlan();
+            e2.Desired = 2;
+            e2.Accepted = 0;
+            e2.Acquired = 0;
+            e2.ExposureTemplate = et;
+
+            target.ExposurePlans.Add(e1);
+            target.ExposurePlans.Add(e2);
+
+            PlanningTarget sut = new PlanningTarget(project, target);
+            sut.PlanId.Should().NotBeNull();
+            sut.DatabaseId = 101;
+            sut.Name = "target";
+            sut.Coordinates.Should().Be(target.Coordinates);
+            sut.Rotation.Should().Be(14);
+            sut.ROI.Should().Be(.8);
+            sut.Rejected.Should().BeFalse();
+            sut.AllExposurePlans.Should().NotBeNull().And.HaveCount(2);
+            sut.ExposurePlans.Should().NotBeNull().And.HaveCount(1);
+            sut.CompletedExposurePlans.Should().NotBeNull().And.HaveCount(1);
+            sut.ExposureSelector.Should().NotBeNull();
+            (sut.ExposureSelector is BasicExposureSelector).Should().BeTrue();
         }
 
         private ExposurePlan GetEP(string filterName) {

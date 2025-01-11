@@ -313,6 +313,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Grading {
             imageParameter.ImageType = "LIGHT";
             metadata.Rotator.Position = rotation;
             metadata.Image = imageParameter;
+            metadata.Image.Id = 0;
 
             cameraParameter.Gain = gain;
             cameraParameter.Offset = offset;

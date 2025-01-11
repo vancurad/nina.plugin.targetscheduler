@@ -31,10 +31,10 @@ namespace NINA.Plugin.TargetScheduler.Grading {
             worker = Task.Run(DoWork);
         }
 
-        public Task Enqueue(GradingWorkData workPackage, CancellationToken token) {
+        public Task Enqueue(GradingWorkData workData, CancellationToken token) {
             var mergedCts = CancellationTokenSource.CreateLinkedTokenSource(token, workerCTS.Token);
-            TSLogger.Debug($"queuing image grading task: targetId={workPackage.TargetId}, exposureId={workPackage.ExposurePlanId}, imageId={workPackage.ImageSavedEventArgs.MetaData.Image.Id}");
-            return queue.EnqueueAsync(workPackage, mergedCts.Token);
+            TSLogger.Debug($"queuing image grading task: targetId={workData.TargetId}, exposureId={workData.ExposurePlanId}, imageId={workData.ImageId}");
+            return queue.EnqueueAsync(workData, mergedCts.Token);
         }
 
         private async Task DoWork() {
@@ -63,6 +63,7 @@ namespace NINA.Plugin.TargetScheduler.Grading {
         public int TargetId { get; private set; }
         public int ExposurePlanId { get; private set; }
         public int AcquiredImageId { get; private set; }
+        public int ImageId { get; private set; }
         public ImageSavedEventArgs ImageSavedEventArgs { get; private set; }
         public IImageGraderPreferences GraderPreferences { get; private set; }
 
@@ -72,6 +73,7 @@ namespace NINA.Plugin.TargetScheduler.Grading {
             TargetId = targetId;
             ExposurePlanId = exposurePlanId;
             AcquiredImageId = acquiredImageId;
+            ImageId = imageSavedEventArgs.MetaData.Image.Id;
             ImageSavedEventArgs = imageSavedEventArgs;
             GraderPreferences = graderPreferences;
         }

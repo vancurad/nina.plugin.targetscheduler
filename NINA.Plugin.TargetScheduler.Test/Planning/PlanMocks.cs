@@ -5,6 +5,7 @@ using NINA.Image.ImageData;
 using NINA.Image.Interfaces;
 using NINA.Plugin.TargetScheduler.Astrometry;
 using NINA.Plugin.TargetScheduler.Database.Schema;
+using NINA.Plugin.TargetScheduler.Planning;
 using NINA.Plugin.TargetScheduler.Planning.Exposures;
 using NINA.Plugin.TargetScheduler.Planning.Interfaces;
 using NINA.Plugin.TargetScheduler.Planning.Scoring.Rules;
@@ -66,6 +67,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
             pt.SetupAllProperties();
             pt.SetupProperty(m => m.Name, name);
             pt.SetupProperty(m => m.Coordinates, coordinates);
+            pt.SetupProperty(m => m.AllExposurePlans, new List<IExposure>());
             pt.SetupProperty(m => m.ExposurePlans, new List<IExposure>());
             pt.SetupProperty(m => m.CompletedExposurePlans, new List<IExposure>());
 
@@ -99,11 +101,14 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
 
         public static void AddMockPlanFilter(Mock<ITarget> pt, Mock<IExposure> pf) {
             pf.SetupProperty(m => m.PlanTarget, pt.Object);
+            pt.Object.AllExposurePlans.Add(pf.Object);
             pt.Object.ExposurePlans.Add(pf.Object);
         }
 
         public static void AddMockPlanFilterToCompleted(Mock<ITarget> pt, Mock<IExposure> pf) {
             pf.SetupProperty(m => m.PlanTarget, pt.Object);
+            pf.Object.Rejected = true;
+            pf.Object.RejectedReason = Reasons.FilterComplete;
             pt.Object.CompletedExposurePlans.Add(pf.Object);
         }
 

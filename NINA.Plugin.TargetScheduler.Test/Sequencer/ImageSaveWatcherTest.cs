@@ -50,13 +50,17 @@ namespace NINA.Plugin.TargetScheduler.Test.Sequencer {
             Mock<IExposure> e1 = PlanMocks.GetMockPlanExposure("Ha", 10, 0);
             e1.SetupProperty(e => e.DatabaseId, 1);
             CancellationToken token = new CancellationToken();
-            ImageSavedEventArgs imageData = GraderExpertTest.GetMockImageData(0, 0, "Ha", 0, 0, 1.5, 0);
 
-            Mock<ImageSaveWatcher> mock = new Mock<ImageSaveWatcher>(profile, imageSaveMediator, t1.Object, e1.Object, token) { CallBase = true };
+            int imageId = 22;
+            ImageSavedEventArgs imageData = GraderExpertTest.GetMockImageData(0, 0, "Ha", 0, 0, 1.5, 0);
+            imageData.MetaData.Image.Id = imageId;
+
+            Mock<ImageSaveWatcher> mock = new Mock<ImageSaveWatcher>(profile, imageSaveMediator) { CallBase = true };
             mock.Setup(m => m.GetSchedulerDatabaseContext()).Returns(db.GetContext());
             mock.Setup(m => m.GetProfilePreference(It.IsAny<IProfile>())).Returns(new ProfilePreference(profileId));
 
             ImageSaveWatcher sut = mock.Object;
+            sut.WaitForExposure(imageId, new ExposureWaitData(t1.Object, e1.Object, imageId, token));
             sut.ImageSaved(null, imageData);
 
             using (var context = db.GetContext()) {
@@ -85,14 +89,18 @@ namespace NINA.Plugin.TargetScheduler.Test.Sequencer {
             Mock<IExposure> e1 = PlanMocks.GetMockPlanExposure("OIII", 10, 0);
             e1.SetupProperty(e => e.DatabaseId, 2);
             CancellationToken token = new CancellationToken();
-            ImageSavedEventArgs imageData = GraderExpertTest.GetMockImageData(0, 0, "OIII", 0, 0, 1.5, 0);
 
-            Mock<ImageSaveWatcher> mock = new Mock<ImageSaveWatcher>(profile, imageSaveMediator, t1.Object, e1.Object, token) { CallBase = true };
+            int imageId = 23;
+            ImageSavedEventArgs imageData = GraderExpertTest.GetMockImageData(0, 0, "OIII", 0, 0, 1.5, 0);
+            imageData.MetaData.Image.Id = imageId;
+
+            Mock<ImageSaveWatcher> mock = new Mock<ImageSaveWatcher>(profile, imageSaveMediator) { CallBase = true };
             mock.Setup(m => m.GetSchedulerDatabaseContext()).Returns(db.GetContext());
             mock.Setup(m => m.GetProfilePreference(It.IsAny<IProfile>())).Returns(new ProfilePreference(profileId));
             mock.Setup(m => m.GetImageGradingController()).Returns(GetMockedImageGradingController());
 
             ImageSaveWatcher sut = mock.Object;
+            sut.WaitForExposure(imageId, new ExposureWaitData(t1.Object, e1.Object, imageId, token));
             sut.ImageSaved(null, imageData);
 
             using (var context = db.GetContext()) {

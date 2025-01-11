@@ -14,10 +14,13 @@ namespace NINA.Plugin.TargetScheduler.Test.Grading {
             mock.SetupAllProperties();
             CancellationToken ct = new CancellationTokenSource().Token;
 
+            Mock<GradingWorkData> workDataMock = new Mock<GradingWorkData>();
+            workDataMock.SetupAllProperties();
+
             ImageGradingController sut = new ImageGradingController(mock.Object);
-            sut.Enqueue(new GradingWorkData(), ct).Wait();
-            sut.Enqueue(new GradingWorkData(), ct).Wait();
-            sut.Enqueue(new GradingWorkData(), ct).Wait();
+            sut.Enqueue(workDataMock.Object, ct).Wait();
+            sut.Enqueue(workDataMock.Object, ct).Wait();
+            sut.Enqueue(workDataMock.Object, ct).Wait();
 
             Thread.Sleep(50); // give it time...
             sut.Shutdown();

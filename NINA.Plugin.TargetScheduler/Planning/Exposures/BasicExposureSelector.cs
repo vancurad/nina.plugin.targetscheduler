@@ -23,7 +23,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
 
             foreach (IFilterCadenceItem item in FilterCadence) {
                 IExposure exposure = target.AllExposurePlans[item.ReferenceIdx];
-                if (exposure.Rejected || target.CompletedExposurePlans.Contains(exposure)) {
+                if (exposure.Rejected) {
                     continue;
                 }
 
