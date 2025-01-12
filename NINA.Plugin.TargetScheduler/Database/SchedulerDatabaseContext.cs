@@ -177,6 +177,8 @@ namespace NINA.Plugin.TargetScheduler.Database {
         }
 
         public void ClearExistingOverrideExposureOrders(int targetId) {
+            if (GetOverrideExposureOrders(targetId).Count == 0) { return; }
+
             using (var transaction = Database.BeginTransaction()) {
                 try {
                     var predicate = PredicateBuilder.New<OverrideExposureOrderItem>();
@@ -217,6 +219,8 @@ namespace NINA.Plugin.TargetScheduler.Database {
         }
 
         public void ClearExistingFilterCadences(int targetId) {
+            if (GetFilterCadences(targetId).Count == 0) { return; }
+
             using (var transaction = Database.BeginTransaction()) {
                 try {
                     var predicate = PredicateBuilder.New<FilterCadenceItem>();
@@ -267,7 +271,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
 
         public List<AcquiredImage> GetAcquiredImagesForGrading(ExposurePlan exposurePlan) {
             var images = AcquiredImageSet.AsNoTracking().Where(p =>
-                p.Id == exposurePlan.Id &&
+                p.ExposureId == exposurePlan.Id &&
                 p.TargetId == exposurePlan.TargetId &&
                 p.FilterName == exposurePlan.ExposureTemplate.FilterName)
               .OrderByDescending(p => p.acquiredDate);
@@ -498,9 +502,10 @@ namespace NINA.Plugin.TargetScheduler.Database {
             }
         }
 
-        public Target SaveTarget(Target target) {
+        public Target SaveTarget(Target target, bool clearFilterCadenceItems = false) {
             TSLogger.Debug($"saving Target Id={target.Id} Name={target.Name}");
             ClearExistingOverrideExposureOrders(target.Id);
+            if (clearFilterCadenceItems) { ClearExistingFilterCadences(target.Id); }
 
             using (var transaction = Database.BeginTransaction()) {
                 try {
@@ -521,7 +526,10 @@ namespace NINA.Plugin.TargetScheduler.Database {
                     transaction.Commit();
                     return GetTarget(target.Project.Id, target.Id);
                 } catch (Exception e) {
-                    TSLogger.Error($"error persisting target: {e.Message} {e.StackTrace}");
+                    TSLogger.Error($"error persisting target: {e.Message}\n{e.StackTrace}");
+                    if (e.InnerException != null) {
+                        TSLogger.Error($"inner exception: {e.InnerException.Message}\n{e.InnerException.StackTrace}");
+                    }
                     RollbackTransaction(transaction);
                     return null;
                 }

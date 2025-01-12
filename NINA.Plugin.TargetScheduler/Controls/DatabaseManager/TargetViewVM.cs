@@ -263,6 +263,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
         public ICommand CancelOverrideExposureOrderCommand { get; private set; }
 
         private void Edit(object obj) {
+            Refresh(null); // forrce a refresh since display could be out of date
             TargetProxy.PropertyChanged += TargetProxy_PropertyChanged;
             managerVM.SetEditMode(true);
             ShowEditView = true;
@@ -276,9 +277,10 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
         private void Save(object obj) {
             TargetProxy.Proxy.ExposurePlans = ExposurePlans;
 
-            // If exposure plans have been added or removed, we have to clear any override exposure order
+            // If exposure plans have been added or removed, we have to clear override exposure order and filter cadence
             if (TargetProxy.Proxy.ExposurePlans.Count != TargetProxy.Original.ExposurePlans.Count) {
                 TargetProxy.Proxy.OverrideExposureOrders = new List<OverrideExposureOrderItem>();
+                TargetProxy.Proxy.FilterCadences = new List<FilterCadenceItem>();
             }
 
             managerVM.SaveTarget(TargetProxy.Proxy);
@@ -568,7 +570,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             string message = $"Clear override exposure order?  This cannot be undone.";
             if (MyMessageBox.Show(message, "Clear?", MessageBoxButton.YesNo, MessageBoxResult.No) == MessageBoxResult.Yes) {
                 TargetProxy.Proxy.OverrideExposureOrders = new List<OverrideExposureOrderItem>();
-                managerVM.SaveTarget(TargetProxy.Proxy);
+                managerVM.SaveTarget(TargetProxy.Proxy, true);
                 TargetProxy.OnSave();
                 SetExposureOrderDisplay();
             }
@@ -576,7 +578,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
 
         public void SaveOverrideExposureOrder(List<OverrideExposureOrderItem> overrideExposureOrders) {
             TargetProxy.Target.OverrideExposureOrders = overrideExposureOrders;
-            managerVM.SaveTarget(TargetProxy.Proxy);
+            managerVM.SaveTarget(TargetProxy.Proxy, true);
             TargetProxy.OnSave();
             SetExposureOrderDisplay();
         }

@@ -20,6 +20,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Exposures {
             mockProject.SetupProperty(p => p.SmartExposureOrder, false);
             Mock<ITarget> mockTarget = PlanMocks.GetMockPlanTarget("T1", TestData.M31);
             mockTarget.SetupAllProperties();
+            mockTarget.SetupProperty(t => t.AllExposurePlans, new List<IExposure>());
             mockTarget.SetupProperty(t => t.ExposurePlans, new List<IExposure>());
 
             IExposureSelector s = new ExposureSelectionExpert().GetExposureSelector(mockProject.Object, mockTarget.Object, new Target());

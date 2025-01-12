@@ -42,7 +42,7 @@ namespace NINA.Plugin.TargetScheduler.Planning {
             // Otherwise, generate from (non-zero) filter switch frequency
             int idx = 0;
             order = 1;
-            target.ExposurePlans.ForEach((ep) => {
+            target.AllExposurePlans.ForEach((ep) => {
                 for (int i = 0; i < filterSwitchFrequency; i++) {
                     bool next = order == 1;
                     filterCadences.Add(new PlanningFilterCadence(order++, next, FilterCadenceAction.Exposure, idx));

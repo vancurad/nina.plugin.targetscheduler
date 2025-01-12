@@ -681,9 +681,9 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             }
         }
 
-        public void SaveTarget(Target target) {
+        public void SaveTarget(Target target, bool clearFilterCadenceItems = false) {
             using (var context = database.GetContext()) {
-                if (context.SaveTarget(target) != null) {
+                if (context.SaveTarget(target, clearFilterCadenceItems) != null) {
                     activeTreeDataItem.Data = target;
                     TextBlock textBlock = activeTreeDataItem.Header as TextBlock;
                     if (textBlock.Text != target.Name) {

@@ -27,9 +27,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
                 }
 
                 IExposure exposure = target.AllExposurePlans[item.ReferenceIdx];
-                if (exposure.Rejected || target.CompletedExposurePlans.Contains(exposure)) {
-                    continue;
-                }
+                if (exposure.Rejected) { continue; }
 
                 exposure.PreDither = preDither;
                 FilterCadence.SetLastSelected(item);

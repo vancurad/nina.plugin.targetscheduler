@@ -23,9 +23,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
 
             foreach (IFilterCadenceItem item in FilterCadence) {
                 IExposure exposure = target.AllExposurePlans[item.ReferenceIdx];
-                if (exposure.Rejected) {
-                    continue;
-                }
+                if (exposure.Rejected) { continue; }
 
                 exposure.PreDither = DitherManager.DitherRequired(exposure);
                 FilterCadence.SetLastSelected(item);
