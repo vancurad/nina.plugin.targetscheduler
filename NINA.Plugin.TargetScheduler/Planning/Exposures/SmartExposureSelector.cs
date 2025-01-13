@@ -1,5 +1,6 @@
 ﻿using NINA.Plugin.TargetScheduler.Database.Schema;
 using NINA.Plugin.TargetScheduler.Planning.Interfaces;
+using NINA.Plugin.TargetScheduler.Shared.Utility;
 using System;
 
 namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
@@ -28,6 +29,13 @@ namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
                     selected = exposure;
                     highScore = exposure.MoonAvoidanceScore;
                 }
+            }
+
+            if (selected == null) {
+                // Fail safe ... should not happen
+                string msg = $"unexpected: no acceptable exposure plan in smart exposure selector for target '{target.Name}' at time {atTime}";
+                TSLogger.Error(msg);
+                throw new Exception(msg);
             }
 
             selected.PreDither = DitherManager.DitherRequired(selected);

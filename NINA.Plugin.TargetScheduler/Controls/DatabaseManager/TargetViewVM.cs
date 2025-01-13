@@ -501,15 +501,20 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             }
         }
 
+        public bool HaveFSFExposureOrder { get => !HaveOverrideExposureOrder && !HaveSmartExposureOrder; private set { } }
         public bool HaveOverrideExposureOrder { get => Common.IsNotEmpty(TargetProxy.Original.OverrideExposureOrders); private set { } }
+        public bool HaveSmartExposureOrder { get => TargetProxy.Target.Project.SmartExposureOrder; private set { } }
 
         private void SetExposureOrderDisplay() {
-            ExposureOrderDisplay = HaveOverrideExposureOrder
-                ? GetOverrideExposureOrder()
-                : GetDefaultExposureOrder();
+            ExposureOrderDisplay = HaveSmartExposureOrder
+                ? string.Empty : HaveOverrideExposureOrder
+                    ? GetOverrideExposureOrder()
+                    : GetDefaultExposureOrder();
 
             RaisePropertyChanged(nameof(ExposureOrderDisplay));
+            RaisePropertyChanged(nameof(HaveFSFExposureOrder));
             RaisePropertyChanged(nameof(HaveOverrideExposureOrder));
+            RaisePropertyChanged(nameof(HaveSmartExposureOrder));
         }
 
         private string GetDefaultExposureOrder() {
