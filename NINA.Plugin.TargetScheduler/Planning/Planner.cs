@@ -116,7 +116,8 @@ namespace NINA.Plugin.TargetScheduler.Planning {
         /// Review each project and the list of associated targets: reject those targets that are not visible.  If all targets
         /// for the project are rejected, mark the project rejected too.  A target is visible if it is above the horizon
         /// within the time window set by the most inclusive twilight over all incomplete exposure plans for that target, is clipped
-        /// to any meridian window, and the remaining visible time is greater than the minimum imaging time preference for the project.
+        /// to any meridian window, is below the maximum altitude, and the remaining visible time is greater than the minimum imaging
+        /// time preference for the project.
         /// </summary>
         /// <param name="projects"></param>
         /// <returns></returns>
@@ -222,7 +223,8 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                 foreach (ITarget target in project.Targets) {
                     if (target.Rejected
                         && target.RejectedReason != Reasons.TargetNotYetVisible
-                        && target.RejectedReason != Reasons.TargetBeforeMeridianWindow) {
+                        && target.RejectedReason != Reasons.TargetBeforeMeridianWindow
+                        && target.RejectedReason != Reasons.TargetMaxAltitude) {
                         continue;
                     }
 
@@ -448,6 +450,7 @@ namespace NINA.Plugin.TargetScheduler.Planning {
         public const string TargetNeverRises = "never rises at location";
         public const string TargetNotVisible = "not visible";
         public const string TargetNotYetVisible = "not yet visible";
+        public const string TargetMaxAltitude = "max altitude";
         public const string TargetMeridianWindowClipped = "clipped by meridian window";
         public const string TargetBeforeMeridianWindow = "before meridian window";
         public const string TargetMoonAvoidance = "moon avoidance";

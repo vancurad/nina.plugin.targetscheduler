@@ -36,7 +36,9 @@ namespace NINA.Plugin.TargetScheduler.Planning {
             TwilightCircumstances twilightCircumstances = TwilightCircumstances.AdjustTwilightCircumstances(observerInfo, atTime);
             TargetVisibility targetVisibility = new(target, observerInfo,
                 twilightCircumstances.OnDate, twilightCircumstances.Sunset, twilightCircumstances.Sunrise, TARGET_VISIBILITY_SAMPLE_INTERVAL);
-            return Visibility(atTime, target, twilightCircumstances, targetVisibility);
+
+            if (!Visibility(atTime, target, twilightCircumstances, targetVisibility)) { return false; }
+            return CheckMaximumAltitude(atTime, target, targetVisibility);
         }
 
         /// <summary>
@@ -119,6 +121,24 @@ namespace NINA.Plugin.TargetScheduler.Planning {
         }
 
         /// <summary>
+        /// Reject targets that are currently above the project's max altitude setting.
+        /// </summary>
+        /// <param name="atTime"></param>
+        /// <param name="target"></param>
+        /// <returns></returns>
+        public bool CheckMaximumAltitude(DateTime atTime, ITarget target, TargetVisibility targetVisibility) {
+            if (target.Rejected || target.Project.MaximumAltitude == 0) { return true; }
+
+            double altitude = targetVisibility.GetAltitude(atTime);
+            if (altitude > target.Project.MaximumAltitude) {
+                SetRejected(target, Reasons.TargetMaxAltitude);
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Reject target exposures that are not suitable for the current level of twilight.
         /// </summary>
         /// <param name="target"></param>
@@ -187,10 +207,15 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                 TARGET_VISIBILITY_SAMPLE_INTERVAL);
 
             while (true) {
-                // Check target for moon avoidance and twilight at this time
-                MoonAvoidanceFilter(atTime, target, moonExpert);
-                if (AllExposurePlansRejected(target)) {
-                    SetRejected(target, Reasons.TargetMoonAvoidance);
+                // Check target for maximum altitude, moon avoidance, and twilight at this time
+
+                CheckMaximumAltitude(atTime, target, targetVisibility);
+
+                if (!target.Rejected) {
+                    MoonAvoidanceFilter(atTime, target, moonExpert);
+                    if (AllExposurePlansRejected(target)) {
+                        SetRejected(target, Reasons.TargetMoonAvoidance);
+                    }
                 }
 
                 if (!target.Rejected) {
@@ -221,7 +246,9 @@ namespace NINA.Plugin.TargetScheduler.Planning {
 
         public bool VisibleLater(ITarget target) {
             return target.Rejected &&
-                (target.RejectedReason == Reasons.TargetNotYetVisible || target.RejectedReason == Reasons.TargetBeforeMeridianWindow);
+                  (target.RejectedReason == Reasons.TargetNotYetVisible
+                || target.RejectedReason == Reasons.TargetBeforeMeridianWindow
+                || target.RejectedReason == Reasons.TargetMaxAltitude);
         }
 
         public bool AllExposurePlansRejected(ITarget target) {

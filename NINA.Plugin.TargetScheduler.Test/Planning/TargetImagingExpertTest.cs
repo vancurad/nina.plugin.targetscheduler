@@ -286,6 +286,27 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
         }
 
         [Test]
+        public void testCheckFutureMaxAltitude() {
+            IProfile profile = GetProfileService();
+            DateTime atTime = new DateTime(2024, 10, 15, 23, 0, 0);
+            IProject p1 = PlanMocks.GetMockPlanProject("P1", ProjectState.Active).Object;
+            p1.MaximumAltitude = 70;
+            p1.MinimumTime = 30;
+            ITarget t1 = PlanMocks.GetMockPlanTarget("T1", TestData.M31).Object;
+            t1.StartTime = atTime;
+            t1.Project = p1;
+            IExposure e1 = PlanMocks.GetMockPlanExposure("L", 10, 0).Object;
+            t1.ExposurePlans.Add(e1);
+
+            TargetImagingExpert sut = new TargetImagingExpert(profile, GetPrefs());
+
+            // Above max altitude at start but descending and available later
+            sut.CheckFuture(t1, GetMoonAvoidanceExpert("L"));
+            t1.Rejected.Should().BeFalse();
+            t1.StartTime.Should().BeCloseTo(new DateTime(2024, 10, 16, 1, 57, 50), 1.Seconds());
+        }
+
+        [Test]
         public void testCheckFutureMoonAllNight() {
             IProfile profile = GetProfileService();
             DateTime atTime = new DateTime(2025, 1, 1, 20, 0, 0);
@@ -379,6 +400,38 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
 
             t1.RejectedReason = Reasons.TargetBeforeMeridianWindow;
             sut.VisibleLater(t1).Should().BeTrue();
+        }
+
+        [Test]
+        public void testCheckMaximumAltitude() {
+            IProfile profile = GetProfileService();
+            DateTime atTime = new DateTime(2024, 10, 15, 23, 0, 0);
+            DateTime sunset = atTime.AddHours(-5);
+            DateTime sunrise = atTime.AddHours(7);
+            ITarget t1 = PlanMocks.GetMockPlanTarget("T1", TestData.M31).Object;
+            TargetVisibility viz = new TargetVisibility(t1, TestData.North_Mid_Lat, atTime, sunset, sunrise, 60);
+            TargetImagingExpert sut = new TargetImagingExpert(profile, GetPrefs());
+
+            t1.Rejected = false;
+            t1.RejectedReason = null;
+
+            t1.Project.MaximumAltitude = 0; // max check not enabled
+            sut.CheckMaximumAltitude(atTime, t1, viz).Should().BeTrue();
+            t1.Rejected.Should().BeFalse();
+            t1.RejectedReason.Should().BeNull();
+
+            t1.Project.MaximumAltitude = 70; // max check enabled and above
+            sut.CheckMaximumAltitude(atTime, t1, viz).Should().BeFalse();
+            t1.Rejected.Should().BeTrue();
+            t1.RejectedReason.Should().Be(Reasons.TargetMaxAltitude);
+
+            t1.Rejected = false;
+            t1.RejectedReason = null;
+
+            t1.Project.MaximumAltitude = 75; // max check enabled but below
+            sut.CheckMaximumAltitude(atTime, t1, viz).Should().BeTrue();
+            t1.Rejected.Should().BeFalse();
+            t1.RejectedReason.Should().BeNull();
         }
 
         [Test]

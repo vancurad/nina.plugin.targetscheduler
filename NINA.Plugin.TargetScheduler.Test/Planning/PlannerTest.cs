@@ -354,6 +354,32 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
         }
 
         [Test]
+        public void testFilterForMaxAltitude() {
+            Mock<IProfileService> profileMock = PlanMocks.GetMockProfileService(TestData.Pittsboro_NC);
+            IProfile profile = profileMock.Object.ActiveProfile;
+
+            Mock<IProject> pp1 = PlanMocks.GetMockPlanProject("pp1", ProjectState.Active);
+            pp1.SetupProperty(p => p.MaximumAltitude, 45);
+            Mock<ITarget> pt = PlanMocks.GetMockPlanTarget("M42", TestData.M42);
+            Mock<IExposure> pf = PlanMocks.GetMockPlanExposure("Ha", 10, 0);
+            PlanMocks.AddMockPlanFilter(pt, pf);
+            PlanMocks.AddMockPlanTarget(pp1, pt);
+            List<IProject> projects = PlanMocks.ProjectsList(pp1.Object);
+
+            DateTime atTime = new DateTime(2024, 12, 18, 1, 0, 0);
+            projects = new Planner(atTime, profile, GetPrefs(), false).FilterForVisibility(projects);
+            Assert.That(projects, Is.Not.Null);
+            projects.Count.Should().Be(1);
+
+            IProject pp = projects[0];
+            pp.Name.Should().Be("pp1");
+            pp.Rejected.Should().BeTrue();
+            ITarget pt1 = pp.Targets[0];
+            pt1.Rejected.Should().BeTrue();
+            pt1.RejectedReason.Should().Be(Reasons.TargetMaxAltitude);
+        }
+
+        [Test]
         public void testFilterForMoonAvoidance() {
             Mock<IProfileService> profileMock = PlanMocks.GetMockProfileService(TestData.Pittsboro_NC);
             IProfile profile = profileMock.Object.ActiveProfile;

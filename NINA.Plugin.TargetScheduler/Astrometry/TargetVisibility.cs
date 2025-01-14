@@ -156,6 +156,22 @@ namespace NINA.Plugin.TargetScheduler.Astrometry {
         }
 
         /// <summary>
+        /// Return the target altitude at the provided time.  The altitude is based on the samples so approximate.
+        ///
+        /// If imaging isn't possible at all or the time falls outside that sampled timespan, DateTime.MinValue is
+        /// returned.
+        /// </summary>
+        /// <param name="atTime"></param>
+        /// <returns></returns>
+        public double GetAltitude(DateTime atTime) {
+            if (!ImagingPossible || atTime < Sunset || atTime > Sunrise)
+                return double.MinValue;
+
+            int pos = FindInterval(atTime, 0, TargetPositions.Count - 1);
+            return TargetPositions[pos].Altitude;
+        }
+
+        /// <summary>
         /// Visibility start times will be returned based on the sample rate.  Determine whether 'now' falls inside
         /// the sample interval, i.e. within plus/minus 2x SampleInterval.  For example, if the sample interval is
         /// 10 seconds, then a calculated start time will match from 10 seconds before to 10 seconds after 'now'.

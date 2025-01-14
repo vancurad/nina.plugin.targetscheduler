@@ -355,6 +355,26 @@ namespace NINA.Plugin.TargetScheduler.Test.Astrometry {
         }
 
         [Test]
+        public void testGetAltitude() {
+            DateTime dateTime = new DateTime(2024, 10, 15, 0, 0, 0);
+            DateTime sunset = dateTime.AddHours(18);
+            DateTime sunrise = sunset.AddHours(12);
+            HorizonDefinition hd = new HorizonDefinition(0);
+            TimeInterval imagingInterval = new TimeInterval(sunset, sunrise);
+
+            TargetVisibility sut = new TargetVisibility("T1", 1, TestData.North_Mid_Lat, TestData.M31, dateTime, sunset, sunrise, 60);
+
+            DateTime atTime = dateTime.AddHours(23).AddSeconds(23);
+            sut.GetAltitude(atTime).Should().BeApproximately(73.436, 0.001);
+
+            atTime = sunset.AddSeconds(-1);
+            sut.GetAltitude(atTime).Should().Be(double.MinValue);
+
+            atTime = sunrise.AddSeconds(1);
+            sut.GetAltitude(atTime).Should().Be(double.MinValue);
+        }
+
+        [Test]
         public void testIsApproximatelyNow() {
             DateTime dateTime = new DateTime(2024, 12, 1, 13, 0, 0);
             DateTime sunset = new DateTime(2024, 12, 1, 18, 0, 0);
