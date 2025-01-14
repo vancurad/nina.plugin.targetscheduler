@@ -67,6 +67,10 @@ namespace NINA.Plugin.TargetScheduler.Planning {
             this.WaitForNextTargetTime = null;
         }
 
+        public void AddPlanInstruction(IInstruction planInstruction) {
+            PlanInstructions.Add(planInstruction);
+        }
+
         public string LogPlanResults() {
             StringBuilder sb = new StringBuilder();
             string type = IsWait ? "WAIT" : "TARGET";

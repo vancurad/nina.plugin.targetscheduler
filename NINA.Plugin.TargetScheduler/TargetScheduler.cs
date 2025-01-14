@@ -10,7 +10,6 @@ using NINA.Plugin.TargetScheduler.Database.Schema;
 using NINA.Plugin.TargetScheduler.Grading;
 using NINA.Plugin.TargetScheduler.Shared.Utility;
 using NINA.Plugin.TargetScheduler.SyncService.Sync;
-using NINA.Profile;
 using NINA.Profile.Interfaces;
 using NINA.WPF.Base.Interfaces.Mediator;
 using NINA.WPF.Base.Interfaces.ViewModel;
@@ -31,7 +30,6 @@ namespace NINA.Plugin.TargetScheduler {
 
         public static readonly ImagePattern ProjectNameImagePattern = new ImagePattern("$$TSPROJECTNAME$$", "TS project name (if available)", "Target Scheduler");
 
-        private IPluginOptionsAccessor pluginSettings;
         private IProfileService profileService;
         private IApplicationMediator applicationMediator;
         private IFramingAssistantVM framingAssistantVM;
@@ -51,7 +49,6 @@ namespace NINA.Plugin.TargetScheduler {
                 CoreUtil.SaveSettings(Properties.Settings.Default);
             }
 
-            this.pluginSettings = new PluginOptionsAccessor(profileService, Guid.Parse(this.Identifier));
             this.profileService = profileService;
             this.applicationMediator = applicationMediator;
             this.framingAssistantVM = framingAssistantVM;

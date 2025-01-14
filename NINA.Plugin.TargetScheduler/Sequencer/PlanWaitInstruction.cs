@@ -27,7 +27,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             SequenceCommands.StopGuiding(guiderMediator, token);
             SequenceCommands.SetTelescopeTracking(telescopeMediator, TrackingMode.Stopped, token);
 
-            TimeSpan duration = ((DateTime)waitUntil) - DateTime.Now;
+            TimeSpan duration = waitUntil - DateTime.Now;
             CoreUtil.Wait(duration, token, progress).Wait(token);
             TSLogger.Debug("done waiting");
 

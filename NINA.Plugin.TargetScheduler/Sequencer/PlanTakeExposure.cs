@@ -132,9 +132,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                 }
 
                 var root = ItemUtility.GetRootContainer(this.Parent);
-                if (root != null) {
-                    imageData.MetaData.Sequence.Title = root.SequenceTitle;
-                }
+                imageData.MetaData.Sequence.Title = root != null ? root.SequenceTitle : "";
 
                 imageSaveWatcher.WaitForExposure(imageData.MetaData.Image.Id, new ExposureWaitData(target, exposure, imageData.MetaData.Image.Id, token));
 
