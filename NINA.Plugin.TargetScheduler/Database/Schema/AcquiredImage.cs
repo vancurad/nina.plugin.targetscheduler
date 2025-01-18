@@ -15,7 +15,7 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
         public string profileId { get; set; }
         [Required] public int ProjectId { get; set; }
         [Required] public int TargetId { get; set; }
-        [Required] public int ExposureId { get; set; }
+        public int ExposureId { get; set; }
         public long acquiredDate { get; set; }
         [Required] public string FilterName { get; set; }
         public int gradingStatus { get; set; }

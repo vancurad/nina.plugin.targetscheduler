@@ -1,6 +1,11 @@
 ﻿using LinqKit;
 using NINA.Core.Utility;
+using NINA.Core.Utility.Notification;
+using NINA.Plugin.TargetScheduler.Astrometry;
 using NINA.Plugin.TargetScheduler.Database.Schema;
+using NINA.Plugin.TargetScheduler.Grading;
+using NINA.Plugin.TargetScheduler.Planning.Interfaces;
+using NINA.Plugin.TargetScheduler.Planning.Scoring.Rules;
 using NINA.Plugin.TargetScheduler.Shared.Utility;
 using NINA.Plugin.TargetScheduler.Util;
 using System;
@@ -12,6 +17,7 @@ using System.Data.Entity.Migrations;
 using System.Data.Entity.ModelConfiguration.Conventions;
 using System.Data.Entity.Validation;
 using System.Data.SQLite;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Resources;
@@ -36,6 +42,8 @@ namespace NINA.Plugin.TargetScheduler.Database {
         }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder) {
+            BackupPreTS5Database();
+
             base.OnModelCreating(modelBuilder);
             TSLogger.Debug("Scheduler database: OnModelCreating");
 
@@ -47,11 +55,10 @@ namespace NINA.Plugin.TargetScheduler.Database {
 
             var sqi = new CreateOrMigrateDatabaseInitializer<SchedulerDatabaseContext>();
             System.Data.Entity.Database.SetInitializer(sqi);
-        }
 
-        /* You can add the following to write generated SQL to the console.  Don't leave it active ...
-         *   Database.Log = Console.Write;
-         */
+            // You can add the following to write generated SQL to the console.  Don't leave it active ...
+            // Database.Log = Console.Write;
+        }
 
         public ProfilePreference GetProfilePreference(string profileId, bool createDefault = false) {
             ProfilePreference profilePreference = ProfilePreferenceSet.Where(p => p.ProfileId.Equals(profileId)).FirstOrDefault();
@@ -756,6 +763,33 @@ namespace NINA.Plugin.TargetScheduler.Database {
             }
         }
 
+        private void BackupPreTS5Database() {
+            try {
+                // Be sure this is not a test
+                string dataSource = Database.Connection.ConnectionString;
+                if (!dataSource.Contains("NINA\\SchedulerPlugin\\schedulerdb.sqlite")) {
+                    return;
+                }
+
+                // Bail if this is a first run of TS (no database at all)
+                string sourceFile = Path.Combine(Common.PLUGIN_HOME, SchedulerDatabaseInteraction.DATABASE_FILENAME);
+                if (!File.Exists(sourceFile)) {
+                    return;
+                }
+
+                // Bail if the backup already exists
+                string preTS5Backup = Path.Combine(Common.PLUGIN_HOME, $"schedulerdb-backup-pre-ts5.{SchedulerDatabaseInteraction.DATABASE_SUFFIX}");
+                if (File.Exists(preTS5Backup)) {
+                    return;
+                }
+
+                TSLogger.Info("detected first run with TS5, backing up TS4 database before migration");
+                File.Copy(sourceFile, preTS5Backup);
+            } catch (Exception ex) {
+                TSLogger.Error($"failed to backup pre-TS5 database: {ex.Message}\n{ex.StackTrace}");
+            }
+        }
+
         private class CreateOrMigrateDatabaseInitializer<TContext> : CreateDatabaseIfNotExists<TContext>,
                 IDatabaseInitializer<TContext> where TContext : SchedulerDatabaseContext {
 
@@ -775,7 +809,6 @@ namespace NINA.Plugin.TargetScheduler.Database {
                 }
 
                 // Apply any new migration scripts
-                /* TODO
                 int version = context.Database.SqlQuery<int>("PRAGMA user_version").First();
                 Dictionary<int, string> migrationScripts = GetMigrationSQL();
                 foreach (KeyValuePair<int, string> scriptEntry in migrationScripts.OrderBy(entry => entry.Key)) {
@@ -799,12 +832,11 @@ namespace NINA.Plugin.TargetScheduler.Database {
                 int newVersion = context.Database.SqlQuery<int>("PRAGMA user_version").First();
 
                 // Other repairs/updates
-                // TODO:
-                //RepairAndUpdate(version, newVersion, context);
+                RepairAndUpdate(version, newVersion, context);
 
                 if (newVersion != version) {
                     TSLogger.Info($"database updated: {version} -> {newVersion}");
-                }*/
+                }
             }
 
             private bool DatabaseExists(TContext context) {
@@ -843,7 +875,6 @@ namespace NINA.Plugin.TargetScheduler.Database {
                 }
             }
 
-            /*
             private void RepairAndUpdate(int oldVersion, int newVersion, TContext context) {
                 // If a new scoring rule was added, we need to add a rule weight record to projects that don't have it
                 List<Project> projects = context.GetAllProjects();
@@ -891,6 +922,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
                 }
 
                 // Clear override exposure order (meaning changed with bug fix)
+                /* We don't want/need to do this for TS 4->5
                 if (oldVersion == 8 && newVersion == 9) {
                     projects = context.GetAllProjects();
                     if (projects != null && projects.Count > 0) {
@@ -909,8 +941,61 @@ namespace NINA.Plugin.TargetScheduler.Database {
                             TSLogger.Info("cleared override exposure ordering for bug fix");
                         }
                     }
+                }*/
+
+                if (oldVersion < 17 && newVersion == 17) {
+                    TSLogger.Info("TS 4 -> 5 database migration");
+                    Notification.ShowInformation("Migrating Target Scheduler database to new version ...");
+
+                    // Remap grading status to new enum value
+                    List<AcquiredImage> acquiredImages = context.AcquiredImageSet.Where(ai => ai != null).ToList();
+                    acquiredImages.ToList().ForEach(ai => {
+                        ai.gradingStatus = (int)(ai.gradingStatus == 1 ? GradingStatus.Accepted : GradingStatus.Rejected);
+                        context.AcquiredImageSet.AddOrUpdate(ai);
+                    });
+
+                    // Refactor override exposure order
+                    List<Target> targetList = context.TargetSet.Where(t => t != null).ToList();
+                    targetList.ForEach(t => {
+                        if (!string.IsNullOrEmpty(t.unusedOEO)) {
+                            int targetId = t.Id;
+                            string oeo = t.unusedOEO;
+                            int order = 1;
+
+                            List<ExposurePlan> eps = context.ExposurePlanSet.Where(ep => ep.TargetId == targetId).ToList();
+
+                            string[] element = oeo.Split('|');
+                            foreach (var elem in element) {
+                                int action;
+                                int refIdx = -1;
+                                if (elem == "Dither") {
+                                    action = (int)OverrideExposureOrderAction.Dither;
+                                } else {
+                                    action = (int)OverrideExposureOrderAction.Exposure;
+                                    refIdx = GetOldOEORefIdx(Int32.Parse(elem), eps);
+                                }
+
+                                var oeoItem = new OverrideExposureOrderItem(targetId, order++, action, refIdx);
+                                context.OverrideExposureOrderSet.Add(oeoItem);
+                            }
+
+                            t.unusedOEO = null;
+                            context.TargetSet.AddOrUpdate(t);
+                        }
+                    });
+
+                    context.SaveChanges();
+                    Notification.ShowSuccess("Target Scheduler database migration complete");
                 }
-            }*/
+            }
+
+            private int GetOldOEORefIdx(int epId, List<ExposurePlan> eps) {
+                for (int i = 0; i < eps.Count; i++) {
+                    if (epId == eps[i].Id) return i;
+                }
+
+                throw new Exception($"failed to find exposure plan Id for OEO: {epId}");
+            }
         }
     }
 }

@@ -22,6 +22,7 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
         [Required] public int epochCode { get; set; }
         public double rotation { get; set; }
         public double roi { get; set; }
+        public string unusedOEO { get; set; }
 
         [ForeignKey("Project")] public int ProjectId { get; set; }
         public virtual Project Project { get; set; }
