@@ -599,6 +599,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.AcquiredImages {
         public string TargetName { get; private set; }
         public string ProfileName { get; private set; }
         public bool Accepted { get { return acquiredImage.Accepted; } }
+        public string GradingStatus { get { return acquiredImage.GradingStatus.ToString(); } }
         public string RejectReason { get { return acquiredImage.RejectReason; } }
 
         public string FileName { get { return acquiredImage.Metadata.FileName; } }
