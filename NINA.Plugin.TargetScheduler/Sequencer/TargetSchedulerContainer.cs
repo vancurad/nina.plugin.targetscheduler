@@ -105,9 +105,9 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                 IDomeMediator domeMediator,
                 IDomeFollower domeFollower,
                 IPlateSolverFactory plateSolverFactory,
-        INighttimeCalculator nighttimeCalculator,
+                INighttimeCalculator nighttimeCalculator,
                 IWindowServiceFactory windowServiceFactory,
-        IFramingAssistantVM framingAssistantVM,
+                IFramingAssistantVM framingAssistantVM,
                 IApplicationMediator applicationMediator,
                 IMessageBroker messageBroker) : base() {
             this.profileService = profileService;
@@ -300,9 +300,16 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                             await ExecuteEventContainer(AfterTargetContainer, progress, token);
                         }
 
+                        /* TODO: this isn't right.  This should run after each target but in TS5, this makes
+                         * it run after each (single exposure) plan.
+                         *
+                         * Actually, in TS5 I'm not sure this makes sense at all.  A plan is really an
+                         * arbitrary partitioning of the work.  What custom task makes sense at this point?
+                         *
                         if (previousPlanTarget != null && PreviousSchedulerPlan != null) {
                             await ExecuteEventContainer(AfterAllTargetsContainer, progress, token);
                         }
+                        */
 
                         TSLogger.Info("--BEGIN PLAN EXECUTION--------------------------------------------------------");
                         TSLogger.Info($"plan target: {target.Name}");

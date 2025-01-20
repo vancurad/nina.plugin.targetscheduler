@@ -91,7 +91,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             return Task.CompletedTask;
         }
 
-        public async void ImageSaved(object sender, ImageSavedEventArgs imageSavedEventArgs) {
+        public virtual async void ImageSaved(object sender, ImageSavedEventArgs imageSavedEventArgs) {
             ExposureWaitData waitData = GetWaitData(imageSavedEventArgs);
             if (waitData == null) { return; }
 
@@ -104,11 +104,15 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
 
             try {
                 TSLogger.Info($"starting ImageSaved: eId={exposure.DatabaseId}, imageId={imageSavedEventArgs.MetaData.Image.Id}");
-                bool autoAccepted = !target.Project.EnableGrader;
-                int acquiredImageId = UpdateDatabase(waitData, imageSavedEventArgs, autoAccepted);
-                if (!autoAccepted) {
-                    GradingWorkData workData = GetGradingWorkData(waitData, acquiredImageId, imageSavedEventArgs);
-                    await GetImageGradingController().Enqueue(workData, waitData.Token);
+                if (!profilePreference.DoSkipSimulatedUpdates) {
+                    bool autoAccepted = !target.Project.EnableGrader;
+                    int acquiredImageId = UpdateDatabase(waitData, imageSavedEventArgs, autoAccepted);
+                    if (!autoAccepted) {
+                        GradingWorkData workData = GetGradingWorkData(waitData, acquiredImageId, imageSavedEventArgs);
+                        await GetImageGradingController().Enqueue(workData, waitData.Token);
+                    }
+                } else {
+                    TSLogger.Info($"simulated run enabled, skipping all database updates associated with image save");
                 }
             } catch (Exception ex) {
                 TSLogger.Error($"exception in ImageSaveWatcher.ImageSaved: {ex.Message}\n{ex.StackTrace}");
@@ -118,7 +122,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             }
         }
 
-        private ExposureWaitData GetWaitData(object args) {
+        protected ExposureWaitData GetWaitData(object args) {
             int imageId = -1;
 
             BeforeFinalizeImageSavedEventArgs beforeArgs = args as BeforeFinalizeImageSavedEventArgs;
@@ -219,17 +223,22 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         public ITarget Target { get; private set; }
         public IExposure Exposure { get; private set; }
         public int ImageId { get; private set; }
+        public string ExposureGuid { get; private set; }
         public CancellationToken Token { get; private set; }
 
-        public ExposureWaitData(ITarget target, IExposure exposure, int imageId, CancellationToken token) {
+        public ExposureWaitData(ITarget target, IExposure exposure, int imageId, CancellationToken token) :
+            this(target, exposure, imageId, "n/a", token) { }
+
+        public ExposureWaitData(ITarget target, IExposure exposure, int imageId, string exposureGuid, CancellationToken token) {
             Target = target;
             Exposure = exposure;
             ImageId = imageId;
+            ExposureGuid = exposureGuid;
             Token = token;
         }
 
         public override string ToString() {
-            return $"target: {Target.Name}, exposure: {Exposure.FilterName}/{Exposure.DatabaseId}, imageId: {ImageId}";
+            return $"target: {Target.Name}, exposure: {Exposure.FilterName}/{Exposure.DatabaseId}, imageId: {ImageId}, exposureGuid: {ExposureGuid}";
         }
     }
 

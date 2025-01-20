@@ -53,7 +53,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         private readonly IPlateSolverFactory plateSolverFactory;
         private readonly IWindowServiceFactory windowServiceFactory;
 
-        private ISyncImageSaveWatcher syncImageSaveWatcher;
+        private IImageSaveWatcher syncImageSaveWatcher;
 
         [JsonProperty] public InstructionContainer SyncBeforeWaitContainer { get; set; }
         [JsonProperty] public InstructionContainer SyncAfterWaitContainer { get; set; }
@@ -215,10 +215,8 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                 return;
             }
 
-            //if (!Common.USE_EMULATOR) {
             syncImageSaveWatcher = new SyncImageSaveWatcher(profileService.ActiveProfile, imageSaveMediator);
             syncImageSaveWatcher.Start();
-            //}
 
             while (true) {
                 progress?.Report(new ApplicationStatus() { Status = "Target Scheduler: requesting action from sync server" });
@@ -315,7 +313,10 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         }
 
         private async Task TakeSyncedExposure(SyncedExposure syncedExposure, IProgress<ApplicationStatus> progress, CancellationToken token) {
-            SyncTakeExposureContainer container = new SyncTakeExposureContainer(profileService, cameraMediator, imagingMediator, imageSaveMediator, imageHistoryVM, filterWheelMediator, syncImageSaveWatcher, syncedExposure, UpdateDisplayTextAction);
+            ITarget target = GetPlanTarget(syncedExposure.TargetDatabaseId);
+            IExposure exposure = GetPlanExposure(target, syncedExposure.ExposurePlanDatabaseId);
+
+            SyncTakeExposureContainer container = new SyncTakeExposureContainer(profileService, cameraMediator, imagingMediator, imageSaveMediator, imageHistoryVM, filterWheelMediator, syncImageSaveWatcher, syncedExposure, target, exposure, UpdateDisplayTextAction);
             Application.Current.Dispatcher.Invoke(delegate {
                 Items.Clear();
                 Add(container);

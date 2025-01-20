@@ -2,6 +2,7 @@
 using NINA.Equipment.Interfaces.Mediator;
 using NINA.Plugin.TargetScheduler.Database;
 using NINA.Plugin.TargetScheduler.Database.Schema;
+using NINA.Plugin.TargetScheduler.Planning.Interfaces;
 using NINA.Plugin.TargetScheduler.SyncService.Sync;
 using NINA.Plugin.TargetScheduler.Util;
 using NINA.Profile.Interfaces;
@@ -26,13 +27,14 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         private IImageSaveMediator imageSaveMediator;
         private IImageHistoryVM imageHistoryVM;
         private IFilterWheelMediator filterWheelMediator;
-        private ISyncImageSaveWatcher syncImageSaveWatcher;
+        private IImageSaveWatcher syncImageSaveWatcher;
         private SyncedExposure syncedExposure;
         private Action<string> UpdateDisplayTextAction;
 
         private ExposurePlan exposurePlan;
         private ExposureTemplate exposureTemplate;
-        private Target target;
+        private ITarget target;
+        private IExposure exposure;
 
         public SyncTakeExposureContainer(IProfileService profileService,
                                          ICameraMediator cameraMediator,
@@ -40,8 +42,10 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                                          IImageSaveMediator imageSaveMediator,
                                          IImageHistoryVM imageHistoryVM,
                                          IFilterWheelMediator filterWheelMediator,
-                                         ISyncImageSaveWatcher syncImageSaveWatcher,
+                                         IImageSaveWatcher syncImageSaveWatcher,
                                          SyncedExposure syncedExposure,
+                                         ITarget target,
+                                         IExposure exposure,
                                          Action<String> UpdateDisplayTextAction) : base(new SequentialStrategy()) {
             this.profileService = profileService;
             this.cameraMediator = cameraMediator;
@@ -51,6 +55,8 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             this.filterWheelMediator = filterWheelMediator;
             this.syncImageSaveWatcher = syncImageSaveWatcher;
             this.syncedExposure = syncedExposure;
+            this.target = target;
+            this.exposure = exposure;
             this.UpdateDisplayTextAction = UpdateDisplayTextAction;
 
             Description = "";
@@ -67,14 +73,14 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         }
 
         private ISequenceItem GetTakeExposure() {
-            return new SyncTakeExposure(exposurePlan, exposureTemplate, target, profileService, cameraMediator, imagingMediator, imageSaveMediator, imageHistoryVM, syncImageSaveWatcher, syncedExposure, UpdateDisplayTextAction);
+            return new SyncTakeExposure(target, exposure, exposureTemplate, profileService, cameraMediator, imagingMediator, imageSaveMediator, imageHistoryVM, syncImageSaveWatcher, syncedExposure, UpdateDisplayTextAction);
         }
 
         private void LoadExposureDetails() {
             using (var context = new SchedulerDatabaseInteraction().GetContext()) {
                 this.exposurePlan = context.GetExposurePlan(syncedExposure.ExposurePlanDatabaseId);
                 this.exposureTemplate = GetExposureTemplate(context, exposurePlan);
-                this.target = GetTarget(context, exposurePlan);
+                //TODO remove: this.target = GetTarget(context, exposurePlan);
             }
         }
 
