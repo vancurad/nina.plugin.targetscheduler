@@ -88,7 +88,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         public object lockObj = new object();
         public int TotalExposureCount { get; set; }
 
-        public SchedulerPlan PreviousSchedulerPlan { get; private set; }
+        public PlanExecutionHistory PlanExecutionHistory { get; private set; }
 
         [ImportingConstructor]
         public TargetSchedulerContainer(
@@ -245,7 +245,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
 
             imageSaveWatcher.Start();
             ITarget previousPlanTarget = null;
-            PreviousSchedulerPlan = null;
+            PlanExecutionHistory = new PlanExecutionHistory();
             synchronizationEnabled = IsSynchronizationEnabled();
 
             while (true) {
@@ -272,12 +272,12 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                         await ExecuteEventContainer(AfterTargetContainer, progress, token);
                         await ExecuteEventContainer(AfterAllTargetsContainer, progress, token);
                         previousPlanTarget = null;
-                        PreviousSchedulerPlan = null;
                     }
 
                     if (!profilePreferences.DoSkipSimulatedWaits) {
                         TSLogger.Info($"waiting for next target to become available: {Utils.FormatDateTimeFull(plan.WaitForNextTargetTime)}");
                         waitStartPublisher.Publish((DateTime)plan.WaitForNextTargetTime);
+                        var historyItem = new PlanExecutionHistoryItem(DateTime.Now, plan);
 
                         SetSyncServerState(ServerState.PlanWait);
                         SchedulerProgress.WaitStart(plan.WaitForNextTargetTime);
@@ -288,6 +288,9 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                         await ExecuteEventContainer(AfterWaitContainer, progress, token);
                         SchedulerProgress.End();
                         atTime = DateTime.Now;
+
+                        historyItem.EndTime = atTime;
+                        PlanExecutionHistory.Add(historyItem);
                     } else {
                         atTime = (DateTime)plan.WaitForNextTargetTime;
                         TSLogger.Info($"simulated run enabled, skipping planned wait and advancing time to {atTime}");
@@ -300,18 +303,8 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                             await ExecuteEventContainer(AfterTargetContainer, progress, token);
                         }
 
-                        /* TODO: this isn't right.  This should run after each target but in TS5, this makes
-                         * it run after each (single exposure) plan.
-                         *
-                         * Actually, in TS5 I'm not sure this makes sense at all.  A plan is really an
-                         * arbitrary partitioning of the work.  What custom task makes sense at this point?
-                         *
-                        if (previousPlanTarget != null && PreviousSchedulerPlan != null) {
-                            await ExecuteEventContainer(AfterAllTargetsContainer, progress, token);
-                        }
-                        */
-
                         TSLogger.Info("--BEGIN PLAN EXECUTION--------------------------------------------------------");
+                        var historyItem = new PlanExecutionHistoryItem(DateTime.Now, plan);
                         TSLogger.Info($"plan target: {target.Name}");
 
                         SetTarget(atTime, target);
@@ -323,7 +316,9 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                         planContainer.Execute(progress, token).Wait();
 
                         previousPlanTarget = target;
-                        PreviousSchedulerPlan = plan;
+
+                        historyItem.EndTime = DateTime.Now;
+                        PlanExecutionHistory.Add(historyItem);
                     } catch (Exception ex) {
                         if (Utils.IsCancelException(ex)) {
                             TSLogger.Warning("sequence was canceled or interrupted, target scheduler execution is incomplete");

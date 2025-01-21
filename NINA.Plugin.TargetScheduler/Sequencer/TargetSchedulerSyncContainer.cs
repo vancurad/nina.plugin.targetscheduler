@@ -62,7 +62,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         [JsonProperty] public InstructionContainer SyncAfterAllTargetsContainer { get; set; }
 
         private IProfile serverProfile;
-        public SchedulerPlan PreviousSchedulerPlan { get; private set; }
+        public PlanExecutionHistory PlanExecutionHistory { get; private set; }
 
         [ImportingConstructor]
         public TargetSchedulerSyncContainer(
@@ -327,13 +327,20 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         }
 
         private void AddExposureToPlan(SyncedExposure syncedExposure) {
-            ITarget target = GetPlanTarget(syncedExposure.TargetDatabaseId);
-            if (PreviousSchedulerPlan == null) {
-                PreviousSchedulerPlan = new SchedulerPlan(target);
+            if (PlanExecutionHistory == null) {
+                PlanExecutionHistory = new PlanExecutionHistory();
             }
 
-            IInstruction instruction = new Planning.Entities.PlanTakeExposure(GetPlanExposure(target, syncedExposure.ExposurePlanDatabaseId));
-            PreviousSchedulerPlan.AddPlanInstruction(instruction);
+            ITarget target = GetPlanTarget(syncedExposure.TargetDatabaseId);
+            SchedulerPlan plan = new SchedulerPlan(target);
+
+            IExposure exposure = GetPlanExposure(target, syncedExposure.ExposurePlanDatabaseId);
+            IInstruction instruction = new Planning.Entities.PlanTakeExposure(exposure);
+            plan.AddPlanInstruction(instruction);
+
+            PlanExecutionHistoryItem item = new PlanExecutionHistoryItem(DateTime.Now, plan);
+            item.EndTime = item.StartTime.AddSeconds(exposure.ExposureLength); // sync container plan end time is estimated
+            PlanExecutionHistory.Add(item);
         }
 
         private ITarget GetPlanTarget(int targetDatabaseId) {
@@ -383,7 +390,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
 
             if (syncedEventContainer.EventContainerType == EventContainerType.BeforeTarget) {
                 TSLogger.Info("SYNC client: clearing previous scheduler plan for new target");
-                PreviousSchedulerPlan = null;
+                PlanExecutionHistory = null;
             }
         }
 
