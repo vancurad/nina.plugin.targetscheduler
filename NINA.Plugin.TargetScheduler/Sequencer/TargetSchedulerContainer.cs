@@ -81,7 +81,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         [JsonProperty] public InstructionContainer AfterWaitContainer { get; set; }
         [JsonProperty] public InstructionContainer BeforeTargetContainer { get; set; }
         [JsonProperty] public InstructionContainer AfterTargetContainer { get; set; }
-        [JsonProperty] public InstructionContainer AfterAllTargetsContainer { get; set; }
+        [JsonProperty] public InstructionContainer ImmediateFlatsContainer { get; set; }
 
         private ProfilePreference profilePreferences;
 
@@ -133,7 +133,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             AfterWaitContainer = new InstructionContainer(EventContainerType.AfterWait, Parent);
             BeforeTargetContainer = new InstructionContainer(EventContainerType.BeforeTarget, Parent);
             AfterTargetContainer = new InstructionContainer(EventContainerType.AfterTarget, Parent);
-            AfterAllTargetsContainer = new InstructionContainer(EventContainerType.AfterEachTarget, this);
+            ImmediateFlatsContainer = new InstructionContainer(EventContainerType.ImmediateFlats, this);
 
             Task.Run(() => NighttimeData = nighttimeCalculator.Calculate());
             Target = new InputTarget(Angle.ByDegree(profileService.ActiveProfile.AstrometrySettings.Latitude), Angle.ByDegree(profileService.ActiveProfile.AstrometrySettings.Longitude), profileService.ActiveProfile.AstrometrySettings.Horizon);
@@ -164,7 +164,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             AfterWaitContainer.Initialize(profileService);
             BeforeTargetContainer.Initialize(profileService);
             AfterTargetContainer.Initialize(profileService);
-            AfterAllTargetsContainer.Initialize(profileService);
+            ImmediateFlatsContainer.Initialize(profileService);
         }
 
         public override void AfterParentChanged() {
@@ -177,7 +177,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                 AfterWaitContainer.AttachNewParent(Parent);
                 BeforeTargetContainer.AttachNewParent(Parent);
                 AfterTargetContainer.AttachNewParent(Parent);
-                AfterAllTargetsContainer.AttachNewParent(this);
+                ImmediateFlatsContainer.AttachNewParent(this);
 
                 if (Parent.Status == SequenceEntityStatus.RUNNING) {
                     SequenceBlockInitialize();
@@ -192,7 +192,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             AfterWaitContainer.ResetProgress();
             BeforeTargetContainer.ResetProgress();
             AfterTargetContainer.ResetProgress();
-            AfterAllTargetsContainer.ResetProgress();
+            ImmediateFlatsContainer.ResetProgress();
 
             if (SchedulerProgress != null) {
                 SchedulerProgress.Reset();
@@ -256,7 +256,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                 if (plan == null) {
                     if (previousPlanTarget != null) {
                         await ExecuteEventContainer(AfterTargetContainer, progress, token);
-                        await ExecuteEventContainer(AfterAllTargetsContainer, progress, token);
+                        await ExecuteEventContainer(ImmediateFlatsContainer, progress, token);
                     }
 
                     SchedulerProgress.End();
@@ -270,7 +270,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                 if (plan.WaitForNextTargetTime != null) {
                     if (previousPlanTarget != null) {
                         await ExecuteEventContainer(AfterTargetContainer, progress, token);
-                        await ExecuteEventContainer(AfterAllTargetsContainer, progress, token);
+                        await ExecuteEventContainer(ImmediateFlatsContainer, progress, token);
                         previousPlanTarget = null;
                     }
 
@@ -442,7 +442,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             bool afterWaitValid = AfterWaitContainer.Validate();
             bool beforeTargetValid = BeforeTargetContainer.Validate();
             bool afterTargetValid = AfterTargetContainer.Validate();
-            bool afterAllTargetsValid = AfterAllTargetsContainer.Validate();
+            bool afterAllTargetsValid = ImmediateFlatsContainer.Validate();
 
             if (!triggersValid || !beforeWaitValid || !afterWaitValid || !beforeTargetValid || !afterTargetValid || !afterAllTargetsValid) {
                 issues.Add("One or more triggers or custom containers is not valid");
@@ -560,7 +560,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             CoordinatesInjector injector = new CoordinatesInjector(Target);
             injector.Inject(BeforeTargetContainer);
             injector.Inject(AfterTargetContainer);
-            injector.Inject(AfterAllTargetsContainer);
+            injector.Inject(ImmediateFlatsContainer);
         }
 
         private void SchedulerProgress_PropertyChanged(object sender, PropertyChangedEventArgs e) {
@@ -683,13 +683,13 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             clone.AfterWaitContainer = (InstructionContainer)AfterWaitContainer.Clone();
             clone.BeforeTargetContainer = (InstructionContainer)BeforeTargetContainer.Clone();
             clone.AfterTargetContainer = (InstructionContainer)AfterTargetContainer.Clone();
-            clone.AfterAllTargetsContainer = (InstructionContainer)AfterAllTargetsContainer.Clone();
+            clone.ImmediateFlatsContainer = (InstructionContainer)ImmediateFlatsContainer.Clone();
 
             clone.BeforeWaitContainer.AttachNewParent(clone);
             clone.AfterWaitContainer.AttachNewParent(clone);
             clone.BeforeTargetContainer.AttachNewParent(clone);
             clone.AfterTargetContainer.AttachNewParent(clone);
-            clone.AfterAllTargetsContainer.AttachNewParent(clone);
+            clone.ImmediateFlatsContainer.AttachNewParent(clone);
 
             foreach (var item in clone.Items) {
                 item.AttachNewParent(clone);

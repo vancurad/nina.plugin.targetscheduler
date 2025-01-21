@@ -157,7 +157,7 @@
 
                     <ninactrl:DetachingExpander>
                         <ninactrl:DetachingExpander.Header>
-                            <TextBlock Text="After Each Target Instructions" />
+                            <TextBlock Text="Immediate Flats Instructions" />
                         </ninactrl:DetachingExpander.Header>
                         <StackPanel Orientation="Vertical">
                             <Border MinHeight="50"
@@ -165,7 +165,7 @@
                                     BorderBrush="{StaticResource BorderBrush}"
                                     BorderThickness="1">
                                 <Grid Background="{StaticResource BackgroundBrush}"
-                                      DataContext="{Binding SyncAfterAllTargetsContainer}">
+                                      DataContext="{Binding SyncImmediateFlatsContainer}">
                                     <ItemsControl MinHeight="50"
                                                   ItemsSource="{Binding Items}" />
                                     <TextBlock Height="18"

@@ -18,6 +18,8 @@ if (Test-Path -Path $out) {
 if (Test-Path -Path $file) {
     $raw = Get-Content -Path $file -Raw
     $raw = $raw -replace "Assistant.NINAPlugin", "NINA.Plugin.TargetScheduler"
+    $raw = $raw -replace "AfterAllTargetsContainer", "ImmediateFlatsContainer"
+    $raw = $raw -replace "AfterEachTarget", "ImmediateFlats"
 
     Write-Output $raw | Out-File -FilePath $out
     Write-Output "`r`nmigrated to TS5: $file`r`n"
