@@ -541,51 +541,50 @@ namespace NINA.Plugin.TargetScheduler.Test.Sequencer {
         [TestCase(1111, "1111")]
         [TestCase(11111, "11111")]
         public void TestFormatSessionIdentifier(int sessionId, string expected) {
-            FlatsExpert sut = new FlatsExpert();
-            sut.FormatSessionIdentifier(sessionId).Should().Be(expected);
+            FlatsExpert.FormatSessionIdentifier(sessionId).Should().Be(expected);
         }
 
         [Test]
         public void TestOverloadTargetName() {
             FlatsExpert sut = new FlatsExpert();
 
-            var result = sut.DeOverloadTargetName(null);
+            var result = FlatsExpert.DeOverloadTargetName(null);
             result.Item1.Should().Be("");
             result.Item2.Should().Be("0");
             result.Item3.Should().Be("");
 
-            result = sut.DeOverloadTargetName("@");
+            result = FlatsExpert.DeOverloadTargetName("@");
             result.Item1.Should().Be("");
             result.Item2.Should().Be("0");
             result.Item3.Should().Be("");
 
-            result = sut.DeOverloadTargetName("@@");
+            result = FlatsExpert.DeOverloadTargetName("@@");
             result.Item1.Should().Be("");
             result.Item2.Should().Be("0");
             result.Item3.Should().Be("");
 
-            result = sut.DeOverloadTargetName("@@@");
+            result = FlatsExpert.DeOverloadTargetName("@@@");
             result.Item1.Should().Be("");
             result.Item2.Should().Be("0");
             result.Item3.Should().Be("");
 
-            string overloaded = sut.GetOverloadTargetName(null, 43, null);
+            string overloaded = FlatsExpert.GetOverloadTargetName(null, 43, null);
             overloaded.Should().Be($"{FlatsExpert.OVERLOAD_SEP}43{FlatsExpert.OVERLOAD_SEP}");
-            result = sut.DeOverloadTargetName(overloaded);
+            result = FlatsExpert.DeOverloadTargetName(overloaded);
             result.Item1.Should().Be("");
             result.Item2.Should().Be("43");
             result.Item3.Should().Be("");
 
-            overloaded = sut.GetOverloadTargetName("", 43, "");
+            overloaded = FlatsExpert.GetOverloadTargetName("", 43, "");
             overloaded.Should().Be($"{FlatsExpert.OVERLOAD_SEP}43{FlatsExpert.OVERLOAD_SEP}");
-            result = sut.DeOverloadTargetName(overloaded);
+            result = FlatsExpert.DeOverloadTargetName(overloaded);
             result.Item1.Should().Be("");
             result.Item2.Should().Be("43");
             result.Item3.Should().Be("");
 
-            overloaded = sut.GetOverloadTargetName("foo", 43, "bar");
+            overloaded = FlatsExpert.GetOverloadTargetName("foo", 43, "bar");
             overloaded.Should().Be($"foo{FlatsExpert.OVERLOAD_SEP}43{FlatsExpert.OVERLOAD_SEP}bar");
-            result = sut.DeOverloadTargetName(overloaded);
+            result = FlatsExpert.DeOverloadTargetName(overloaded);
             result.Item1.Should().Be("foo");
             result.Item2.Should().Be("43");
             result.Item3.Should().Be("bar");

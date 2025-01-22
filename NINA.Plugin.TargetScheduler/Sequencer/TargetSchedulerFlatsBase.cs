@@ -248,11 +248,12 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         }
 
         protected Task BeforeImageSaved(object sender, BeforeImageSavedEventArgs args) {
+            if (args.Image.MetaData.Image.ImageType != CaptureSequence.ImageTypes.FLAT) {
+                return Task.CompletedTask;
+            }
+
             string overloadedName = args.Image.MetaData.Target.Name;
-            var tuple = flatsExpert.DeOverloadTargetName(overloadedName);
-            string targetName = tuple.Item1;
-            string sessionId = tuple.Item2;
-            string projectName = tuple.Item3;
+            (string targetName, string sessionId, string projectName) = FlatsExpert.DeOverloadTargetName(overloadedName);
 
             TSLogger.Debug($"TS Flats: BeforeImageSaved: {projectName}/{targetName} sid={sessionId} filter={args.Image?.MetaData?.FilterWheel?.Filter}");
             args.Image.MetaData.Target.Name = targetName;
@@ -262,12 +263,12 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         }
 
         protected Task BeforeFinalizeImageSaved(object sender, BeforeFinalizeImageSavedEventArgs args) {
-            var tuple = flatsExpert.DeOverloadTargetName(args.Image?.RawImageData?.MetaData?.Sequence?.Title);
-            string targetName = tuple.Item1;
-            string sessionId = tuple.Item2;
-            string projectName = tuple.Item3;
+            if (args.Image.RawImageData.MetaData.Image.ImageType != CaptureSequence.ImageTypes.FLAT) {
+                return Task.CompletedTask;
+            }
 
-            string sessionIdentifier = flatsExpert.FormatSessionIdentifier(int.Parse(sessionId));
+            (string targetName, string sessionId, string projectName) = FlatsExpert.DeOverloadTargetName(args.Image?.RawImageData?.MetaData?.Sequence?.Title);
+            string sessionIdentifier = FlatsExpert.FormatSessionIdentifier(int.Parse(sessionId));
             ImagePattern proto = TargetScheduler.FlatSessionIdImagePattern;
             args.AddImagePattern(new ImagePattern(proto.Key, proto.Description) { Value = sessionIdentifier });
 
@@ -280,6 +281,10 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         }
 
         protected void ImageSaved(object sender, ImageSavedEventArgs args) {
+            if (args.MetaData.Image.ImageType != CaptureSequence.ImageTypes.FLAT) {
+                return;
+            }
+
             TSLogger.Debug($"TS Flats: ImageSaved: {args.MetaData?.Target?.Name} filter={args.Filter} file={args.PathToImage?.LocalPath}");
         }
 
@@ -301,13 +306,8 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         }
 
         protected async Task CloseCover(IProgress<ApplicationStatus> progress, CancellationToken token) {
-            if (!flatDeviceMediator.GetInfo().Connected) {
-                return;
-            }
-
-            if (!flatDeviceMediator.GetInfo().SupportsOpenClose) {
-                return;
-            }
+            if (!flatDeviceMediator.GetInfo().Connected) { return; }
+            if (!flatDeviceMediator.GetInfo().SupportsOpenClose) { return; }
 
             CoverState coverState = flatDeviceMediator.GetInfo().CoverState;
 
@@ -317,9 +317,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                 return;
             }
 
-            if (coverState == CoverState.Closed) {
-                return;
-            }
+            if (coverState == CoverState.Closed) { return; }
 
             TSLogger.Info("TS Flats: closing flat device");
             await flatDeviceMediator.CloseCover(progress, token);
@@ -332,9 +330,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         }
 
         protected async Task OpenCover(IProgress<ApplicationStatus> progress, CancellationToken token) {
-            if (!flatDeviceMediator.GetInfo().Connected) {
-                return;
-            }
+            if (!flatDeviceMediator.GetInfo().Connected) { return; }
 
             if (!flatDeviceMediator.GetInfo().SupportsOpenClose) {
                 TSLogger.Info("TS Flats: flat panel doesn't support open/close");
@@ -366,13 +362,8 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         }
 
         protected async Task ToggleLight(bool onOff, IProgress<ApplicationStatus> progress, CancellationToken token) {
-            if (!flatDeviceMediator.GetInfo().Connected) {
-                return;
-            }
-
-            if (flatDeviceMediator.GetInfo().LightOn == onOff) {
-                return;
-            }
+            if (!flatDeviceMediator.GetInfo().Connected) { return; }
+            if (flatDeviceMediator.GetInfo().LightOn == onOff) { return; }
 
             TSLogger.Info($"TS Flats: toggling flat device light: {onOff}");
             await flatDeviceMediator.ToggleLight(onOff, progress, token);
@@ -495,7 +486,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         public FlatTargetContainer(TargetSchedulerFlatsBase parent, Target target, int count, int sessionId) {
             this.parent = parent;
 
-            string overloadedName = new FlatsExpert().GetOverloadTargetName(target?.Name, sessionId, target?.Project?.Name);
+            string overloadedName = FlatsExpert.GetOverloadTargetName(target?.Name, sessionId, target?.Project?.Name);
             inputTarget = new InputTarget(Angle.Zero, Angle.Zero, null) { TargetName = overloadedName };
 
             loopCondition = new LoopCondition() { Iterations = count };

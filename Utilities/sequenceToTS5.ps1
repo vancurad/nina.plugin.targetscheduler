@@ -1,6 +1,6 @@
 
 # Powershell script to migrate NINA sequence files to TS5.  Basically just fixing the
-# namespace of TS instructions.
+# namespace of TS instructions and renaming one of the custom event containers.
 
 [CmdletBinding()]
 param(

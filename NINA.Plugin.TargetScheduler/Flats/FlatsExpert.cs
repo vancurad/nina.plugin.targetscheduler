@@ -406,8 +406,8 @@ namespace NINA.Plugin.TargetScheduler.Flats {
         /// </summary>
         /// <param name="sessionId"></param>
         /// <returns></returns>
-        public string FormatSessionIdentifier(int? sessionId) {
-            int id = (sessionId != null) ? (int)sessionId : 0;
+        public static string FormatSessionIdentifier(int? sessionId) {
+            int id = (sessionId.HasValue) ? (int)sessionId : 0;
             return string.Format("{0:D4}", id);
         }
 
@@ -415,14 +415,13 @@ namespace NINA.Plugin.TargetScheduler.Flats {
 
         /// <summary>
         /// Overload a target name with both name and session identifier.  This is used while flats are
-        /// coming through the image pipeline so we can save name/sid in the image metadata where it
-        /// follows the image on the same thread.
+        /// coming through the image pipeline so we can save name/sid in the image metadata.
         /// </summary>
         /// <param name="targetName"></param>
         /// <param name="sessionId"></param>
         /// <param name="projectName"></param>
         /// <returns></returns>
-        public string GetOverloadTargetName(string targetName, int sessionId, string projectName) {
+        public static string GetOverloadTargetName(string targetName, int sessionId, string projectName) {
             targetName = targetName ?? string.Empty;
             projectName = projectName ?? string.Empty;
             return $"{targetName}{OVERLOAD_SEP}{sessionId}{OVERLOAD_SEP}{projectName}";
@@ -433,7 +432,7 @@ namespace NINA.Plugin.TargetScheduler.Flats {
         /// </summary>
         /// <param name="overloadedName"></param>
         /// <returns></returns>
-        public Tuple<string, string, string> DeOverloadTargetName(string overloadedName) {
+        public static Tuple<string, string, string> DeOverloadTargetName(string overloadedName) {
             if (string.IsNullOrEmpty(overloadedName)) {
                 TSLogger.Warning("TS Flats: overloaded target name is empty");
                 return new Tuple<string, string, string>("", "0", "");

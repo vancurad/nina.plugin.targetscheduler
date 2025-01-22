@@ -1,4 +1,5 @@
 ﻿using NINA.Core.Model;
+using NINA.Equipment.Model;
 using NINA.Plugin.TargetScheduler.Database;
 using NINA.Plugin.TargetScheduler.Database.Schema;
 using NINA.Plugin.TargetScheduler.Flats;
@@ -55,7 +56,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             int count = 0;
             while (!exposureDictionary.IsEmpty) {
                 if (++count == 200) {
-                    TSLogger.Warning($"timed out waiting on all exposures to be processed and scheduler database updated.  Remaining:\n{ExposureIdsLog()}");
+                    TSLogger.Warning($"timed out waiting on all exposures to be processed, remaining:\n{ExposureIdsLog()}");
                     break;
                 }
 
@@ -75,11 +76,15 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         }
 
         private Task BeforeFinalizeImageSaved(object sender, BeforeFinalizeImageSavedEventArgs args) {
+            if (args.Image.RawImageData.MetaData.Image.ImageType != CaptureSequence.ImageTypes.LIGHT) {
+                return Task.CompletedTask;
+            }
+
             ExposureWaitData waitData = GetWaitData(args);
             if (waitData == null) { return Task.CompletedTask; }
 
             ITarget target = waitData.Target;
-            string sessionIdentifier = new FlatsExpert().FormatSessionIdentifier(target.Project.SessionId);
+            string sessionIdentifier = FlatsExpert.FormatSessionIdentifier(target.Project.SessionId);
 
             ImagePattern proto = TargetScheduler.FlatSessionIdImagePattern;
             args.AddImagePattern(new ImagePattern(proto.Key, proto.Description) { Value = sessionIdentifier });
@@ -92,12 +97,12 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         }
 
         public virtual async void ImageSaved(object sender, ImageSavedEventArgs imageSavedEventArgs) {
-            ExposureWaitData waitData = GetWaitData(imageSavedEventArgs);
-            if (waitData == null) { return; }
-
-            if (imageSavedEventArgs.MetaData.Image.ImageType != "LIGHT") {
+            if (imageSavedEventArgs.MetaData.Image.ImageType != CaptureSequence.ImageTypes.LIGHT) {
                 return;
             }
+
+            ExposureWaitData waitData = GetWaitData(imageSavedEventArgs);
+            if (waitData == null) { return; }
 
             ITarget target = waitData.Target;
             IExposure exposure = waitData.Exposure;
