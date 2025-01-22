@@ -943,6 +943,7 @@ namespace NINA.Plugin.TargetScheduler.Database {
                     }
                 }*/
 
+                // TS 5
                 if (oldVersion < 17 && newVersion == 17) {
                     TSLogger.Info("TS 4 -> 5 database migration");
                     Notification.ShowInformation("Migrating Target Scheduler database to new version ...");

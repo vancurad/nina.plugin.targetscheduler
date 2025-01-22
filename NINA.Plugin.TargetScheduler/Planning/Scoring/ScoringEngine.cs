@@ -21,29 +21,29 @@ namespace NINA.Plugin.TargetScheduler.Planning.Scoring {
             set { ruleWeights = value; Rules = null; }
         }
 
-        public ScoringEngine(IProfile activeProfile, ProfilePreference ProfilePreference, DateTime atTime, ITarget previousPlanTarget) {
+        public ScoringEngine(IProfile activeProfile, ProfilePreference ProfilePreference, DateTime atTime, ITarget previousTarget) {
             this.ActiveProfile = activeProfile;
             this.ProfilePreference = ProfilePreference;
-            this.PreviousPlanTarget = previousPlanTarget;
+            this.PreviousPlanTarget = previousTarget;
             this.AtTime = atTime;
         }
 
-        public double ScoreTarget(ITarget planTarget) {
+        public double ScoreTarget(ITarget target) {
             if (Rules == null) {
                 Rules = AddAllRules(RuleWeights);
             }
 
-            planTarget.ScoringResults = new ScoringResults();
+            target.ScoringResults = new ScoringResults();
 
             double totalScore = 0;
             foreach (ScoringRule rule in Rules) {
                 double weight = RuleWeights[rule.Name] / ScoringRule.WEIGHT_SCALE;
-                double score = rule.Score(this, planTarget);
+                double score = rule.Score(this, target);
                 totalScore += weight * score;
-                planTarget.ScoringResults.AddRuleResult(new RuleResult(rule, weight, score));
+                target.ScoringResults.AddRuleResult(new RuleResult(rule, weight, score));
             }
 
-            planTarget.ScoringResults.TotalScore = totalScore;
+            target.ScoringResults.TotalScore = totalScore;
             return totalScore;
         }
 
