@@ -60,7 +60,7 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
             EnableGradeFWHM = false;
             EnableGradeEccentricity = false;
             EnableMoveRejected = false;
-            DelayGrading = 0;
+            DelayGrading = 80;
             AcceptImprovement = true;
             MaxGradingSampleSize = 10;
             RMSPixelThreshold = 8;
@@ -79,7 +79,7 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
 
             EnableSimulatedRun = false;
             SkipSimulatedWaits = true;
-            SkipSimulatedUpdates = true;
+            SkipSimulatedUpdates = false;
         }
 
         [NotMapped]

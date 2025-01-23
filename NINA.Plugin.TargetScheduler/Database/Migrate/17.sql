@@ -10,7 +10,7 @@ ALTER TABLE profilepreference ADD COLUMN autoAcceptLevelHFR REAL DEFAULT 0;
 ALTER TABLE profilepreference ADD COLUMN autoAcceptLevelFWHM REAL DEFAULT 0;
 ALTER TABLE profilepreference ADD COLUMN autoAcceptLevelEccentricity REAL DEFAULT 0;
 ALTER TABLE profilepreference ADD COLUMN enableSimulatedRun INTEGER DEFAULT 0;
-ALTER TABLE profilepreference ADD COLUMN skipSimulatedWaits INTEGER  DEFAULT 0;
+ALTER TABLE profilepreference ADD COLUMN skipSimulatedWaits INTEGER  DEFAULT 1;
 ALTER TABLE profilepreference ADD COLUMN skipSimulatedUpdates INTEGER DEFAULT 0;
 
 ALTER TABLE project ADD COLUMN maximumAltitude REAL DEFAULT 0;
