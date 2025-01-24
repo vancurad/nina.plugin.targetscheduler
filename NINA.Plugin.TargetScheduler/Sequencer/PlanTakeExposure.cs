@@ -81,7 +81,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
 
             var inputTarget = RetrieveTarget(dsoContainer);
             string exposureId = "";
-            target.ExposureSelector.ExposureTaken(exposure);
+            target.ExposureSelector.ExposureTaken(exposure); // we assume the exposure won't be canceled ...
 
             if (synchronizationEnabled) {
                 exposureId = Guid.NewGuid().ToString();

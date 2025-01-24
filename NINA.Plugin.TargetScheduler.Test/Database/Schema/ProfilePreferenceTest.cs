@@ -20,7 +20,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Database.Schema {
             sut.EnableGradeHFR.Should().BeTrue();
             sut.EnableGradeFWHM.Should().BeFalse();
             sut.EnableGradeEccentricity.Should().BeFalse();
-            sut.DelayGrading.Should().BeApproximately(0, 0.001);
+            sut.DelayGrading.Should().BeApproximately(80, 0.001);
             sut.AcceptImprovement.Should().BeTrue();
             sut.MaxGradingSampleSize.Should().Be(10);
             sut.RMSPixelThreshold.Should().Be(8);
@@ -39,7 +39,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Database.Schema {
 
             sut.EnableSimulatedRun.Should().BeFalse();
             sut.SkipSimulatedWaits.Should().BeTrue();
-            sut.SkipSimulatedUpdates.Should().BeTrue();
+            sut.SkipSimulatedUpdates.Should().BeFalse();
         }
     }
 }

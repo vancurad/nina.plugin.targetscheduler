@@ -168,7 +168,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
 
         private GradingWorkData GetGradingWorkData(ExposureWaitData waitData, int acquiredImageId, ImageSavedEventArgs imageSavedEventArgs) {
             ImageGraderPreferences prefs = new ImageGraderPreferences(profile, profilePreference);
-            return new GradingWorkData(false, waitData.Target.DatabaseId, waitData.Exposure.DatabaseId, acquiredImageId, imageSavedEventArgs, prefs);
+            return new GradingWorkData(waitData.Target.DatabaseId, waitData.Exposure.DatabaseId, acquiredImageId, imageSavedEventArgs, prefs);
         }
 
         private int UpdateDatabase(ExposureWaitData waitData, ImageSavedEventArgs imageSavedEventArgs, bool accepted) {

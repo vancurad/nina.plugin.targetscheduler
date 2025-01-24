@@ -59,7 +59,6 @@ namespace NINA.Plugin.TargetScheduler.Grading {
     }
 
     public class GradingWorkData {
-        public bool IsEmulated { get; private set; }
         public int TargetId { get; private set; }
         public int ExposurePlanId { get; private set; }
         public int AcquiredImageId { get; private set; }
@@ -67,9 +66,8 @@ namespace NINA.Plugin.TargetScheduler.Grading {
         public ImageSavedEventArgs ImageSavedEventArgs { get; private set; }
         public IImageGraderPreferences GraderPreferences { get; private set; }
 
-        public GradingWorkData(bool isEmulated, int targetId, int exposurePlanId, int acquiredImageId,
+        public GradingWorkData(int targetId, int exposurePlanId, int acquiredImageId,
             ImageSavedEventArgs imageSavedEventArgs, IImageGraderPreferences graderPreferences) {
-            IsEmulated = isEmulated;
             TargetId = targetId;
             ExposurePlanId = exposurePlanId;
             AcquiredImageId = acquiredImageId;

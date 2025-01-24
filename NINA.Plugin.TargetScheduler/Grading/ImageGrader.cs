@@ -29,12 +29,9 @@ namespace NINA.Plugin.TargetScheduler.Grading {
         public static readonly string REJECT_FWHM = "FWHM";
         public static readonly string REJECT_ECCENTRICITY = "Eccentricity";
 
-        public void Grade(GradingWorkData workData) {
-            if (workData.IsEmulated) {
-                TSLogger.Debug("skipping image grading for emulation");
-                return;
-            }
+        private object lockObj = new object();
 
+        public void Grade(GradingWorkData workData) {
             ExposurePlan exposurePlan = GetExposurePlan(workData.ExposurePlanId);
             Target target = GetTarget(workData.TargetId);
             string tag = $"target {target.Name}, expId={exposurePlan.Id}, imageId={workData.ImageSavedEventArgs.MetaData.Image.Id}";
@@ -44,33 +41,35 @@ namespace NINA.Plugin.TargetScheduler.Grading {
                 IImageGraderPreferences graderPreferences = workData.GraderPreferences;
                 List<AcquiredImage> population = GetMatchingAcquired(workData, target, GetAllAcquired(exposurePlan));
 
-                if (DelayedGradingEnabled(graderPreferences)) {
-                    if (exposurePlan.Desired == 0) {
-                        TSLogger.Warning("desired count on exposure plan is zero during grading - aborting");
-                        return;
-                    }
+                lock (lockObj) {
+                    if (DelayedGradingEnabled(graderPreferences)) {
+                        if (exposurePlan.Desired == 0) {
+                            TSLogger.Warning("desired count on exposure plan is zero during grading - aborting");
+                            return;
+                        }
 
-                    if (CurrentDelayThreshold(population.Count, exposurePlan.Desired) >= graderPreferences.DelayGradingThreshold) {
-                        List<AcquiredImage> pending = population.Where(a => a.GradingStatus == GradingStatus.Pending).ToList();
-                        TSLogger.Info($"delayed grading triggered for {tag}: acquired={population.Count}, desired={exposurePlan.Desired}, pending={pending.Count}");
+                        if (CurrentDelayThreshold(population.Count, exposurePlan.Desired) >= graderPreferences.DelayGradingThreshold) {
+                            List<AcquiredImage> pending = population.Where(a => a.GradingStatus == GradingStatus.Pending).ToList();
+                            TSLogger.Info($"delayed grading triggered for {tag}: acquired={population.Count}, desired={exposurePlan.Desired}, pending={pending.Count}");
 
-                        pending.ForEach(acquiredImage => {
-                            GradingResult result = GradeImage(exposurePlan, acquiredImage, workData, population);
-                            UpdateDatabase(result, exposurePlan, acquiredImage);
-                            if (graderPreferences.EnableMoveRejected && result != GradingResult.Accepted) {
-                                MoveRejected(acquiredImage.Metadata.FileName);
-                            }
-                        });
+                            pending.ForEach(acquiredImage => {
+                                GradingResult result = GradeImage(exposurePlan, acquiredImage, workData, population);
+                                UpdateDatabase(result, exposurePlan, acquiredImage);
+                                if (graderPreferences.EnableMoveRejected && result != GradingResult.Accepted) {
+                                    MoveRejected(acquiredImage.Metadata.FileName);
+                                }
+                            });
+                        } else {
+                            TSLogger.Info($"delayed grading not yet triggered for {tag}");
+                        }
                     } else {
-                        TSLogger.Info($"delayed grading not yet triggered for {tag}");
-                    }
-                } else {
-                    AcquiredImage acquiredImage = GetCurrentAcquired(workData.AcquiredImageId);
-                    List<AcquiredImage> immediatePopulation = GetImmediatePopulation(graderPreferences.MaxGradingSampleSize, population);
-                    GradingResult result = GradeImage(exposurePlan, acquiredImage, workData, immediatePopulation);
-                    UpdateDatabase(result, exposurePlan, acquiredImage);
-                    if (graderPreferences.EnableMoveRejected && result != GradingResult.Accepted) {
-                        MoveRejected(acquiredImage.Metadata.FileName);
+                        AcquiredImage acquiredImage = GetCurrentAcquired(workData.AcquiredImageId);
+                        List<AcquiredImage> immediatePopulation = GetImmediatePopulation(graderPreferences.MaxGradingSampleSize, population);
+                        GradingResult result = GradeImage(exposurePlan, acquiredImage, workData, immediatePopulation);
+                        UpdateDatabase(result, exposurePlan, acquiredImage);
+                        if (graderPreferences.EnableMoveRejected && result != GradingResult.Accepted) {
+                            MoveRejected(acquiredImage.Metadata.FileName);
+                        }
                     }
                 }
             } catch (Exception ex) {
@@ -229,7 +228,7 @@ namespace NINA.Plugin.TargetScheduler.Grading {
         }
 
         private double CurrentDelayThreshold(int count, int desired) {
-            return (double)count / (double)desired;
+            return ((double)count / (double)desired) * 100;
         }
     }
 
