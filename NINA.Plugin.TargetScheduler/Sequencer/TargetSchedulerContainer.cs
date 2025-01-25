@@ -267,7 +267,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                     return;
                 }
 
-                if (plan.WaitForNextTargetTime != null) {
+                if (plan.IsWait) {
                     if (previousPlanTarget != null) {
                         await ExecuteEventContainer(AfterTargetContainer, progress, token);
                         await ExecuteEventContainer(ImmediateFlatsContainer, progress, token);
