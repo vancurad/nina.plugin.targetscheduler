@@ -6,6 +6,7 @@ using NINA.Plugin.TargetScheduler.Flats;
 using NINA.Plugin.TargetScheduler.Grading;
 using NINA.Plugin.TargetScheduler.Planning.Interfaces;
 using NINA.Plugin.TargetScheduler.Shared.Utility;
+using NINA.Plugin.TargetScheduler.Util;
 using NINA.Profile.Interfaces;
 using NINA.WPF.Base.Interfaces.Mediator;
 using System;
@@ -199,6 +200,9 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                                 string.Empty,
                                 new ImageMetadata(imageSavedEventArgs, target.Project.SessionId, target.ROI, exposure.ReadoutMode));
                             AcquiredImage entity = context.AcquiredImageSet.Add(acquiredImage);
+
+                            (int width, int height, byte[] data) = Thumbnails.CreateThumbnail(imageSavedEventArgs.Image);
+                            context.ImageDataSet.Add(new ImageData("", data, entity.Id, width, height));
 
                             context.SaveChanges();
                             transaction.Commit();

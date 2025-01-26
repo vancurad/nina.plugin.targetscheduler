@@ -195,25 +195,31 @@ namespace NINA.Plugin.TargetScheduler.Test.Database {
                 byte[] data1 = new byte[] { 0x21, 0x22, 0x23, 0x24, 0x25 };
                 byte[] data2 = new byte[] { 0x26, 0x27, 0x28, 0x29, 0x2a };
                 byte[] data3 = new byte[] { 0x2b, 0x2c, 0x2d, 0x2e, 0x2f };
-                context.ImageDataSet.Add(new ImageData("tag1", data1, ai[0].Id));
-                context.ImageDataSet.Add(new ImageData("tag2", data2, ai[0].Id));
-                context.ImageDataSet.Add(new ImageData("tag1", data3, ai[1].Id));
+                context.ImageDataSet.Add(new ImageData("tag1", data1, ai[0].Id, 1, 2));
+                context.ImageDataSet.Add(new ImageData("tag2", data2, ai[0].Id, 3, 4));
+                context.ImageDataSet.Add(new ImageData("tag1", data3, ai[1].Id, 5, 6));
                 context.SaveChanges();
 
                 ImageData id = context.GetImageData(ai[0].Id, "tag1");
                 id.Tag.Should().Be("tag1");
                 string s = Encoding.Default.GetString(id.Data);
                 s.Should().Be("!\"#$%");
+                id.Width.Should().Be(1);
+                id.Height.Should().Be(2);
 
                 id = context.GetImageData(ai[0].Id, "tag2");
                 id.Tag.Should().Be("tag2");
                 s = Encoding.Default.GetString(id.Data);
                 s.Should().Be("&'()*");
+                id.Width.Should().Be(3);
+                id.Height.Should().Be(4);
 
                 id = context.GetImageData(ai[1].Id, "tag1");
                 id.Tag.Should().Be("tag1");
                 s = Encoding.Default.GetString(id.Data);
                 s.Should().Be("+,-./");
+                id.Width.Should().Be(5);
+                id.Height.Should().Be(6);
 
                 context.GetImageData(ai[1].Id, "tag2").Should().BeNull();
                 context.GetImageData(ai[2].Id, "tag1").Should().BeNull();

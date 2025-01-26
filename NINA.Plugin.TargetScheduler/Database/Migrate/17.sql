@@ -5,6 +5,9 @@ This is the migration script for TS 4 -> 5.  Also see the associated repair and 
 ALTER TABLE acquiredimage ADD COLUMN exposureId INTEGER DEFAULT 0;
 ALTER TABLE acquiredimage RENAME COLUMN accepted TO gradingStatus;
 
+ALTER TABLE imagedata ADD COLUMN width INTEGER DEFAULT 0;
+ALTER TABLE imagedata ADD COLUMN height INTEGER DEFAULT 0;
+
 ALTER TABLE profilepreference ADD COLUMN delayGrading REAL DEFAULT 80;
 ALTER TABLE profilepreference ADD COLUMN autoAcceptLevelHFR REAL DEFAULT 0;
 ALTER TABLE profilepreference ADD COLUMN autoAcceptLevelFWHM REAL DEFAULT 0;
