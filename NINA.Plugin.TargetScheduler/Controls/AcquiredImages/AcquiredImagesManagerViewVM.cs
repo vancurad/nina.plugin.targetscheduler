@@ -669,7 +669,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.AcquiredImages {
         public string TargetName { get => record.TargetName; }
         public string ProfileName { get => record.ProfileName; }
         public string FilterName { get => record.FilterName; }
-        public bool Accepted { get => record.Accepted; }
+        public string GradingStatus { get => record.GradingStatus; }
         public string RejectReason { get => record.RejectReason; }
 
         public string Duration { get => record.ExposureDuration; }
