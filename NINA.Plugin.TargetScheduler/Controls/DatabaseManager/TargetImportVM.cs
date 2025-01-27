@@ -14,6 +14,8 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
+using RelayCommand = CommunityToolkit.Mvvm.Input.RelayCommand;
+
 namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
 
     public class TargetImportVM : BaseINPC {
@@ -57,7 +59,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
 
         public ICommand FramingAssistantImportCommand { get; private set; }
 
-        private void FramingAssistantImport(object obj) {
+        private void FramingAssistantImport() {
             Target target = new Target();
             target.Coordinates = GetFramingAssistantCoordinates();
             target.Name = framingAssistantVM.DSO.Name;
@@ -81,7 +83,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
 
         public ICommand SequenceTargetImportCommand { get; private set; }
 
-        private void SequenceTargetImport(object obj) {
+        private void SequenceTargetImport() {
             CommonOpenFileDialog dialog = new CommonOpenFileDialog();
             dialog.Title = "Import Sequence Target";
             dialog.IsFolderPicker = false;
@@ -108,14 +110,14 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             }
         }
 
-        private async void PlanetariumImport(object obj) {
-            Target target = await PlanetariumImport();
+        private async void PlanetariumImport() {
+            Target target = await DoPlanetariumImport();
             if (target != null) {
                 Target = target;
             }
         }
 
-        private async Task<Target> PlanetariumImport() {
+        private async Task<Target> DoPlanetariumImport() {
             try {
                 IPlanetarium planetarium = planetariumFactory.GetPlanetarium();
                 DeepSkyObject dso = await planetarium.GetTarget();

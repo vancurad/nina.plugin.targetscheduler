@@ -20,6 +20,8 @@ using System.Text;
 using System.Windows.Controls;
 using System.Windows.Input;
 
+using RelayCommand = CommunityToolkit.Mvvm.Input.RelayCommand;
+
 namespace NINA.Plugin.TargetScheduler.Controls.PlanPreview {
 
     public class PlanPreviewerViewVM : BaseVM {
@@ -205,7 +207,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.PlanPreview {
             }
         }
 
-        private void SetPreviewTimeNow(object obj) {
+        private void SetPreviewTimeNow() {
             DateTime now = DateTime.Now;
             PlanDate = now.Date;
             PlanHours = now.Hour;
@@ -218,7 +220,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.PlanPreview {
             RaisePropertyChanged(nameof(PlanSeconds));
         }
 
-        private void RunPlanPreview(object obj) {
+        private void RunPlanPreview() {
             ObservableCollection<TreeViewItem> list = new ObservableCollection<TreeViewItem>();
 
             if (PlanDate == DateTime.MinValue || SelectedProfileId == null) {
@@ -324,7 +326,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.PlanPreview {
             }
         }
 
-        private void RunPlanPreviewResults(object obj) {
+        private void RunPlanPreviewResults() {
             if (PlanDate == DateTime.MinValue || SelectedProfileId == null) {
                 return;
             }

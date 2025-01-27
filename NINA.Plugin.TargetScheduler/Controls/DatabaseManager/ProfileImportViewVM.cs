@@ -1,4 +1,5 @@
-﻿using Microsoft.WindowsAPICodePack.Dialogs;
+﻿using CommunityToolkit.Mvvm.Input;
+using Microsoft.WindowsAPICodePack.Dialogs;
 using NINA.Core.MyMessageBox;
 using NINA.Core.Utility;
 using NINA.Plugin.TargetScheduler.Controls.Util;
@@ -32,8 +33,8 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             this.profileItem = profileItem;
             ParentProfileId = (profileItem.Data as ProfileMeta).Id.ToString();
 
-            ImportCommand = new AsyncCommand<bool>(() => Import());
-            SelectFileCommand = new AsyncCommand<bool>(() => SelectFile());
+            ImportCommand = new AsyncRelayCommand(Import);
+            SelectFileCommand = new AsyncRelayCommand(SelectFile);
 
             InitializeCombos();
             ImportFilePath = null;

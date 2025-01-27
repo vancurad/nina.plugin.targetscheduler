@@ -1,8 +1,9 @@
-﻿using NINA.Core.Utility;
-using NINA.Profile.Interfaces;
+﻿using NINA.Profile.Interfaces;
 using NINA.WPF.Base.ViewModel;
 using System.Collections.Generic;
 using System.Windows.Input;
+
+using RelayCommand = CommunityToolkit.Mvvm.Input.RelayCommand;
 
 namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
 
@@ -44,11 +45,11 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
         public ICommand SwitchColorizeModeCommand { get; private set; }
         public ICommand RefreshCommand { get; private set; }
 
-        private void ExpandAll(object obj) {
+        private void ExpandAll() {
             TreeDataItem.VisitAll(RootList[0], i => { i.IsExpanded = true; });
         }
 
-        private void CollapseAll(object obj) {
+        private void CollapseAll() {
             TreeDataItem.VisitAll(RootList[0], i => { i.IsExpanded = false; });
         }
 
@@ -82,18 +83,18 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             }
         }
 
-        private void SwitchDisplayMode(object obj) {
+        private void SwitchDisplayMode() {
             DisplayMode = DisplayMode == TreeDisplayMode.DisplayAll ? TreeDisplayMode.DisplayActiveOnly : TreeDisplayMode.DisplayAll;
             ParentVM.SetTreeDisplayMode(DisplayMode);
             ParentVM.SetTreeColorizeMode(ColorizeProjectsTargets);
         }
 
-        private void SwitchColorizeMode(object obj) {
+        private void SwitchColorizeMode() {
             ColorizeProjectsTargets = ColorizeProjectsTargets ? false : true;
             ParentVM.SetTreeColorizeMode(ColorizeProjectsTargets);
         }
 
-        private void Refresh(object obj) {
+        private void Refresh() {
             List<TreeDataItem> refreshed = ParentVM.Refresh(RootList);
             if (refreshed != null) {
                 RootList = refreshed;

@@ -1,11 +1,12 @@
-﻿using NINA.Core.Utility;
-using NINA.Plugin.TargetScheduler.Controls.Converters;
+﻿using NINA.Plugin.TargetScheduler.Controls.Converters;
 using NINA.Plugin.TargetScheduler.Database.Schema;
 using NINA.Profile.Interfaces;
 using NINA.WPF.Base.ViewModel;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows.Input;
+
+using RelayCommand = CommunityToolkit.Mvvm.Input.RelayCommand;
 
 namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
 
@@ -91,14 +92,14 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
         public ICommand SaveCommand { get; private set; }
         public ICommand CancelCommand { get; private set; }
 
-        private void Edit(object obj) {
+        private void Edit() {
             ProfilePreferenceProxy.PropertyChanged += ProfilePreferenceProxy_PropertyChanged;
             managerVM.SetEditMode(true);
             ShowEditView = true;
             ItemEdited = false;
         }
 
-        private void Save(object obj) {
+        private void Save() {
             managerVM.SaveProfilePreference(ProfilePreferenceProxy.ProfilePreference);
             ProfilePreferenceProxy.OnSave();
             ProfilePreferenceProxy.PropertyChanged -= ProfilePreferenceProxy_PropertyChanged;
@@ -107,7 +108,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             managerVM.SetEditMode(false);
         }
 
-        private void Cancel(object obj) {
+        private void Cancel() {
             ProfilePreferenceProxy.OnCancel();
             ProfilePreferenceProxy.PropertyChanged -= ProfilePreferenceProxy_PropertyChanged;
             ShowEditView = false;

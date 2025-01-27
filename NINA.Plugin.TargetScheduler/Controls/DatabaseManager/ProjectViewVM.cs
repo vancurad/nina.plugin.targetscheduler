@@ -1,6 +1,5 @@
 ﻿using NINA.Astrometry;
 using NINA.Core.MyMessageBox;
-using NINA.Core.Utility;
 using NINA.Plugin.TargetScheduler.Controls.Converters;
 using NINA.Plugin.TargetScheduler.Database.Schema;
 using NINA.Plugin.TargetScheduler.Planning.Exposures;
@@ -16,6 +15,8 @@ using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+
+using RelayCommand = CommunityToolkit.Mvvm.Input.RelayCommand;
 
 namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
 
@@ -237,14 +238,14 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
         public ICommand PasteScoringRuleWeightsCommand { get; private set; }
         public ICommand ResetScoringRuleWeightsCommand { get; private set; }
 
-        private void Edit(object obj) {
+        private void Edit() {
             ProjectProxy.PropertyChanged += ProjectProxy_PropertyChanged;
             managerVM.SetEditMode(true);
             ShowEditView = true;
             ItemEdited = false;
         }
 
-        private void Save(object obj) {
+        private void Save() {
             // Prevent save if minimum time setting is such that it would never allow a meridian window to work properly
             if (ProjectProxy.Proxy.MeridianWindow > 0 && ProjectProxy.Proxy.MinimumTime > (ProjectProxy.Proxy.MeridianWindow * 2)) {
                 string message = $"Minimum Time must be less than twice the Meridian Window or the project will never be selected for imaging.";
@@ -262,7 +263,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             managerVM.SetEditMode(false);
         }
 
-        private void Cancel(object obj) {
+        private void Cancel() {
             ProjectProxy.OnCancel();
             ProjectProxy.PropertyChanged -= ProjectProxy_PropertyChanged;
             InitializeRuleWeights(ProjectProxy.Proxy);
@@ -271,34 +272,34 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             managerVM.SetEditMode(false);
         }
 
-        private void Copy(object obj) {
+        private void Copy() {
             managerVM.CopyItem();
         }
 
-        private void Delete(object obj) {
+        private void Delete() {
             string message = $"Delete project '{ProjectProxy.Project.Name}' and any associated targets?  This cannot be undone.";
             if (MyMessageBox.Show(message, "Delete Project?", MessageBoxButton.YesNo, MessageBoxResult.No) == MessageBoxResult.Yes) {
                 managerVM.DeleteProject(ProjectProxy.Proxy);
             }
         }
 
-        private void AddTarget(object obj) {
+        private void AddTarget() {
             managerVM.AddNewTarget(ProjectProxy.Proxy);
         }
 
-        private void ResetTargets(object obj) {
+        private void ResetTargets() {
             string message = $"Reset target completion (accepted and acquired counts) on all targets under '{ProjectProxy.Project.Name}'?  This cannot be undone.";
             if (MyMessageBox.Show(message, "Reset Target Completion?", MessageBoxButton.YesNo, MessageBoxResult.No) == MessageBoxResult.Yes) {
                 managerVM.ResetProjectTargets();
             }
         }
 
-        private void PasteTarget(object obj) {
+        private void PasteTarget() {
             managerVM.PasteTarget(ProjectProxy.Proxy);
             ProjectActive = ActiveNowWithActiveTargets(ProjectProxy.Project);
         }
 
-        private void ImportMosaicPanels(object obj) {
+        private void ImportMosaicPanels() {
             int panels = FramingAssistantPanelsDefined();
             if (panels == 1) {
                 MyMessageBox.Show("The Framing Assistant only defines one panel at the moment.", "Oops");
@@ -320,16 +321,16 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
 
                 managerVM.AddTargets(ProjectProxy.Project, targets);
                 ProjectProxy.Proxy.IsMosaic = true;
-                Save(null);
+                Save();
             }
         }
 
-        private void CopyScoringRuleWeights(object obj) {
+        private void CopyScoringRuleWeights() {
             ScoringRuleWeightsClipboard.SetItem(projectProxy.Project);
             RaisePropertyChanged(nameof(PasteScoringRuleWeightsEnabled));
         }
 
-        private void PasteScoringRuleWeights(object obj) {
+        private void PasteScoringRuleWeights() {
             List<RuleWeight> weights = ScoringRuleWeightsClipboard.GetItem();
             foreach (RuleWeight weight in ProjectProxy.Proxy.RuleWeights) {
                 RuleWeight newRuleWeight = weights.Where(rw => rw.Name == weight.Name).FirstOrDefault();
@@ -341,7 +342,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             InitializeRuleWeights(ProjectProxy.Proxy);
         }
 
-        private void ResetScoringRuleWeights(object obj) {
+        private void ResetScoringRuleWeights() {
             Dictionary<string, IScoringRule> rules = ScoringRule.GetAllScoringRules();
             List<RuleWeight> weights = new List<RuleWeight>(rules.Count);
             foreach (var rule in rules) {

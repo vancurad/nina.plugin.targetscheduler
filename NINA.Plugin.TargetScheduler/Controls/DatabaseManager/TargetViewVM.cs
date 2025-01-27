@@ -1,4 +1,5 @@
-﻿using NINA.Astrometry;
+﻿using CommunityToolkit.Mvvm.Input;
+using NINA.Astrometry;
 using NINA.Core.Enum;
 using NINA.Core.MyMessageBox;
 using NINA.Core.Utility;
@@ -17,12 +18,19 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+
+using RelayCommand = CommunityToolkit.Mvvm.Input.RelayCommand;
+using RelayCommandParam = CommunityToolkit.Mvvm.Input.RelayCommand<object>;
 
 namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
 
     public class TargetViewVM : BaseVM {
+        private IApplicationMediator applicationMediator;
+        private IFramingAssistantVM framingAssistantVM;
+
         private DatabaseManagerVM managerVM;
         private Project project;
         private IProfile profile;
@@ -38,6 +46,8 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             IPlanetariumFactory planetariumFactory,
             Target target,
             Project project) : base(profileService) {
+            this.applicationMediator = applicationMediator;
+            this.framingAssistantVM = framingAssistantVM;
             this.managerVM = managerVM;
             this.project = project;
             exposureCompletionHelper = GetExposureCompletionHelper(project);
@@ -66,16 +76,10 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             CopyExposurePlansCommand = new RelayCommand(CopyExposurePlans);
             PasteExposurePlansCommand = new RelayCommand(PasteExposurePlans);
             DeleteExposurePlansCommand = new RelayCommand(DeleteAllExposurePlans);
-            DeleteExposurePlanCommand = new RelayCommand(DeleteExposurePlan);
-
+            DeleteExposurePlanCommand = new RelayCommandParam((obj) => DeleteExposurePlan(obj), (obj) => true);
             OverrideExposureOrderCommand = new RelayCommand(DisplayOverrideExposureOrder);
             CancelOverrideExposureOrderCommand = new RelayCommand(CancelOverrideExposureOrder);
-
-            SendCoordinatesToFramingAssistantCommand = new AsyncCommand<bool>(async () => {
-                applicationMediator.ChangeTab(ApplicationTab.FRAMINGASSISTANT);
-                // Note that IFramingAssistantVM doesn't expose any properties to set the rotation, although they are on the impl
-                return await framingAssistantVM.SetCoordinates(TargetDSO);
-            });
+            SendCoordinatesToFramingAssistantCommand = new AsyncRelayCommand(SendCoordinatesToFramingAssistant);
 
             TargetImportVM = new TargetImportVM(deepSkyObjectSearchVM, framingAssistantVM, planetariumFactory);
             TargetImportVM.PropertyChanged += ImportTarget_PropertyChanged;
@@ -262,19 +266,19 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
         public ICommand OverrideExposureOrderCommand { get; private set; }
         public ICommand CancelOverrideExposureOrderCommand { get; private set; }
 
-        private void Edit(object obj) {
-            Refresh(null); // forrce a refresh since display could be out of date
+        private void Edit() {
+            Refresh(); // forrce a refresh since display could be out of date
             TargetProxy.PropertyChanged += TargetProxy_PropertyChanged;
             managerVM.SetEditMode(true);
             ShowEditView = true;
             ItemEdited = false;
         }
 
-        private void ShowTargetImportViewCmd(object obj) {
+        private void ShowTargetImportViewCmd() {
             ShowTargetImportView = !ShowTargetImportView;
         }
 
-        private void Save(object obj) {
+        private void Save() {
             TargetProxy.Proxy.ExposurePlans = ExposurePlans;
 
             // If exposure plans have been added or removed, we have to clear override exposure order and filter cadence
@@ -295,7 +299,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             managerVM.SetEditMode(false);
         }
 
-        private void Cancel(object obj) {
+        private void Cancel() {
             TargetProxy.OnCancel();
             TargetProxy.PropertyChanged -= TargetProxy_PropertyChanged;
             InitializeExposurePlans(TargetProxy.Proxy);
@@ -305,11 +309,11 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             managerVM.SetEditMode(false);
         }
 
-        private void Copy(object obj) {
+        private void Copy() {
             managerVM.CopyItem();
         }
 
-        private void Delete(object obj) {
+        private void Delete() {
             bool deleteAcquiredImagesWithTarget = managerVM.GetProfilePreference(profileId).EnableDeleteAcquiredImagesWithTarget;
             string message = deleteAcquiredImagesWithTarget
                 ? $"Delete target '{TargetProxy.Target.Name}' and all associated acquired image records?  This cannot be undone."
@@ -319,7 +323,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             }
         }
 
-        private void ResetTarget(object obj) {
+        private void ResetTarget() {
             string message = $"Reset target completion (accepted and acquired counts) on all Exposure Plans for '{TargetProxy.Proxy.Name}'?  This cannot be undone.";
             if (MyMessageBox.Show(message, "Reset Target Completion?", MessageBoxButton.YesNo, MessageBoxResult.No) == MessageBoxResult.Yes) {
                 Target updatedTarget = managerVM.ResetTarget(TargetProxy.Original);
@@ -331,7 +335,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             }
         }
 
-        private void Refresh(object obj) {
+        private void Refresh() {
             Target target = managerVM.ReloadTarget(TargetProxy.Proxy);
             if (target != null) {
                 TargetProxy = new TargetProxy(target);
@@ -350,7 +354,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             return exposureTemplate;
         }
 
-        private void AddExposurePlan(object obj) {
+        private void AddExposurePlan() {
             ExposureTemplate exposureTemplate = GetDefaultExposureTemplate();
             if (exposureTemplate == null) {
                 return;
@@ -367,7 +371,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             ItemEdited = true;
         }
 
-        private void CopyExposurePlans(object obj) {
+        private void CopyExposurePlans() {
             if (Common.IsNotEmpty(ExposurePlans)) {
                 List<ExposurePlan> exposurePlans = new List<ExposurePlan>(ExposurePlans.Count);
                 ExposurePlans.ForEach(ep => exposurePlans.Add(ep));
@@ -381,7 +385,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             }
         }
 
-        private void PasteExposurePlans(object obj) {
+        private void PasteExposurePlans() {
             ExposurePlansSpec source = ExposurePlansClipboard.GetItem();
             List<ExposurePlan> srcExposurePlans = source.ExposurePlans;
 
@@ -432,7 +436,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             TargetActive = ActiveWithActiveExposurePlans(TargetProxy.Target);
         }
 
-        private void DeleteAllExposurePlans(object obj) {
+        private void DeleteAllExposurePlans() {
             if (Common.IsNotEmpty(TargetProxy.Original.ExposurePlans)) {
                 string message = "Delete all exposure plans for this target?  This cannot be undone.";
                 if (MyMessageBox.Show(message, "Delete all Exposure Plans?", MessageBoxButton.YesNo, MessageBoxResult.No) == MessageBoxResult.Yes) {
@@ -566,12 +570,12 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             }
         }
 
-        private void DisplayOverrideExposureOrder(object obj) {
+        private void DisplayOverrideExposureOrder() {
             OverrideExposureOrderVM = new OverrideExposureOrderViewVM(this, profileService);
             ShowOverrideExposureOrderPopup = true;
         }
 
-        private void CancelOverrideExposureOrder(object obj) {
+        private void CancelOverrideExposureOrder() {
             string message = $"Clear override exposure order?  This cannot be undone.";
             if (MyMessageBox.Show(message, "Clear?", MessageBoxButton.YesNo, MessageBoxResult.No) == MessageBoxResult.Yes) {
                 TargetProxy.Proxy.OverrideExposureOrders = new List<OverrideExposureOrderItem>();
@@ -586,6 +590,12 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             managerVM.SaveTarget(TargetProxy.Proxy, true);
             TargetProxy.OnSave();
             SetExposureOrderDisplay();
+        }
+
+        private async Task<bool> SendCoordinatesToFramingAssistant() {
+            applicationMediator.ChangeTab(ApplicationTab.FRAMINGASSISTANT);
+            // Note that IFramingAssistantVM doesn't expose any properties to set the rotation, although they are on the impl
+            return await framingAssistantVM.SetCoordinates(TargetDSO);
         }
     }
 }

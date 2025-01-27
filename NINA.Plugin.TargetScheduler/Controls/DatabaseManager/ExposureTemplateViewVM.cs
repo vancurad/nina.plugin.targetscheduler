@@ -1,6 +1,5 @@
 ﻿using NINA.Core.Model.Equipment;
 using NINA.Core.MyMessageBox;
-using NINA.Core.Utility;
 using NINA.Plugin.TargetScheduler.Controls.Converters;
 using NINA.Plugin.TargetScheduler.Controls.Util;
 using NINA.Plugin.TargetScheduler.Database.Schema;
@@ -10,6 +9,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
+
+using RelayCommand = CommunityToolkit.Mvvm.Input.RelayCommand;
 
 namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
 
@@ -195,14 +196,14 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
         public ICommand CopyCommand { get; private set; }
         public ICommand DeleteCommand { get; private set; }
 
-        private void Edit(object obj) {
+        private void Edit() {
             ExposureTemplateProxy.PropertyChanged += ExposureTemplateProxy_PropertyChanged;
             managerVM.SetEditMode(true);
             ShowEditView = true;
             ItemEdited = false;
         }
 
-        private void Save(object obj) {
+        private void Save() {
             managerVM.SaveExposureTemplate(ExposureTemplateProxy.Proxy);
             ExposureTemplateProxy.OnSave();
             ExposureTemplateProxy.PropertyChanged -= ExposureTemplateProxy_PropertyChanged;
@@ -211,7 +212,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             managerVM.SetEditMode(false);
         }
 
-        private void Cancel(object obj) {
+        private void Cancel() {
             ExposureTemplateProxy.OnCancel();
             ExposureTemplateProxy.PropertyChanged -= ExposureTemplateProxy_PropertyChanged;
             ShowEditView = false;
@@ -219,11 +220,11 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             managerVM.SetEditMode(false);
         }
 
-        private void Copy(object obj) {
+        private void Copy() {
             managerVM.CopyItem();
         }
 
-        private void Delete(object obj) {
+        private void Delete() {
             int count = managerVM.ExposureTemplateUsage(ExposureTemplateProxy.ExposureTemplate.Id);
             string msg = count > 0
                 ? $"Are you sure?  '{ExposureTemplateProxy.ExposureTemplate.Name}' is in use by {count} exposure plan(s).  If those exposure plans are still active, deleting may cause problems later.  This cannot be undone."

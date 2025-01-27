@@ -1,10 +1,12 @@
-﻿using NINA.Core.Utility;
-using NINA.Plugin.TargetScheduler.Database.Schema;
+﻿using NINA.Plugin.TargetScheduler.Database.Schema;
 using NINA.Profile;
 using NINA.Profile.Interfaces;
 using NINA.WPF.Base.ViewModel;
 using System.Collections.Generic;
 using System.Windows.Input;
+
+using RelayCommand = CommunityToolkit.Mvvm.Input.RelayCommand;
+using RelayCommandParam = CommunityToolkit.Mvvm.Input.RelayCommand<object>;
 
 namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
 
@@ -42,8 +44,8 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
 
             AddExposureTemplateCommand = new RelayCommand(AddExposureTemplate);
             PasteExposureTemplateCommand = new RelayCommand(PasteExposureTemplate);
-            ViewExposureTemplateCommand = new RelayCommand(ViewExposureTemplate);
-            CopyExposureTemplateCommand = new RelayCommand(CopyExposureTemplate);
+            ViewExposureTemplateCommand = new RelayCommandParam(ViewExposureTemplate);
+            CopyExposureTemplateCommand = new RelayCommandParam(CopyExposureTemplate);
         }
 
         private List<ExposureTemplate> InitExposureTemplates(TreeDataItem profileItem) {
@@ -60,11 +62,11 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
         public ICommand ViewExposureTemplateCommand { get; private set; }
         public ICommand CopyExposureTemplateCommand { get; private set; }
 
-        private void AddExposureTemplate(object obj) {
+        private void AddExposureTemplate() {
             managerVM.AddNewExposureTemplate(parentItem);
         }
 
-        private void PasteExposureTemplate(object obj) {
+        private void PasteExposureTemplate() {
             managerVM.PasteExposureTemplate(parentItem);
         }
 

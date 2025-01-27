@@ -1,12 +1,13 @@
-﻿using NINA.Plugin.TargetScheduler.Database.Schema;
-using NINA.Core.MyMessageBox;
-using NINA.Core.Utility;
+﻿using NINA.Core.MyMessageBox;
+using NINA.Plugin.TargetScheduler.Database.Schema;
 using NINA.Profile;
 using NINA.Profile.Interfaces;
 using NINA.WPF.Base.ViewModel;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Input;
+using RelayCommand = CommunityToolkit.Mvvm.Input.RelayCommand;
+using RelayCommandParam = CommunityToolkit.Mvvm.Input.RelayCommand<object>;
 
 namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
 
@@ -47,8 +48,8 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             PasteProjectCommand = new RelayCommand(PasteProject);
             ImportCommand = new RelayCommand(DisplayProfileImport);
             ResetProfileCommand = new RelayCommand(ResetProfile);
-            ViewProjectCommand = new RelayCommand(ViewProject);
-            CopyProjectCommand = new RelayCommand(CopyProject);
+            ViewProjectCommand = new RelayCommandParam(ViewProject);
+            CopyProjectCommand = new RelayCommandParam(CopyProject);
         }
 
         private List<Project> InitProjects(TreeDataItem profileItem) {
@@ -88,26 +89,26 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
         public ICommand ViewProjectCommand { get; private set; }
         public ICommand CopyProjectCommand { get; private set; }
 
-        private void ViewProfilePreferences(object obj) {
+        private void ViewProfilePreferences() {
             managerVM.ViewProfilePreferences(Profile);
         }
 
-        private void AddProject(object obj) {
+        private void AddProject() {
             managerVM.AddNewProject(parentItem);
         }
 
-        private void PasteProject(object obj) {
+        private void PasteProject() {
             managerVM.PasteProject(parentItem);
         }
 
-        private void DisplayProfileImport(object obj) {
+        private void DisplayProfileImport() {
             ShowProfileImportView = !ShowProfileImportView;
             if (ShowProfileImportView) {
                 ProfileImportVM = new ProfileImportViewVM(managerVM, parentItem, profileService);
             }
         }
 
-        private void ResetProfile(object obj) {
+        private void ResetProfile() {
             string message = $"Reset target completion (accepted and acquired counts) on all projects/targets under '{Profile.Name}'?  This cannot be undone.";
             if (MyMessageBox.Show(message, "Reset Target Completion?", MessageBoxButton.YesNo, MessageBoxResult.No) == MessageBoxResult.Yes) {
                 managerVM.ResetProfile(parentItem);

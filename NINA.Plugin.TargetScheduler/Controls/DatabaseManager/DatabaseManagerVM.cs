@@ -1,7 +1,6 @@
 ﻿using LinqKit;
 using NINA.Core.Model.Equipment;
 using NINA.Core.MyMessageBox;
-using NINA.Core.Utility;
 using NINA.Core.Utility.Notification;
 using NINA.Equipment.Interfaces;
 using NINA.Plugin.TargetScheduler.Controls.Util;
@@ -22,6 +21,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+
+using RelayCommandParam = CommunityToolkit.Mvvm.Input.RelayCommand<object>;
 
 namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
 
@@ -51,7 +52,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
 
             database = new SchedulerDatabaseInteraction();
 
-            SelectedItemChangedCommand = new RelayCommand(SelectedItemChanged);
+            SelectedItemChangedCommand = new RelayCommandParam(SelectedItemChanged);
             SelectedDisplayMode = TreeDisplayMode.DisplayAll;
             InitializeProjectsColorize();
         }

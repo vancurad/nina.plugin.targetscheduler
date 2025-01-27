@@ -1,4 +1,5 @@
-﻿using CsvHelper;
+﻿using CommunityToolkit.Mvvm.Input;
+using CsvHelper;
 using LinqKit;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using NINA.Core.Locale;
@@ -36,9 +37,9 @@ namespace NINA.Plugin.TargetScheduler.Controls.AcquiredImages {
             this.profileService = profileService;
             database = new SchedulerDatabaseInteraction();
 
-            RefreshTableCommand = new AsyncCommand<bool>(() => RefreshTable());
-            CsvOutputCommand = new AsyncCommand<bool>(() => CsvOutput());
-            PurgeCommand = new AsyncCommand<bool>(() => PurgeRecords());
+            RefreshTableCommand = new AsyncRelayCommand(RefreshTable);
+            CsvOutputCommand = new AsyncRelayCommand(CsvOutput);
+            PurgeCommand = new AsyncRelayCommand(PurgeRecords);
             PurgeTargetChoices = GetPurgeTargetChoices();
 
             InitializeCriteria();

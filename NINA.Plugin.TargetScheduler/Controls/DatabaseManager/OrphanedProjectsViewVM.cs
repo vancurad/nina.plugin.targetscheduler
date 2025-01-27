@@ -12,6 +12,8 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 
+using RelayCommandParam = CommunityToolkit.Mvvm.Input.RelayCommand<object>;
+
 namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
 
     public class OrphanedProjectsViewVM : BaseVM {
@@ -25,8 +27,8 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             projects = new ObservableCollection<Project>();
             orphanedProjects.ForEach(p => projects.Add(p));
 
-            MoveProjectCommand = new RelayCommand(MoveProject);
-            DeleteProjectCommand = new RelayCommand(DeleteProject);
+            MoveProjectCommand = new RelayCommandParam(MoveProject);
+            DeleteProjectCommand = new RelayCommandParam(DeleteProject);
 
             InitializeProfilesList();
         }

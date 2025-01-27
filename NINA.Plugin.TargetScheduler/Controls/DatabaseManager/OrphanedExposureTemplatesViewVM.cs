@@ -12,6 +12,8 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 
+using RelayCommandParam = CommunityToolkit.Mvvm.Input.RelayCommand<object>;
+
 namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
 
     public class OrphanedExposureTemplatesViewVM : BaseVM {
@@ -25,8 +27,8 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
             exposureTemplates = new ObservableCollection<ExposureTemplate>();
             orphanedExposureTemplates.ForEach(et => exposureTemplates.Add(et));
 
-            MoveExposureTemplateCommand = new RelayCommand(MoveExposureTemplates);
-            DeleteExposureTemplateCommand = new RelayCommand(DeleteExposureTemplates);
+            MoveExposureTemplateCommand = new RelayCommandParam(MoveExposureTemplates);
+            DeleteExposureTemplateCommand = new RelayCommandParam(DeleteExposureTemplates);
 
             InitializeProfilesList();
         }
