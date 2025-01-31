@@ -5,6 +5,7 @@ using NINA.Plugin.Interfaces;
 using NINA.Plugin.TargetScheduler.Controls.AcquiredImages;
 using NINA.Plugin.TargetScheduler.Controls.DatabaseManager;
 using NINA.Plugin.TargetScheduler.Controls.PlanPreview;
+using NINA.Plugin.TargetScheduler.Controls.Reporting;
 using NINA.Plugin.TargetScheduler.Database;
 using NINA.Plugin.TargetScheduler.Database.Schema;
 using NINA.Plugin.TargetScheduler.Grading;
@@ -105,6 +106,16 @@ namespace NINA.Plugin.TargetScheduler {
             }
         }
 
+        private ReportingManagerViewVM reportingManagerViewVM;
+
+        public ReportingManagerViewVM ReportingManagerViewVM {
+            get => reportingManagerViewVM;
+            set {
+                reportingManagerViewVM = value;
+                RaisePropertyChanged(nameof(ReportingManagerViewVM));
+            }
+        }
+
         private AcquiredImagesManagerViewVM acquiredImagesManagerViewVM;
 
         public AcquiredImagesManagerViewVM AcquiredImagesManagerViewVM {
@@ -135,6 +146,18 @@ namespace NINA.Plugin.TargetScheduler {
                 planPreviewIsExpanded = value;
                 if (value && PlanPreviewerViewVM == null) {
                     PlanPreviewerViewVM = new PlanPreviewerViewVM(profileService);
+                }
+            }
+        }
+
+        private bool reportingManagerIsExpanded = false;
+
+        public bool ReportingManagerIsExpanded {
+            get { return reportingManagerIsExpanded; }
+            set {
+                reportingManagerIsExpanded = value;
+                if (value && ReportingManagerViewVM == null) {
+                    ReportingManagerViewVM = new ReportingManagerViewVM(profileService);
                 }
             }
         }

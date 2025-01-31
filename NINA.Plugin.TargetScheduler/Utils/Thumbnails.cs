@@ -17,7 +17,7 @@ namespace NINA.Plugin.TargetScheduler.Util {
         /// <returns></returns>
         public static (int, int, byte[]) CreateThumbnail(BitmapSource imageSource) {
             try {
-                double scaleFactor = 256 / imageSource.Width;
+                double scaleFactor = 192 / imageSource.Height;
                 BitmapSource resizedBitmap = new TransformedBitmap(imageSource, new ScaleTransform(scaleFactor, scaleFactor));
                 int width = (int)resizedBitmap.Width;
                 int height = (int)resizedBitmap.Height;

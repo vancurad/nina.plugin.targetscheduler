@@ -17,6 +17,8 @@ namespace NINA.Plugin.TargetScheduler.Util {
         public static readonly string DateFMT = "yyyy-MM-dd HH:mm:ss";
 
         public static FilterInfo LookupFilter(IProfile profile, string filterName) {
+            if (profile == null) throw new ArgumentNullException("profile");
+
             foreach (FilterInfo filterInfo in profile?.FilterWheelSettings?.FilterWheelFilters) {
                 if (filterInfo.Name == filterName) {
                     return filterInfo;
@@ -30,6 +32,11 @@ namespace NINA.Plugin.TargetScheduler.Util {
             decimal hours = Math.Floor((decimal)minutes / 60);
             int min = minutes % 60;
             return $"{hours}h {min}m";
+        }
+
+        public static string StoHMS(int seconds) {
+            TimeSpan time = TimeSpan.FromSeconds(seconds);
+            return $"{time.Hours}h {time.Minutes}m {time.Seconds}s";
         }
 
         public static int HMtoM(string hm) {
@@ -91,7 +98,7 @@ namespace NINA.Plugin.TargetScheduler.Util {
         }
 
         public static string FormatDateTimeFull(DateTime? dateTime) {
-            return dateTime == null ? "n/a" : String.Format("{0:yyyy-MM-dd HH:mm:ss zzzz}", dateTime);
+            return dateTime.HasValue ? String.Format("{0:yyyy-MM-dd HH:mm:ss zzzz}", dateTime) : "n/a";
         }
 
         public static string FormatCoordinates(Coordinates coordinates) {
@@ -102,7 +109,23 @@ namespace NINA.Plugin.TargetScheduler.Util {
             return AstroUtil.DegreesToDMS(degrees);
         }
 
-        public static async void TestWait(int seconds) {
+        public static string FormatInt(int? i) {
+            return i.HasValue ? i.ToString() : "";
+        }
+
+        public static string FormatDbl(double d) {
+            return FormatDbl(d, "{0:0.####}");
+        }
+
+        public static string FormatDbl(double d, string format) {
+            return double.IsNaN(d) ? "" : string.Format(format, d);
+        }
+
+        public static string FormatHF(double d) {
+            return double.IsNaN(d) || d <= 0 ? "--" : string.Format("{0:0.####}", d);
+        }
+
+        public static void TestWait(int seconds) {
             TSLogger.Debug($"********** TESTING: waiting for {seconds}s ...");
             Thread.Sleep(seconds * 1000);
             TSLogger.Debug("********** TESTING: wait complete");

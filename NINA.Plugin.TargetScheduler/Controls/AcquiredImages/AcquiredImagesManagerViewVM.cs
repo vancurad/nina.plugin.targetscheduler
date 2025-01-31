@@ -8,6 +8,7 @@ using NINA.Core.Utility;
 using NINA.Plugin.TargetScheduler.Database;
 using NINA.Plugin.TargetScheduler.Database.Schema;
 using NINA.Plugin.TargetScheduler.Shared.Utility;
+using NINA.Plugin.TargetScheduler.Util;
 using NINA.Profile;
 using NINA.Profile.Interfaces;
 using NINA.WPF.Base.ViewModel;
@@ -30,7 +31,6 @@ using System.Windows.Threading;
 namespace NINA.Plugin.TargetScheduler.Controls.AcquiredImages {
 
     public class AcquiredImagesManagerViewVM : BaseVM {
-        private IProfileService profileService;
         private SchedulerDatabaseInteraction database;
 
         public AcquiredImagesManagerViewVM(IProfileService profileService) : base(profileService) {
@@ -424,7 +424,6 @@ namespace NINA.Plugin.TargetScheduler.Controls.AcquiredImages {
         }
 
         private static Dispatcher _dispatcher = Application.Current?.Dispatcher ?? Dispatcher.CurrentDispatcher;
-        private object lockObj = new object();
 
         private async Task<bool> LoadRecords() {
             return await Task.Run(() => {
@@ -604,55 +603,39 @@ namespace NINA.Plugin.TargetScheduler.Controls.AcquiredImages {
         public string RejectReason { get { return acquiredImage.RejectReason; } }
 
         public string FileName { get { return acquiredImage.Metadata.FileName; } }
-        public string ExposureDuration { get { return fmt(acquiredImage.Metadata.ExposureDuration); } }
+        public string ExposureDuration { get { return Utils.FormatDbl(acquiredImage.Metadata.ExposureDuration); } }
 
-        public string Gain { get { return fmtInt(acquiredImage.Metadata.Gain); } }
-        public string Offset { get { return fmtInt(acquiredImage.Metadata.Offset); } }
+        public string Gain { get { return Utils.FormatInt(acquiredImage.Metadata.Gain); } }
+        public string Offset { get { return Utils.FormatInt(acquiredImage.Metadata.Offset); } }
         public string Binning { get { return acquiredImage.Metadata.Binning; } }
 
-        public string DetectedStars { get { return fmtInt(acquiredImage.Metadata.DetectedStars); } }
-        public string HFR { get { return fmt(acquiredImage.Metadata.HFR); } }
-        public string HFRStDev { get { return fmt(acquiredImage.Metadata.HFRStDev); } }
+        public string DetectedStars { get { return Utils.FormatInt(acquiredImage.Metadata.DetectedStars); } }
+        public string HFR { get { return Utils.FormatDbl(acquiredImage.Metadata.HFR); } }
+        public string HFRStDev { get { return Utils.FormatDbl(acquiredImage.Metadata.HFRStDev); } }
 
-        public string FWHM { get { return fmtHF(acquiredImage.Metadata.FWHM); } }
-        public string Eccentricity { get { return fmtHF(acquiredImage.Metadata.Eccentricity); } }
+        public string FWHM { get { return Utils.FormatHF(acquiredImage.Metadata.FWHM); } }
+        public string Eccentricity { get { return Utils.FormatHF(acquiredImage.Metadata.Eccentricity); } }
 
-        public string ADUStDev { get { return fmt(acquiredImage.Metadata.ADUStDev); } }
-        public string ADUMean { get { return fmt(acquiredImage.Metadata.ADUMean); } }
-        public string ADUMedian { get { return fmt(acquiredImage.Metadata.ADUMedian); } }
-        public string ADUMin { get { return fmtInt(acquiredImage.Metadata.ADUMin); } }
-        public string ADUMax { get { return fmtInt(acquiredImage.Metadata.ADUMax); } }
+        public string ADUStDev { get { return Utils.FormatDbl(acquiredImage.Metadata.ADUStDev); } }
+        public string ADUMean { get { return Utils.FormatDbl(acquiredImage.Metadata.ADUMean); } }
+        public string ADUMedian { get { return Utils.FormatDbl(acquiredImage.Metadata.ADUMedian); } }
+        public string ADUMin { get { return Utils.FormatInt(acquiredImage.Metadata.ADUMin); } }
+        public string ADUMax { get { return Utils.FormatInt(acquiredImage.Metadata.ADUMax); } }
 
-        public string GuidingRMS { get { return fmt(acquiredImage.Metadata.GuidingRMS); } }
-        public string GuidingRMSArcSec { get { return fmt(acquiredImage.Metadata.GuidingRMSArcSec); } }
-        public string GuidingRMSRA { get { return fmt(acquiredImage.Metadata.GuidingRMSRA); } }
-        public string GuidingRMSRAArcSec { get { return fmt(acquiredImage.Metadata.GuidingRMSRAArcSec); } }
-        public string GuidingRMSDEC { get { return fmt(acquiredImage.Metadata.GuidingRMSDEC); } }
-        public string GuidingRMSDECArcSec { get { return fmt(acquiredImage.Metadata.GuidingRMSDECArcSec); } }
+        public string GuidingRMS { get { return Utils.FormatDbl(acquiredImage.Metadata.GuidingRMS); } }
+        public string GuidingRMSArcSec { get { return Utils.FormatDbl(acquiredImage.Metadata.GuidingRMSArcSec); } }
+        public string GuidingRMSRA { get { return Utils.FormatDbl(acquiredImage.Metadata.GuidingRMSRA); } }
+        public string GuidingRMSRAArcSec { get { return Utils.FormatDbl(acquiredImage.Metadata.GuidingRMSRAArcSec); } }
+        public string GuidingRMSDEC { get { return Utils.FormatDbl(acquiredImage.Metadata.GuidingRMSDEC); } }
+        public string GuidingRMSDECArcSec { get { return Utils.FormatDbl(acquiredImage.Metadata.GuidingRMSDECArcSec); } }
 
-        public string FocuserPosition { get { return fmtInt(acquiredImage.Metadata.FocuserPosition); } }
-        public string FocuserTemp { get { return fmt(acquiredImage.Metadata.FocuserTemp); } }
-        public string RotatorPosition { get { return fmt(acquiredImage.Metadata.RotatorPosition); } }
+        public string FocuserPosition { get { return Utils.FormatInt(acquiredImage.Metadata.FocuserPosition); } }
+        public string FocuserTemp { get { return Utils.FormatDbl(acquiredImage.Metadata.FocuserTemp); } }
+        public string RotatorPosition { get { return Utils.FormatDbl(acquiredImage.Metadata.RotatorPosition); } }
         public string PierSide { get { return acquiredImage.Metadata.PierSide; } }
-        public string CameraTemp { get { return fmt(acquiredImage.Metadata.CameraTemp); } }
-        public string CameraTargetTemp { get { return fmt(acquiredImage.Metadata.CameraTargetTemp); } }
-        public string Airmass { get { return fmt(acquiredImage.Metadata.Airmass); } }
-
-        private string fmtInt(int? i) {
-            return i == null ? "" : i.ToString();
-        }
-
-        private string fmt(double d) {
-            return fmt(d, "{0:0.####}");
-        }
-
-        private string fmt(double d, string format) {
-            return Double.IsNaN(d) ? "" : String.Format(format, d);
-        }
-
-        private string fmtHF(double d) {
-            return Double.IsNaN(d) || d <= 0 ? "--" : String.Format("{0:0.####}", d);
-        }
+        public string CameraTemp { get { return Utils.FormatDbl(acquiredImage.Metadata.CameraTemp); } }
+        public string CameraTargetTemp { get { return Utils.FormatDbl(acquiredImage.Metadata.CameraTargetTemp); } }
+        public string Airmass { get { return Utils.FormatDbl(acquiredImage.Metadata.Airmass); } }
     }
 
     internal class CsvAcquiredImage {
