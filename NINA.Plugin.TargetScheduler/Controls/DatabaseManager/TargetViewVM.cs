@@ -267,7 +267,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.DatabaseManager {
         public ICommand CancelOverrideExposureOrderCommand { get; private set; }
 
         private void Edit() {
-            Refresh(); // forrce a refresh since display could be out of date
+            Refresh(); // force a refresh since display could be out of date
             TargetProxy.PropertyChanged += TargetProxy_PropertyChanged;
             managerVM.SetEditMode(true);
             ShowEditView = true;
