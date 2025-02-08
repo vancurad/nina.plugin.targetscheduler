@@ -21,9 +21,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyMetadata("Repository", "https://github.com/tcpalmer/nina.plugin.targetscheduler/")]
 [assembly: AssemblyMetadata("Homepage", "https://tcpalmer.github.io/nina-scheduler/")]
 [assembly: AssemblyMetadata("Tags", "Automation,Scheduling,Sequencer")]
-[assembly: AssemblyMetadata("FeaturedImageURL", "https://raw.githubusercontent.com/tcpalmer/nina.plugin.targetscheduler/main/NINA.Plugin.TargetScheduler/assets/target-scheduler-logo.png?raw=true")]
-[assembly: AssemblyMetadata("ScreenshotURL", "https://raw.githubusercontent.com/tcpalmer/nina.plugin.targetscheduler/main/NINA.Plugin.TargetScheduler/assets/screenshot-1.png?raw=true")]
-[assembly: AssemblyMetadata("AltScreenshotURL", "https://raw.githubusercontent.com/tcpalmer/nina.plugin.targetscheduler/main/NINA.Plugin.TargetScheduler/assets/screenshot-2.png?raw=true")]
+[assembly: AssemblyMetadata("FeaturedImageURL", "https://raw.githubusercontent.com/tcpalmer/nina.plugin.targetscheduler/master/NINA.Plugin.TargetScheduler/assets/target-scheduler-logo.png?raw=true")]
+[assembly: AssemblyMetadata("ScreenshotURL", "https://raw.githubusercontent.com/tcpalmer/nina.plugin.targetscheduler/master/NINA.Plugin.TargetScheduler/assets/screenshot-1.png?raw=true")]
+[assembly: AssemblyMetadata("AltScreenshotURL", "https://raw.githubusercontent.com/tcpalmer/nina.plugin.targetscheduler/master/NINA.Plugin.TargetScheduler/assets/screenshot-2.png?raw=true")]
 [assembly: AssemblyMetadata("LongDescription", @"The Target Scheduler Plugin is designed to provide a higher level of automation than is typically achievable with NINA. Specifically, it maintains a database of imaging projects describing DSO targets and associated exposure plans. Based on various criteria and preferences, it can decide at any given time what project/target should be actively imaging. A user will enter the desired projects, targets, and preferences into a UI exposed by the plugin. At runtime, a single new instruction for the NINA Advanced Sequencer will interact with the planning engine to determine the best target for imaging at each point throughout a night. The instruction will manage the slew/center to the target, switching filters, taking exposures, and dithering - all while transparently interacting with the surrounding NINA triggers and conditions.
 
 ## Major Features
@@ -54,8 +54,8 @@ The [plugin documentation](https://tcpalmer.github.io/nina-scheduler/) provides 
 * Review the [plugin documentation](https://tcpalmer.github.io/nina-scheduler/)
 * Ask for help (tag @tcpalmer) in the #target-scheduler channel on the NINA project [Discord server](https://discord.com/invite/rWRbVbw).
 * [Plugin source code](https://github.com/tcpalmer/nina.plugin.targetscheduler)
-* [Change log](https://github.com/tcpalmer/nina.plugin.targetscheduler/blob/main/CHANGELOG.md)
+* [Change log](https://github.com/tcpalmer/nina.plugin.targetscheduler/blob/master/CHANGELOG.md)
 
-The Target Scheduler plugin is provided 'as is' under the terms of the [Mozilla Public License 2.0](https://github.com/tcpalmer/nina.plugin.targetscheduler/blob/main/LICENSE.txt)")]
+The Target Scheduler plugin is provided 'as is' under the terms of the [Mozilla Public License 2.0](https://github.com/tcpalmer/nina.plugin.targetscheduler/blob/master/LICENSE.txt)")]
 
 [assembly: ComVisible(false)]
