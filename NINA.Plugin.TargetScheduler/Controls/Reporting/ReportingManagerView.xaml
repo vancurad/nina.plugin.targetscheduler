@@ -109,7 +109,7 @@
         </Grid>
 
         <StackPanel Visibility="{Binding TableLoading, Converter={StaticResource InverseBooleanToVisibilityCollapsedConverter}}">
-            <TextBlock MaxWidth="200"
+            <TextBlock MaxWidth="500"
                        HorizontalAlignment="Left"
                        VerticalAlignment="Center"
                        FontSize="16"

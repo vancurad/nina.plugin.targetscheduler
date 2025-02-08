@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Input;
+using LinqKit;
 using NINA.Core.Locale;
 using NINA.Core.Utility;
 using NINA.Plugin.TargetScheduler.Controls.AcquiredImages;
@@ -59,19 +60,24 @@ namespace NINA.Plugin.TargetScheduler.Controls.Reporting {
         public ICollectionView ItemsView { get => itemsView; set { itemsView = value; } }
 
         private AsyncObservableCollection<KeyValuePair<int, string>> GetTargetChoices() {
-            AsyncObservableCollection<KeyValuePair<int, string>> choices = new AsyncObservableCollection<KeyValuePair<int, string>> {
-                new KeyValuePair<int, string>(0, "Select")
-            };
+            Dictionary<int, string> scratch = new Dictionary<int, string>();
 
             using (var context = database.GetContext()) {
                 List<Project> projects = context.GetAllProjects();
                 projects.ForEach(p => {
                     p.Targets.ForEach(t => {
-                        choices.Add(new KeyValuePair<int, string>(t.Id, $"{t.Project.Name} / {t.Name}"));
+                        scratch.Add(t.Id, $"{t.Project.Name} / {t.Name}");
+                        // scratch.Add(new KeyValuePair<int, string>(t.Id, $"{t.Project.Name} / {t.Name}"));
                     });
                 });
             }
 
+            AsyncObservableCollection<KeyValuePair<int, string>> choices = new AsyncObservableCollection<KeyValuePair<int, string>> {
+                new KeyValuePair<int, string>(0, "Select")
+            };
+
+            var sorted = from entry in scratch orderby entry.Value ascending select entry;
+            sorted.ForEach(p => choices.Add(p));
             return choices;
         }
 
