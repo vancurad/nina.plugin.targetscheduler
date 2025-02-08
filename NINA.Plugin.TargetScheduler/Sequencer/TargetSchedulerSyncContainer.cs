@@ -59,7 +59,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         [JsonProperty] public InstructionContainer SyncAfterWaitContainer { get; set; }
         [JsonProperty] public InstructionContainer SyncBeforeTargetContainer { get; set; }
         [JsonProperty] public InstructionContainer SyncAfterTargetContainer { get; set; }
-        [JsonProperty] public InstructionContainer SyncImmediateFlatsContainer { get; set; }
+        [JsonProperty] public InstructionContainer SyncAfterAllTargetsContainer { get; set; }
 
         private IProfile serverProfile;
         public PlanExecutionHistory PlanExecutionHistory { get; private set; }
@@ -98,7 +98,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             SyncAfterWaitContainer = new InstructionContainer(EventContainerType.AfterWait, Parent);
             SyncBeforeTargetContainer = new InstructionContainer(EventContainerType.BeforeTarget, Parent);
             SyncAfterTargetContainer = new InstructionContainer(EventContainerType.AfterTarget, Parent);
-            SyncImmediateFlatsContainer = new InstructionContainer(EventContainerType.ImmediateFlats, Parent);
+            SyncAfterAllTargetsContainer = new InstructionContainer(EventContainerType.AfterEachTarget, Parent);
         }
 
         public TargetSchedulerSyncContainer(TargetSchedulerSyncContainer clone) : this(
@@ -119,13 +119,13 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             clone.SyncAfterWaitContainer = (InstructionContainer)SyncAfterWaitContainer.Clone();
             clone.SyncBeforeTargetContainer = (InstructionContainer)SyncBeforeTargetContainer.Clone();
             clone.SyncAfterTargetContainer = (InstructionContainer)SyncAfterTargetContainer.Clone();
-            clone.SyncImmediateFlatsContainer = (InstructionContainer)SyncImmediateFlatsContainer.Clone();
+            clone.SyncAfterAllTargetsContainer = (InstructionContainer)SyncAfterAllTargetsContainer.Clone();
 
             clone.SyncBeforeWaitContainer.AttachNewParent(clone);
             clone.SyncAfterWaitContainer.AttachNewParent(clone);
             clone.SyncBeforeTargetContainer.AttachNewParent(clone);
             clone.SyncAfterTargetContainer.AttachNewParent(clone);
-            clone.SyncImmediateFlatsContainer.AttachNewParent(clone);
+            clone.SyncAfterAllTargetsContainer.AttachNewParent(clone);
         }
 
         public override object Clone() {
@@ -142,7 +142,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                 SyncAfterWaitContainer.Initialize(profileService);
                 SyncBeforeTargetContainer.Initialize(profileService);
                 SyncAfterTargetContainer.Initialize(profileService);
-                SyncImmediateFlatsContainer.Initialize(profileService);
+                SyncAfterAllTargetsContainer.Initialize(profileService);
             }
         }
 
@@ -156,7 +156,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                 SyncAfterWaitContainer.AttachNewParent(Parent);
                 SyncBeforeTargetContainer.AttachNewParent(Parent);
                 SyncAfterTargetContainer.AttachNewParent(Parent);
-                SyncImmediateFlatsContainer.AttachNewParent(Parent);
+                SyncAfterAllTargetsContainer.AttachNewParent(Parent);
 
                 if (Parent.Status == SequenceEntityStatus.RUNNING) {
                     SequenceBlockInitialize();
@@ -174,7 +174,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                 SyncAfterWaitContainer.ResetProgress();
                 SyncBeforeTargetContainer.ResetProgress();
                 SyncAfterTargetContainer.ResetProgress();
-                SyncImmediateFlatsContainer.ResetProgress();
+                SyncAfterAllTargetsContainer.ResetProgress();
             }
         }
 
@@ -274,7 +274,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             bool afterWaitValid = SyncAfterWaitContainer.Validate();
             bool beforeNewTargetValid = SyncBeforeTargetContainer.Validate();
             bool afterNewTargetValid = SyncAfterTargetContainer.Validate();
-            bool afterEachTargetValid = SyncImmediateFlatsContainer.Validate();
+            bool afterEachTargetValid = SyncAfterAllTargetsContainer.Validate();
 
             if (!beforeWaitValid || !afterWaitValid || !beforeNewTargetValid || !afterNewTargetValid || !afterEachTargetValid) {
                 issues.Add("One or more custom containers is not valid");
@@ -382,7 +382,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                 case EventContainerType.AfterWait: { targetContainer = SyncAfterWaitContainer; break; }
                 case EventContainerType.BeforeTarget: { targetContainer = SyncBeforeTargetContainer; break; }
                 case EventContainerType.AfterTarget: { targetContainer = SyncAfterTargetContainer; break; }
-                case EventContainerType.ImmediateFlats: { targetContainer = SyncImmediateFlatsContainer; break; }
+                case EventContainerType.AfterEachTarget: { targetContainer = SyncAfterAllTargetsContainer; break; }
             }
 
             await ExecuteEventContainer(targetContainer, progress, token);

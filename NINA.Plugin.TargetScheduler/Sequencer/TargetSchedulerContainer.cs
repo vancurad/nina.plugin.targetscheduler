@@ -81,7 +81,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         [JsonProperty] public InstructionContainer AfterWaitContainer { get; set; }
         [JsonProperty] public InstructionContainer BeforeTargetContainer { get; set; }
         [JsonProperty] public InstructionContainer AfterTargetContainer { get; set; }
-        [JsonProperty] public InstructionContainer ImmediateFlatsContainer { get; set; }
+        [JsonProperty] public InstructionContainer AfterAllTargetsContainer { get; set; }
 
         private ProfilePreference profilePreferences;
 
@@ -133,7 +133,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             AfterWaitContainer = new InstructionContainer(EventContainerType.AfterWait, Parent);
             BeforeTargetContainer = new InstructionContainer(EventContainerType.BeforeTarget, Parent);
             AfterTargetContainer = new InstructionContainer(EventContainerType.AfterTarget, Parent);
-            ImmediateFlatsContainer = new InstructionContainer(EventContainerType.ImmediateFlats, this);
+            AfterAllTargetsContainer = new InstructionContainer(EventContainerType.AfterEachTarget, this);
 
             Task.Run(() => NighttimeData = nighttimeCalculator.Calculate());
             Target = new InputTarget(Angle.ByDegree(profileService.ActiveProfile.AstrometrySettings.Latitude), Angle.ByDegree(profileService.ActiveProfile.AstrometrySettings.Longitude), profileService.ActiveProfile.AstrometrySettings.Horizon);
@@ -164,7 +164,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             AfterWaitContainer.Initialize(profileService);
             BeforeTargetContainer.Initialize(profileService);
             AfterTargetContainer.Initialize(profileService);
-            ImmediateFlatsContainer.Initialize(profileService);
+            AfterAllTargetsContainer.Initialize(profileService);
         }
 
         public override void AfterParentChanged() {
@@ -177,7 +177,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                 AfterWaitContainer.AttachNewParent(Parent);
                 BeforeTargetContainer.AttachNewParent(Parent);
                 AfterTargetContainer.AttachNewParent(Parent);
-                ImmediateFlatsContainer.AttachNewParent(this);
+                AfterAllTargetsContainer.AttachNewParent(this);
 
                 if (Parent.Status == SequenceEntityStatus.RUNNING) {
                     SequenceBlockInitialize();
@@ -192,7 +192,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             AfterWaitContainer.ResetProgress();
             BeforeTargetContainer.ResetProgress();
             AfterTargetContainer.ResetProgress();
-            ImmediateFlatsContainer.ResetProgress();
+            AfterAllTargetsContainer.ResetProgress();
 
             if (SchedulerProgress != null) {
                 SchedulerProgress.Reset();
@@ -256,7 +256,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                 if (plan == null) {
                     if (previousPlanTarget != null) {
                         await ExecuteEventContainer(AfterTargetContainer, progress, token);
-                        await ExecuteEventContainer(ImmediateFlatsContainer, progress, token);
+                        await ExecuteEventContainer(AfterAllTargetsContainer, progress, token);
                     }
 
                     SchedulerProgress.End();
@@ -270,37 +270,40 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                 if (plan.IsWait) {
                     if (previousPlanTarget != null) {
                         await ExecuteEventContainer(AfterTargetContainer, progress, token);
-                        await ExecuteEventContainer(ImmediateFlatsContainer, progress, token);
+                        await ExecuteEventContainer(AfterAllTargetsContainer, progress, token);
                         previousPlanTarget = null;
                     }
 
+                    TSLogger.Info($"waiting for next target to become available: {Utils.FormatDateTimeFull(plan.WaitForNextTargetTime)}");
+                    waitStartPublisher.Publish((DateTime)plan.WaitForNextTargetTime);
+                    var historyItem = new PlanExecutionHistoryItem(DateTime.Now, plan);
+
+                    SetSyncServerState(ServerState.PlanWait);
+                    SchedulerProgress.WaitStart(plan.WaitForNextTargetTime);
+                    await ExecuteEventContainer(BeforeWaitContainer, progress, token);
+
+                    SchedulerProgress.Add("Wait");
+
                     if (!profilePreferences.DoSkipSimulatedWaits) {
-                        TSLogger.Info($"waiting for next target to become available: {Utils.FormatDateTimeFull(plan.WaitForNextTargetTime)}");
-                        waitStartPublisher.Publish((DateTime)plan.WaitForNextTargetTime);
-                        var historyItem = new PlanExecutionHistoryItem(DateTime.Now, plan);
-
-                        SetSyncServerState(ServerState.PlanWait);
-                        SchedulerProgress.WaitStart(plan.WaitForNextTargetTime);
-                        await ExecuteEventContainer(BeforeWaitContainer, progress, token);
-
-                        SchedulerProgress.Add("Wait");
-                        WaitForNextTarget(plan.WaitForNextTargetTime, progress, token);
-                        await ExecuteEventContainer(AfterWaitContainer, progress, token);
-                        SchedulerProgress.End();
                         atTime = DateTime.Now;
-
-                        historyItem.EndTime = atTime;
-                        PlanExecutionHistory.Add(historyItem);
+                        WaitForNextTarget(plan.WaitForNextTargetTime, progress, token);
                     } else {
                         atTime = (DateTime)plan.WaitForNextTargetTime;
                         TSLogger.Info($"simulated run enabled, skipping planned wait and advancing time to {atTime}");
                     }
+
+                    await ExecuteEventContainer(AfterWaitContainer, progress, token);
+                    SchedulerProgress.End();
+
+                    historyItem.EndTime = atTime;
+                    PlanExecutionHistory.Add(historyItem);
                 } else {
                     try {
                         ITarget target = plan.PlanTarget;
 
                         if (previousPlanTarget != null && !target.Equals(previousPlanTarget)) {
                             await ExecuteEventContainer(AfterTargetContainer, progress, token);
+                            await ExecuteEventContainer(AfterAllTargetsContainer, progress, token);
                         }
 
                         TSLogger.Info("--BEGIN PLAN EXECUTION--------------------------------------------------------");
@@ -442,7 +445,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             bool afterWaitValid = AfterWaitContainer.Validate();
             bool beforeTargetValid = BeforeTargetContainer.Validate();
             bool afterTargetValid = AfterTargetContainer.Validate();
-            bool afterAllTargetsValid = ImmediateFlatsContainer.Validate();
+            bool afterAllTargetsValid = AfterAllTargetsContainer.Validate();
 
             if (!triggersValid || !beforeWaitValid || !afterWaitValid || !beforeTargetValid || !afterTargetValid || !afterAllTargetsValid) {
                 issues.Add("One or more triggers or custom containers is not valid");
@@ -560,7 +563,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             CoordinatesInjector injector = new CoordinatesInjector(Target);
             injector.Inject(BeforeTargetContainer);
             injector.Inject(AfterTargetContainer);
-            injector.Inject(ImmediateFlatsContainer);
+            injector.Inject(AfterAllTargetsContainer);
         }
 
         private void SchedulerProgress_PropertyChanged(object sender, PropertyChangedEventArgs e) {
@@ -683,13 +686,13 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             clone.AfterWaitContainer = (InstructionContainer)AfterWaitContainer.Clone();
             clone.BeforeTargetContainer = (InstructionContainer)BeforeTargetContainer.Clone();
             clone.AfterTargetContainer = (InstructionContainer)AfterTargetContainer.Clone();
-            clone.ImmediateFlatsContainer = (InstructionContainer)ImmediateFlatsContainer.Clone();
+            clone.AfterAllTargetsContainer = (InstructionContainer)AfterAllTargetsContainer.Clone();
 
             clone.BeforeWaitContainer.AttachNewParent(clone);
             clone.AfterWaitContainer.AttachNewParent(clone);
             clone.BeforeTargetContainer.AttachNewParent(clone);
             clone.AfterTargetContainer.AttachNewParent(clone);
-            clone.ImmediateFlatsContainer.AttachNewParent(clone);
+            clone.AfterAllTargetsContainer.AttachNewParent(clone);
 
             foreach (var item in clone.Items) {
                 item.AttachNewParent(clone);

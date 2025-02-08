@@ -5,7 +5,7 @@
         AfterWait,
         BeforeTarget,
         AfterTarget,
-        ImmediateFlats
+        AfterEachTarget
     }
 
     public static class EventContainerHelper {
@@ -31,8 +31,8 @@
                 return EventContainerType.AfterTarget;
             }
 
-            if (eventContainerType == EventContainerType.ImmediateFlats.ToString()) {
-                return EventContainerType.ImmediateFlats;
+            if (eventContainerType == EventContainerType.AfterEachTarget.ToString()) {
+                return EventContainerType.AfterEachTarget;
             }
 
             throw new ArgumentException($"unknown event container type : {eventContainerType}");

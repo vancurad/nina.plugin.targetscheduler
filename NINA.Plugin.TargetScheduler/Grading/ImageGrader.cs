@@ -98,7 +98,7 @@ namespace NINA.Plugin.TargetScheduler.Grading {
                 }
 
                 // If not delayed and we don't yet have enough images to compare against, assume acceptable
-                if (!DelayedGradingEnabled(prefs) && population == null) {
+                if (Common.IsEmpty(population) || population.Count < 3) {
                     TSLogger.Info("image grading: not enough matching images => accepted");
                     return GradingResult.Accepted;
                 }

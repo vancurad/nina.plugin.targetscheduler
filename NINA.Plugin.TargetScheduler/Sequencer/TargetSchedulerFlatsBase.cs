@@ -212,8 +212,8 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                 // Take the exposures
                 TakeSubframeExposure takeExposure = new TakeSubframeExposure(profileService, cameraMediator, imagingMediator, imageSaveMediator, imageHistoryVM) {
                     ImageType = CaptureSequence.ImageTypes.FLAT,
-                    Gain = flatSpec.Gain,
-                    Offset = flatSpec.Offset,
+                    Gain = setting.Gain != -1 ? setting.Gain : flatSpec.Gain,
+                    Offset = setting.Offset != -1 ? setting.Offset : flatSpec.Offset,
                     Binning = flatSpec.BinningMode,
                     ExposureTime = setting.Time,
                     ROI = flatSpec.ROI,
