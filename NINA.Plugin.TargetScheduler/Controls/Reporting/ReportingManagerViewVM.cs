@@ -67,7 +67,6 @@ namespace NINA.Plugin.TargetScheduler.Controls.Reporting {
                 projects.ForEach(p => {
                     p.Targets.ForEach(t => {
                         scratch.Add(t.Id, $"{t.Project.Name} / {t.Name}");
-                        // scratch.Add(new KeyValuePair<int, string>(t.Id, $"{t.Project.Name} / {t.Name}"));
                     });
                 });
             }
