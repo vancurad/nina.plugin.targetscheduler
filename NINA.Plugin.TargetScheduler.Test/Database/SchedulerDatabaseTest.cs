@@ -323,7 +323,16 @@ namespace NINA.Plugin.TargetScheduler.Test.Database {
                 ProfilePreference pp = context.GetProfilePreference("abcd-1234");
                 pp.Should().BeNull();
 
-                pp = new ProfilePreference("abcd-1234");
+                string pid = "abcd-1234";
+                pp = new ProfilePreference(pid);
+
+                pp.ProfileId.Should().Be(pid);
+                pp.ParkOnWait.Should().BeFalse();
+                pp.ExposureThrottle.Should().BeApproximately(125, 0.001);
+                pp.EnableSmartPlanWindow.Should().BeTrue();
+                pp.EnableDeleteAcquiredImagesWithTarget.Should().BeTrue();
+                pp.EnableSlewCenter.Should().BeTrue();
+
                 pp.EnableGradeRMS = true;
                 pp.EnableGradeStars = true;
                 pp.EnableGradeHFR = true;
@@ -335,7 +344,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Database {
                 context.ProfilePreferenceSet.Add(pp);
                 context.SaveChanges();
 
-                ProfilePreference pp2 = context.GetProfilePreference("abcd-1234");
+                ProfilePreference pp2 = context.GetProfilePreference(pid);
                 pp2.Should().NotBeNull();
 
                 pp2.EnableGradeRMS.Should().BeTrue();

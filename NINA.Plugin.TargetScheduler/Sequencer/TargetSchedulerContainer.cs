@@ -407,7 +407,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             PlanContainer planContainer = new PlanContainer(this, profileService, dateTimeProviders, telescopeMediator,
                 rotatorMediator, guiderMediator, cameraMediator, imagingMediator, imageSaveMediator,
                 imageHistoryVM, filterWheelMediator, domeMediator, domeFollower,
-                plateSolverFactory, windowServiceFactory, messageBroker, imageSaveWatcher,
+                plateSolverFactory, windowServiceFactory, messageBroker, imageSaveWatcher, profilePreferences,
                 synchronizationEnabled, previousPlanTarget, plan, schedulerProgress);
             return planContainer;
         }

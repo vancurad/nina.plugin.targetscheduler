@@ -14,6 +14,7 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
         public double exposureThrottle { get; set; }
         public int enableSmartPlanWindow { get; set; }
         public int enableDeleteAcquiredImagesWithTarget { get; set; }
+        public int enableSlewCenter { get; set; }
 
         public int enableSynchronization { get; set; }
         public int syncWaitTimeout { get; set; }
@@ -53,6 +54,7 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
             ExposureThrottle = 125;
             EnableSmartPlanWindow = true;
             EnableDeleteAcquiredImagesWithTarget = true;
+            EnableSlewCenter = true;
 
             EnableGradeRMS = true;
             EnableGradeStars = true;
@@ -115,6 +117,15 @@ namespace NINA.Plugin.TargetScheduler.Database.Schema {
             set {
                 enableDeleteAcquiredImagesWithTarget = value ? 1 : 0;
                 RaisePropertyChanged(nameof(EnableDeleteAcquiredImagesWithTarget));
+            }
+        }
+
+        [NotMapped]
+        public bool EnableSlewCenter {
+            get { return enableSlewCenter == 1; }
+            set {
+                enableSlewCenter = value ? 1 : 0;
+                RaisePropertyChanged(nameof(EnableSlewCenter));
             }
         }
 

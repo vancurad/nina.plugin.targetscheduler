@@ -53,6 +53,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         private readonly IPlateSolverFactory plateSolverFactory;
         private readonly IWindowServiceFactory windowServiceFactory;
 
+        private readonly ProfilePreference profilePreferences;
         private readonly ITarget previousPlanTarget;
         private readonly SchedulerPlan plan;
         private readonly IProfile activeProfile;
@@ -84,6 +85,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                 IWindowServiceFactory windowServiceFactory,
                 IMessageBroker messageBroker,
                 IImageSaveWatcher imageSaveWatcher,
+                ProfilePreference profilePreferences,
                 bool synchronizationEnabled,
                 ITarget previousPlanTarget,
                 SchedulerPlan plan,
@@ -107,8 +109,8 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             this.domeFollower = domeFollower;
             this.plateSolverFactory = plateSolverFactory;
             this.windowServiceFactory = windowServiceFactory;
-
             this.imageSaveWatcher = imageSaveWatcher;
+            this.profilePreferences = profilePreferences;
             this.synchronizationEnabled = synchronizationEnabled;
             this.schedulerProgress = schedulerProgress;
             this.previousPlanTarget = previousPlanTarget;
@@ -180,7 +182,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
 
                 Add(new PlanSchedulerProgress(schedulerProgress, instruction));
 
-                if (instruction is PlanSlew) {
+                if (instruction is PlanSlew && profilePreferences.EnableSlewCenter) {
                     AddSlew((PlanSlew)instruction, plan.PlanTarget);
                     continue;
                 }

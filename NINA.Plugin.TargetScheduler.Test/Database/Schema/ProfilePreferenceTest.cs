@@ -14,6 +14,8 @@ namespace NINA.Plugin.TargetScheduler.Test.Database.Schema {
             sut.ParkOnWait.Should().BeFalse();
             sut.ExposureThrottle.Should().BeApproximately(125, 0.001);
             sut.EnableSmartPlanWindow.Should().BeTrue();
+            sut.EnableDeleteAcquiredImagesWithTarget.Should().BeTrue();
+            sut.EnableSlewCenter.Should().BeTrue();
 
             sut.EnableGradeRMS.Should().BeTrue();
             sut.EnableGradeStars.Should().BeTrue();
