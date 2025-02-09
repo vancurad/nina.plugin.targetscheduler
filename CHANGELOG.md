@@ -1,5 +1,8 @@
 # Target Scheduler
 
+## 5.0.1.0 (beta) - 2025-02-XX
+* Added profile preference to enable/display slew/center for new targets.
+
 ## 5.0.0.0 (beta) - 2025-02-09
 * Major release
 
