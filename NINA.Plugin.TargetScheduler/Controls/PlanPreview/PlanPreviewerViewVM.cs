@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Windows.Controls;
 using System.Windows.Input;
 
@@ -54,6 +55,16 @@ namespace NINA.Plugin.TargetScheduler.Controls.PlanPreview {
 
             ShowPlanPreview = true;
             ShowPlanPreviewResults = false;
+        }
+
+        private bool tableLoading = false;
+
+        public bool TableLoading {
+            get => tableLoading;
+            set {
+                tableLoading = value;
+                RaisePropertyChanged(nameof(TableLoading));
+            }
         }
 
         private DateTime planDate = DateTime.MinValue;
@@ -235,6 +246,11 @@ namespace NINA.Plugin.TargetScheduler.Controls.PlanPreview {
                     return;
                 }
 
+                // Slight delay allows the UI thread to update the spinner property before the dispatcher
+                // thread starts ... which seems to block the UI updates.
+                TableLoading = true;
+                Thread.Sleep(50);
+
                 int lastTargetId = -1;
                 string lastFilterName = null;
                 TreeViewItem planItem = null;
@@ -313,6 +329,8 @@ namespace NINA.Plugin.TargetScheduler.Controls.PlanPreview {
             } catch (Exception ex) {
                 TSLogger.Error($"failed to run plan preview: {ex.Message} {ex.StackTrace}");
                 InstructionList.Clear();
+            } finally {
+                TableLoading = false;
             }
         }
 
