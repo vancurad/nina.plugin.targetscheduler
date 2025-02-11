@@ -1,6 +1,6 @@
 # Target Scheduler
 
-## 5.0.1.0 (beta) - 2025-02-XX
+## 5.0.1.0 (beta) - 2025-02-11
 * Added profile preference to enable/disable slew/center for new targets.
 * Fixed problem where (now slower) plan preview locks the main UI thread.
 * Fixed serious problem with planner time handling.
