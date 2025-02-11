@@ -18,9 +18,11 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-
+using System.Windows.Threading;
 using RelayCommand = CommunityToolkit.Mvvm.Input.RelayCommand;
 
 namespace NINA.Plugin.TargetScheduler.Controls.PlanPreview {
@@ -55,9 +57,10 @@ namespace NINA.Plugin.TargetScheduler.Controls.PlanPreview {
 
             ShowPlanPreview = true;
             ShowPlanPreviewResults = false;
+            TableLoading = false;
         }
 
-        private bool tableLoading = false;
+        private bool tableLoading;
 
         public bool TableLoading {
             get => tableLoading;
@@ -231,107 +234,119 @@ namespace NINA.Plugin.TargetScheduler.Controls.PlanPreview {
             RaisePropertyChanged(nameof(PlanSeconds));
         }
 
+        private static Dispatcher _dispatcher = Application.Current?.Dispatcher ?? Dispatcher.CurrentDispatcher;
+
         private void RunPlanPreview() {
-            ObservableCollection<TreeViewItem> list = new ObservableCollection<TreeViewItem>();
+            _ = ExecutePlanPreview();
+        }
 
-            if (PlanDate == DateTime.MinValue || SelectedProfileId == null) {
-                return;
-            }
-
-            try {
-                DateTime atDateTime = PlanDate.Date.AddHours(PlanHours).AddMinutes(PlanMinutes).AddSeconds(PlanSeconds);
-                LoadSchedulerPlans(atDateTime, profileService);
-
-                if (SchedulerPlans == null || SchedulerPlans.Count == 0) {
-                    return;
-                }
-
+        private async Task<bool> ExecutePlanPreview() {
+            return await Task.Run(() => {
                 // Slight delay allows the UI thread to update the spinner property before the dispatcher
                 // thread starts ... which seems to block the UI updates.
                 TableLoading = true;
                 Thread.Sleep(50);
 
-                int lastTargetId = -1;
-                string lastFilterName = null;
-                TreeViewItem planItem = null;
+                _dispatcher.Invoke(DispatcherPriority.Normal, new Action(() => {
+                    ObservableCollection<TreeViewItem> list = new ObservableCollection<TreeViewItem>();
 
-                foreach (SchedulerPlan plan in SchedulerPlans) {
-                    if (plan.IsWait) {
-                        planItem = new TreeViewItem();
-                        planItem.Header = $"Wait until {Utils.FormatDateTimeFull(plan.WaitForNextTargetTime)}";
-                        list.Add(planItem);
-                        lastTargetId = -1;
-                        continue;
+                    if (PlanDate == DateTime.MinValue || SelectedProfileId == null) {
+                        return;
                     }
 
-                    if (plan.PlanTarget.DatabaseId != lastTargetId) {
-                        lastTargetId = plan.PlanTarget.DatabaseId;
-                        planItem = new TreeViewItem();
-                        planItem.Header = GetTargetLabel(plan);
-                        planItem.IsExpanded = false;
-                        list.Add(planItem);
-                    }
+                    try {
+                        DateTime atDateTime = PlanDate.Date.AddHours(PlanHours).AddMinutes(PlanMinutes).AddSeconds(PlanSeconds);
+                        LoadSchedulerPlans(atDateTime, profileService);
 
-                    foreach (IInstruction instruction in plan.PlanInstructions) {
-                        TreeViewItem instructionItem = new TreeViewItem();
-
-                        if (instruction is PlanMessage
-                            || instruction is PlanBeforeNewTargetContainer
-                            || instruction is PlanPostExposure) {
-                            continue;
+                        if (SchedulerPlans == null || SchedulerPlans.Count == 0) {
+                            return;
                         }
 
-                        if (instruction is PlanSlew) {
-                            instructionItem.Header = GetSlewLabel(plan.PlanTarget, (PlanSlew)instruction);
-                            planItem.Items.Add(instructionItem);
-                            continue;
-                        }
+                        int lastTargetId = -1;
+                        string lastFilterName = null;
+                        TreeViewItem planItem = null;
+                        ProfilePreference profilePreference = GetProfilePreference(SelectedProfileId);
 
-                        if (instruction is PlanSwitchFilter) {
-                            string filterName = ((PlanSwitchFilter)instruction).exposure.FilterName;
-                            if (filterName != lastFilterName) {
-                                lastFilterName = filterName;
-                                instructionItem.Header = $"Switch Filter: {filterName}";
-                                planItem.Items.Add(instructionItem);
+                        foreach (SchedulerPlan plan in SchedulerPlans) {
+                            if (plan.IsWait) {
+                                planItem = new TreeViewItem();
+                                planItem.Header = $"Wait until {Utils.FormatDateTimeFull(plan.WaitForNextTargetTime)}";
+                                list.Add(planItem);
+                                lastTargetId = -1;
+                                continue;
                             }
-                            continue;
-                        }
 
-                        if (instruction is PlanSetReadoutMode) {
-                            int? readoutMode = ((PlanSetReadoutMode)instruction).exposure.ReadoutMode;
-                            if (readoutMode != null && readoutMode > 0) {
-                                instructionItem.Header = $"Set readout mode: {readoutMode}";
-                                planItem.Items.Add(instructionItem);
+                            if (plan.PlanTarget.DatabaseId != lastTargetId) {
+                                lastTargetId = plan.PlanTarget.DatabaseId;
+                                planItem = new TreeViewItem();
+                                planItem.Header = GetTargetLabel(plan);
+                                planItem.IsExpanded = false;
+                                list.Add(planItem);
                             }
-                            continue;
+
+                            foreach (IInstruction instruction in plan.PlanInstructions) {
+                                TreeViewItem instructionItem = new TreeViewItem();
+
+                                if (instruction is PlanMessage
+                                    || instruction is PlanBeforeNewTargetContainer
+                                    || instruction is PlanPostExposure) {
+                                    continue;
+                                }
+
+                                if (instruction is PlanSlew && profilePreference.EnableSlewCenter) {
+                                    instructionItem.Header = GetSlewLabel(plan.PlanTarget, (PlanSlew)instruction);
+                                    planItem.Items.Add(instructionItem);
+                                    continue;
+                                }
+
+                                if (instruction is PlanSwitchFilter) {
+                                    string filterName = ((PlanSwitchFilter)instruction).exposure.FilterName;
+                                    if (filterName != lastFilterName) {
+                                        lastFilterName = filterName;
+                                        instructionItem.Header = $"Switch Filter: {filterName}";
+                                        planItem.Items.Add(instructionItem);
+                                    }
+                                    continue;
+                                }
+
+                                if (instruction is PlanSetReadoutMode) {
+                                    int? readoutMode = ((PlanSetReadoutMode)instruction).exposure.ReadoutMode;
+                                    if (readoutMode != null && readoutMode > 0) {
+                                        instructionItem.Header = $"Set readout mode: {readoutMode}";
+                                        planItem.Items.Add(instructionItem);
+                                    }
+                                    continue;
+                                }
+
+                                if (instruction is PlanTakeExposure) {
+                                    instructionItem.Header = GetTakeExposureLabel((PlanTakeExposure)instruction);
+                                    planItem.Items.Add(instructionItem);
+                                    continue;
+                                }
+
+                                if (instruction is PlanDither) {
+                                    instructionItem.Header = "Dither";
+                                    planItem.Items.Add(instructionItem);
+                                    continue;
+                                }
+
+                                TSLogger.Error($"unknown instruction type in plan preview: {instruction.GetType().FullName}");
+                                throw new Exception($"unknown instruction type in plan preview: {instruction.GetType().FullName}");
+                            }
                         }
 
-                        if (instruction is PlanTakeExposure) {
-                            instructionItem.Header = GetTakeExposureLabel((PlanTakeExposure)instruction);
-                            planItem.Items.Add(instructionItem);
-                            continue;
-                        }
-
-                        if (instruction is PlanDither) {
-                            instructionItem.Header = "Dither";
-                            planItem.Items.Add(instructionItem);
-                            continue;
-                        }
-
-                        TSLogger.Error($"unknown instruction type in plan preview: {instruction.GetType().FullName}");
-                        throw new Exception($"unknown instruction type in plan preview: {instruction.GetType().FullName}");
+                        InstructionList = list;
+                        ShowPlanPreviewResults = false;
+                        ShowPlanPreview = true;
+                    } catch (Exception ex) {
+                        TSLogger.Error($"failed to run plan preview: {ex.Message} {ex.StackTrace}");
+                        InstructionList.Clear();
                     }
-                }
+                }));
 
-                InstructionList = list;
-                ShowPlanPreviewResults = false;
-                ShowPlanPreview = true;
-            } catch (Exception ex) {
-                TSLogger.Error($"failed to run plan preview: {ex.Message} {ex.StackTrace}");
-                InstructionList.Clear();
-            } finally {
                 TableLoading = false;
-            }
+                return true;
+            });
         }
 
         private string planPreviewResultsLog;
@@ -345,31 +360,52 @@ namespace NINA.Plugin.TargetScheduler.Controls.PlanPreview {
         }
 
         private void RunPlanPreviewResults() {
-            if (PlanDate == DateTime.MinValue || SelectedProfileId == null) {
-                return;
-            }
+            _ = ExecutePlanPreviewResults();
+        }
 
-            try {
-                DateTime atDateTime = PlanDate.Date.AddHours(PlanHours).AddMinutes(PlanMinutes).AddSeconds(PlanSeconds);
-                LoadSchedulerPlans(atDateTime, profileService);
+        private async Task<bool> ExecutePlanPreviewResults() {
+            return await Task.Run(() => {
+                // Slight delay allows the UI thread to update the spinner property before the dispatcher
+                // thread starts ... which seems to block the UI updates.
+                TableLoading = true;
+                Thread.Sleep(50);
 
-                if (SchedulerPlans == null || SchedulerPlans.Count == 0) {
-                    return;
-                }
+                _dispatcher.Invoke(DispatcherPriority.Normal, new Action(() => {
+                    try {
+                        if (PlanDate == DateTime.MinValue || SelectedProfileId == null) {
+                            return;
+                        }
 
-                StringBuilder sb = new StringBuilder();
-                foreach (SchedulerPlan plan in SchedulerPlans) {
-                    sb.Append(plan.DetailsLog);
-                }
+                        // Slight delay allows the UI thread to update the spinner property before the dispatcher
+                        // thread starts ... which seems to block the UI updates.
+                        TableLoading = true;
+                        Thread.Sleep(50);
 
-                sb.AppendLine("\nRUN COMPLETE - NO MORE TARGETS AVAILABLE");
-                PlanPreviewResultsLog = sb.ToString();
-                ShowPlanPreview = false;
-                ShowPlanPreviewResults = true;
-            } catch (Exception ex) {
-                TSLogger.Error($"failed to run plan preview results: {ex.Message} {ex.StackTrace}");
-                PlanPreviewResultsLog = string.Empty;
-            }
+                        DateTime atDateTime = PlanDate.Date.AddHours(PlanHours).AddMinutes(PlanMinutes).AddSeconds(PlanSeconds);
+                        LoadSchedulerPlans(atDateTime, profileService);
+
+                        if (SchedulerPlans == null || SchedulerPlans.Count == 0) {
+                            return;
+                        }
+
+                        StringBuilder sb = new StringBuilder();
+                        foreach (SchedulerPlan plan in SchedulerPlans) {
+                            sb.Append(plan.DetailsLog);
+                        }
+
+                        sb.AppendLine("\nRUN COMPLETE - NO MORE TARGETS AVAILABLE");
+                        PlanPreviewResultsLog = sb.ToString();
+                        ShowPlanPreview = false;
+                        ShowPlanPreviewResults = true;
+                    } catch (Exception ex) {
+                        TSLogger.Error($"failed to run plan preview results: {ex.Message} {ex.StackTrace}");
+                        PlanPreviewResultsLog = string.Empty;
+                    }
+                }));
+
+                TableLoading = false;
+                return true;
+            });
         }
 
         private AsyncObservableCollection<KeyValuePair<string, string>> GetProfileChoices() {
@@ -395,6 +431,12 @@ namespace NINA.Plugin.TargetScheduler.Controls.PlanPreview {
 
             TSLogger.Error($"failed to get profile for ID={profileId}");
             throw new Exception($"failed to get profile for ID={profileId}");
+        }
+
+        private ProfilePreference GetProfilePreference(string profileId) {
+            using (var context = database.GetContext()) {
+                return context.GetProfilePreference(profileId, true);
+            }
         }
 
         private string GetTargetLabel(SchedulerPlan plan) {
