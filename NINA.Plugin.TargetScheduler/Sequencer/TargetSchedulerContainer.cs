@@ -233,11 +233,9 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
         public override async Task Execute(IProgress<ApplicationStatus> progress, CancellationToken token) {
             TSLogger.Debug("TargetSchedulerContainer: Execute");
             profilePreferences = GetProfilePreferences();
-
-            DateTime atTime = DateTime.Now;
+            DateTime atTime = GetPlannerTime(DateTime.Now, DateTime.Now.Date.AddHours(13));
 
             if (profilePreferences.EnableSimulatedRun) {
-                atTime = atTime.Date.AddHours(13);
                 string msg = $"Target Scheduler simulated execution is enabled: skip waits: {profilePreferences.SkipSimulatedWaits}, skip updates: {profilePreferences.SkipSimulatedUpdates}";
                 TSLogger.Warning(msg);
                 Notification.ShowWarning(msg);
@@ -249,6 +247,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
             synchronizationEnabled = IsSynchronizationEnabled();
 
             while (true) {
+                atTime = GetPlannerTime(DateTime.Now, atTime);
                 profilePreferences = GetProfilePreferences();
                 SchedulerPlan plan = new Planner(atTime, profileService.ActiveProfile, profilePreferences, false).GetPlan(previousPlanTarget);
                 SetSyncServerState(ServerState.Ready);
@@ -285,7 +284,6 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                     SchedulerProgress.Add("Wait");
 
                     if (!profilePreferences.DoSkipSimulatedWaits) {
-                        atTime = DateTime.Now;
                         WaitForNextTarget(plan.WaitForNextTargetTime, progress, token);
                     } else {
                         atTime = (DateTime)plan.WaitForNextTargetTime;
@@ -295,7 +293,7 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                     await ExecuteEventContainer(AfterWaitContainer, progress, token);
                     SchedulerProgress.End();
 
-                    historyItem.EndTime = atTime;
+                    historyItem.EndTime = GetPlannerTime(DateTime.Now, atTime);
                     PlanExecutionHistory.Add(historyItem);
                 } else {
                     try {
@@ -318,9 +316,15 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                         PlanContainer planContainer = GetPlanContainer(previousPlanTarget, plan, SchedulerProgress);
                         planContainer.Execute(progress, token).Wait();
 
+                        if (profilePreferences.EnableSimulatedRun) {
+                            atTime = atTime.AddSeconds(target.SelectedExposure.ExposureLength);
+                            historyItem.EndTime = atTime;
+                        } else {
+                            historyItem.EndTime = DateTime.Now;
+                        }
+
                         previousPlanTarget = target;
 
-                        historyItem.EndTime = DateTime.Now;
                         PlanExecutionHistory.Add(historyItem);
                     } catch (Exception ex) {
                         if (Utils.IsCancelException(ex)) {
@@ -340,6 +344,10 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
                     }
                 }
             }
+        }
+
+        private DateTime GetPlannerTime(DateTime actualTime, DateTime simulatedTime) {
+            return profilePreferences.EnableSimulatedRun ? simulatedTime : actualTime;
         }
 
         private void SetSyncServerState(ServerState state) {

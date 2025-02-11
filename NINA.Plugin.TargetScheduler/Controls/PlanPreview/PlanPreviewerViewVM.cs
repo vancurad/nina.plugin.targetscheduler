@@ -293,9 +293,11 @@ namespace NINA.Plugin.TargetScheduler.Controls.PlanPreview {
                                     continue;
                                 }
 
-                                if (instruction is PlanSlew && profilePreference.EnableSlewCenter) {
-                                    instructionItem.Header = GetSlewLabel(plan.PlanTarget, (PlanSlew)instruction);
-                                    planItem.Items.Add(instructionItem);
+                                if (instruction is PlanSlew) {
+                                    if (profilePreference.EnableSlewCenter) {
+                                        instructionItem.Header = GetSlewLabel(plan.PlanTarget, (PlanSlew)instruction);
+                                        planItem.Items.Add(instructionItem);
+                                    }
                                     continue;
                                 }
 
