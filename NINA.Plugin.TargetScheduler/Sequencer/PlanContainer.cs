@@ -182,8 +182,10 @@ namespace NINA.Plugin.TargetScheduler.Sequencer {
 
                 Add(new PlanSchedulerProgress(schedulerProgress, instruction));
 
-                if (instruction is PlanSlew && profilePreferences.EnableSlewCenter) {
-                    AddSlew((PlanSlew)instruction, plan.PlanTarget);
+                if (instruction is PlanSlew) {
+                    if (profilePreferences.EnableSlewCenter) {
+                        AddSlew((PlanSlew)instruction, plan.PlanTarget);
+                    }
                     continue;
                 }
 
