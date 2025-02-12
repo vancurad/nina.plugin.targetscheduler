@@ -103,6 +103,13 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                 targetEndTime = meridianClippedSpan.EndTime;
             }
 
+            // Recheck minimum time after potential meridian clip
+            if (project.MeridianWindow > 0 && target.MeridianWindow.Duration < project.MinimumTime * 60) {
+                TSLogger.Debug($"Target not visible for min time after meridian window clip {project.Name}/{target.Name} on {Utils.FormatDateTimeFull(atTime)} at latitude {observerInfo.Latitude}");
+                SetRejected(target, Reasons.TargetNotVisible);
+                return false;
+            }
+
             // If the start time is in the future, reject ... for now
             DateTime actualStart = atTime > targetStartTime ? atTime : targetStartTime;
             if (actualStart > atTime) {
