@@ -52,8 +52,8 @@ namespace NINA.Plugin.TargetScheduler.Controls.Util {
                         // Telescopius format
                         if (csv.TryGetField<string>("familiar name", out name)) {
                             var catalogue = csv.GetField("catalogue entry");
-                            var ra = AstroUtil.HMSToDegrees(csv.GetField("right ascension"));
-                            var dec = AstroUtil.DMSToDegrees(csv.GetField("declination"));
+                            var ra = AstroUtil.HMSToDegrees(csv.GetField("right ascension (j2000)"));
+                            var dec = AstroUtil.DMSToDegrees(csv.GetField("declination (j2000)"));
 
                             double angle = 0;
                             if (csv.TryGetField<string>("position angle (east)", out var stringAngle) && !string.IsNullOrWhiteSpace(stringAngle)) {
