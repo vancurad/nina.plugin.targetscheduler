@@ -245,23 +245,27 @@ namespace NINA.Plugin.TargetScheduler.Controls.PlanPreview {
                 // Slight delay allows the UI thread to update the spinner property before the dispatcher
                 // thread starts ... which seems to block the UI updates.
                 TableLoading = true;
+                ShowPlanPreviewResults = false;
+                ShowPlanPreview = false;
                 Thread.Sleep(50);
+
+                if (PlanDate == DateTime.MinValue || SelectedProfileId == null) {
+                    TableLoading = false;
+                    return true;
+                }
+
+                DateTime atDateTime = PlanDate.Date.AddHours(PlanHours).AddMinutes(PlanMinutes).AddSeconds(PlanSeconds);
+                LoadSchedulerPlans(atDateTime, profileService);
+
+                if (SchedulerPlans == null || SchedulerPlans.Count == 0) {
+                    TableLoading = false;
+                    return true;
+                }
 
                 _dispatcher.Invoke(DispatcherPriority.Normal, new Action(() => {
                     ObservableCollection<TreeViewItem> list = new ObservableCollection<TreeViewItem>();
 
-                    if (PlanDate == DateTime.MinValue || SelectedProfileId == null) {
-                        return;
-                    }
-
                     try {
-                        DateTime atDateTime = PlanDate.Date.AddHours(PlanHours).AddMinutes(PlanMinutes).AddSeconds(PlanSeconds);
-                        LoadSchedulerPlans(atDateTime, profileService);
-
-                        if (SchedulerPlans == null || SchedulerPlans.Count == 0) {
-                            return;
-                        }
-
                         int lastTargetId = -1;
                         string lastFilterName = null;
                         TreeViewItem planItem = null;
@@ -370,26 +374,25 @@ namespace NINA.Plugin.TargetScheduler.Controls.PlanPreview {
                 // Slight delay allows the UI thread to update the spinner property before the dispatcher
                 // thread starts ... which seems to block the UI updates.
                 TableLoading = true;
+                ShowPlanPreviewResults = false;
+                ShowPlanPreview = false;
                 Thread.Sleep(50);
+
+                if (PlanDate == DateTime.MinValue || SelectedProfileId == null) {
+                    TableLoading = false;
+                    return true;
+                }
+
+                DateTime atDateTime = PlanDate.Date.AddHours(PlanHours).AddMinutes(PlanMinutes).AddSeconds(PlanSeconds);
+                LoadSchedulerPlans(atDateTime, profileService);
+
+                if (SchedulerPlans == null || SchedulerPlans.Count == 0) {
+                    TableLoading = false;
+                    return true;
+                }
 
                 _dispatcher.Invoke(DispatcherPriority.Normal, new Action(() => {
                     try {
-                        if (PlanDate == DateTime.MinValue || SelectedProfileId == null) {
-                            return;
-                        }
-
-                        // Slight delay allows the UI thread to update the spinner property before the dispatcher
-                        // thread starts ... which seems to block the UI updates.
-                        TableLoading = true;
-                        Thread.Sleep(50);
-
-                        DateTime atDateTime = PlanDate.Date.AddHours(PlanHours).AddMinutes(PlanMinutes).AddSeconds(PlanSeconds);
-                        LoadSchedulerPlans(atDateTime, profileService);
-
-                        if (SchedulerPlans == null || SchedulerPlans.Count == 0) {
-                            return;
-                        }
-
                         StringBuilder sb = new StringBuilder();
                         foreach (SchedulerPlan plan in SchedulerPlans) {
                             sb.Append(plan.DetailsLog);

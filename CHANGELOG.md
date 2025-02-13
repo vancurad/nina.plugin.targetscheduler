@@ -1,5 +1,8 @@
 # Target Scheduler
 
+## 5.0.3.0 (beta) - 2025-02-XX
+* Fixed display and threading problems with Scheduler Preview
+
 ## 5.0.2.0 (beta) - 2025-02-12
 * Fixed Telescopius CSV format change.
 * Recheck project minimum time after a meridian window clip.
