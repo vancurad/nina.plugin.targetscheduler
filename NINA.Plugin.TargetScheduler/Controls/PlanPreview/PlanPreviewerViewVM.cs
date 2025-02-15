@@ -186,7 +186,7 @@ namespace NINA.Plugin.TargetScheduler.Controls.PlanPreview {
                 TSLogger.Debug($"running plan preview for {Utils.FormatDateTimeFull(atDateTime)}, profileId={SelectedProfileId}");
 
                 SchedulerPlanLoader loader = new SchedulerPlanLoader(GetProfile(SelectedProfileId));
-                List<IProject> projects = loader.LoadActiveProjects(database.GetContext());
+                List<IProject> projects = MarkForPreview(loader.LoadActiveProjects(database.GetContext()));
                 ProfilePreference profilePreference = loader.GetProfilePreferences(database.GetContext());
 
                 ObservableCollection<TreeViewItem> list = new ObservableCollection<TreeViewItem>();
@@ -219,6 +219,16 @@ namespace NINA.Plugin.TargetScheduler.Controls.PlanPreview {
                 SchedulerPlans = null;
                 return;
             }
+        }
+
+        private List<IProject> MarkForPreview(List<IProject> projects) {
+            if (Common.IsEmpty(projects)) return projects;
+
+            projects.ForEach(p => {
+                p.Targets.ForEach(t => { t.IsPreview = true; });
+            });
+
+            return projects;
         }
 
         private void SetPreviewTimeNow() {

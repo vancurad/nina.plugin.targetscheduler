@@ -5,6 +5,7 @@ using NINA.Plugin.TargetScheduler.Planning.Entities;
 using NINA.Plugin.TargetScheduler.Planning.Exposures;
 using NINA.Plugin.TargetScheduler.Planning.Interfaces;
 using NUnit.Framework;
+using System;
 using System.Collections.Generic;
 
 namespace NINA.Plugin.TargetScheduler.Test.Planning.Entities {
@@ -39,6 +40,9 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Entities {
             sut.CompletedExposurePlans.Should().NotBeNull().And.HaveCount(0);
             sut.ExposureSelector.Should().NotBeNull();
             (sut.ExposureSelector is BasicExposureSelector).Should().BeTrue();
+
+            sut.MinimumTimeSpanEnd = DateTime.Now.Date;
+            sut.MinimumTimeSpanEnd.Should().Be(DateTime.Now.Date);
         }
 
         [Test]

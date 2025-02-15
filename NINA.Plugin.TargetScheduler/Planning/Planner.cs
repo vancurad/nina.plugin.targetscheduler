@@ -4,6 +4,8 @@ using NINA.Core.Utility;
 using NINA.Plugin.TargetScheduler.Astrometry;
 using NINA.Plugin.TargetScheduler.Database;
 using NINA.Plugin.TargetScheduler.Database.Schema;
+using NINA.Plugin.TargetScheduler.Planning.Entities;
+using NINA.Plugin.TargetScheduler.Planning.Exposures;
 using NINA.Plugin.TargetScheduler.Planning.Interfaces;
 using NINA.Plugin.TargetScheduler.Planning.Scoring;
 using NINA.Plugin.TargetScheduler.Shared.Utility;
@@ -51,6 +53,13 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                         projects = GetProjects();
                     }
 
+                    // If the previous target still has time in it's initial minimum time span and is still acceptable, then stick with it
+                    if (PreviousTargetCanContinue(previousTarget)) {
+                        TSLogger.Debug($"previous target still within min time span, continuing: {previousTarget.Project.Name}/{previousTarget.Name}: {previousTarget.MinimumTimeSpanEnd} < {atTime} ");
+                        List<IInstruction> instructions = new InstructionGenerator().Generate(previousTarget, previousTarget);
+                        return new SchedulerPlan(atTime, projects, previousTarget, instructions, !checkCondition);
+                    }
+
                     // Filter all targets for suitability
                     projects = FilterForIncomplete(projects);
                     projects = FilterForVisibility(projects);
@@ -90,6 +99,55 @@ namespace NINA.Plugin.TargetScheduler.Planning {
                     TSLogger.Info($"-- END {title} -----------------------------------------------------");
                 }
             }
+        }
+
+        /// <summary>
+        /// Determine if the previous target can continue.  The first time this target came through the planner,
+        /// we save the future time at which it's minimum time window will expire.  We can then compare the current
+        /// time to that to see if the target is still within that window.
+        ///
+        /// However, we also need to re-check completeness for all exposure plans as well as moon avoidance based on
+        /// the now current time.  If all exposure plans are complete or all are now rejected for moon avoidance,
+        /// we can't continue with this target.
+        /// </summary>
+        /// <param name="previousTarget"></param>
+        /// <returns></returns>
+        public bool PreviousTargetCanContinue(ITarget previousTarget) {
+            if (previousTarget == null) { return false; }
+
+            UpdateTargetExposurePlans(previousTarget);
+
+            // TODO: NOT working for override exposure order:
+            //   - if not all EPs are in the OEO, those will never get complete
+            //   - even still, the
+
+            // Recheck exposure completion
+            if (previousTarget.ExposurePlans.Count == 0) {
+                TSLogger.Debug($"not continuing previous target {previousTarget.Name}: all exposure plans complete");
+                return false;
+            }
+
+            // Recheck for moon avoidance
+            TargetImagingExpert targetExpert = new TargetImagingExpert(activeProfile, profilePreferences);
+            targetExpert.MoonAvoidanceFilter(atTime, previousTarget, new MoonAvoidanceExpert(observerInfo));
+            bool allRejected = true;
+            previousTarget.ExposurePlans.ForEach(ep => { if (!ep.Rejected) { allRejected = false; } });
+            if (allRejected) {
+                TSLogger.Debug($"not continuing previous target {previousTarget.Name}: all remaining exposure plans rejected for moon avoidance");
+                return false;
+            }
+
+            // Determine the next exposure and be sure that it can fit in the remaining minimum time span
+            IExposure nextExposure = previousTarget.ExposureSelector.Select(atTime, previousTarget.Project, previousTarget, previousTarget.SelectedExposure);
+            if (atTime.AddSeconds(nextExposure.ExposureLength) > previousTarget.MinimumTimeSpanEnd) {
+                TSLogger.Debug($"not continuing previous target {previousTarget.Name}: minimum time window exceeded");
+                return false;
+            }
+
+            previousTarget.SelectedExposure = nextExposure;
+            TSLogger.Debug($"continuing previous target {previousTarget.Name}, next filter: {previousTarget.SelectedExposure.FilterName}");
+
+            return true;
         }
 
         /// <summary>
@@ -328,22 +386,54 @@ namespace NINA.Plugin.TargetScheduler.Planning {
             }
         }
 
-        private List<ITarget> GetActiveTargets(List<IProject> projects) {
-            List<ITarget> targets = new List<ITarget>();
+        private void UpdateTargetExposurePlans(ITarget previousTarget) {
+            if (previousTarget == null) return;
 
-            if (NoProjects(projects)) {
-                return targets;
+            // If running in a real sequence, reload exposure plans to get latest from database
+            if (!previousTarget.IsPreview) {
+                previousTarget.AllExposurePlans = GetExposurePlans(previousTarget);
             }
 
-            foreach (IProject project in projects) {
-                if (project.Rejected) { continue; }
-                foreach (ITarget target in project.Targets) {
-                    if (target.Rejected) { continue; }
-                    targets.Add(target);
+            previousTarget.ExposurePlans.Clear();
+            previousTarget.CompletedExposurePlans.Clear();
+
+            previousTarget.AllExposurePlans.ForEach(ep => {
+                if (ep.IsIncomplete()) {
+                    previousTarget.ExposurePlans.Add(ep);
+                } else {
+                    SetRejected(ep, Reasons.FilterComplete);
+                    previousTarget.CompletedExposurePlans.Add(ep);
+                }
+            });
+
+            // If this target is using an override exposure order, we need to ensure that it covers all exposure plans.
+            // Otherwise, they have to be marked rejected since the target would never reach completion just using
+            // the OEO list (this is in the context of whether the current target can continue).
+            OverrideOrderExposureSelector oeoExposureSelector = previousTarget.ExposureSelector as OverrideOrderExposureSelector;
+            if (oeoExposureSelector != null) {
+                for (int i = 0; i < previousTarget.AllExposurePlans.Count; i++) {
+                    if (!oeoExposureSelector.ContainsExposurePlanIdx(i)) {
+                        SetRejected(previousTarget.AllExposurePlans[i], Reasons.FilterComplete);
+                    }
                 }
             }
+        }
 
-            return targets;
+        private List<IExposure> GetExposurePlans(ITarget target) {
+            try {
+                SchedulerDatabaseInteraction database = new SchedulerDatabaseInteraction();
+                using (SchedulerDatabaseContext context = database.GetContext()) {
+                    var eps = context.GetExposurePlans(target.DatabaseId);
+                    List<IExposure> exposures = new List<IExposure>(eps.Count);
+                    eps.ForEach(ep => {
+                        exposures.Add(new PlanningExposure(target, ep, ep.ExposureTemplate));
+                    });
+                    return exposures;
+                }
+            } catch (Exception ex) {
+                TSLogger.Error($"exception reloading target exposure plans {target.Name}: {ex.StackTrace}");
+                throw new SequenceEntityFailedException($"Scheduler: exception reloading target exposure plans: {ex.Message}", ex);
+            }
         }
 
         public bool HasActiveProjects(List<IProject> projects) {

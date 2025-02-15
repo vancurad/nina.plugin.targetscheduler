@@ -166,6 +166,11 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Exposures {
             e.PreDither.Should().BeTrue();
         }
 
+        [Test]
+        [Ignore("implement testContainsExposurePlanIdx")]
+        public void testContainsExposurePlanIdx() {
+        }
+
         private void SetEPs(Mock<ITarget> pt) {
             Mock<IExposure> Lpf = PlanMocks.GetMockPlanExposure("L", 10, 0);
             Mock<IExposure> Rpf = PlanMocks.GetMockPlanExposure("R", 10, 0);

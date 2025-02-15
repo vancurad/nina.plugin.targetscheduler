@@ -320,6 +320,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Exposures {
         public Epoch Epoch { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public double Rotation { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public double ROI { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public bool IsPreview { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public IProject Project { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public bool Rejected { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public string RejectedReason { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
@@ -327,6 +328,7 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning.Exposures {
         public ScoringResults ScoringResults { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public DateTime StartTime { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public DateTime EndTime { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public DateTime MinimumTimeSpanEnd { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public DateTime CulminationTime { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public TimeInterval MeridianWindow { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         string ITarget.PlanId { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }

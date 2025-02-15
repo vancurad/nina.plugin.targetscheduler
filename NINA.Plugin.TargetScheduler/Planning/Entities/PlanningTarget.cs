@@ -18,6 +18,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
         public Epoch Epoch { get; set; }
         public double Rotation { get; set; }
         public double ROI { get; set; }
+        public bool IsPreview { get; set; }
         public List<IExposure> AllExposurePlans { get; set; }
         public List<IExposure> ExposurePlans { get; set; }
         public List<IExposure> CompletedExposurePlans { get; set; }
@@ -31,6 +32,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
 
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
+        public DateTime MinimumTimeSpanEnd { get; set; }
         public DateTime CulminationTime { get; set; }
         public TimeInterval MeridianWindow { get; set; }
 
@@ -42,6 +44,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Entities {
             this.Epoch = target.Epoch;
             this.Rotation = target.Rotation;
             this.ROI = target.ROI;
+            this.IsPreview = false;
             this.Project = planProject;
             this.Rejected = false;
 

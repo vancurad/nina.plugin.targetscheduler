@@ -2,6 +2,7 @@
 using NINA.Plugin.TargetScheduler.Planning.Interfaces;
 using NINA.Plugin.TargetScheduler.Shared.Utility;
 using System;
+using System.Linq;
 
 namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
 
@@ -46,6 +47,11 @@ namespace NINA.Plugin.TargetScheduler.Planning.Exposures {
         }
 
         public void TargetReset() {
+        }
+
+        public bool ContainsExposurePlanIdx(int idx) {
+            var item = FilterCadence.List.Where(item => item.ReferenceIdx == idx).FirstOrDefault();
+            return item != null;
         }
     }
 }

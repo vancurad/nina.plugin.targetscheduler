@@ -17,6 +17,16 @@ namespace NINA.Plugin.TargetScheduler.Test.Planning {
     public class PlannerTest {
 
         [Test]
+        [Ignore("implement PreviousTargetCanContinueTest")]
+        public void PreviousTargetCanContinueTest() {
+            // previous=null -> false
+            // over minimum time -> false
+            // moon comes into play -> false
+            // all exposures complete -> false
+            // OEO
+        }
+
+        [Test]
         public void testFilterForReadyComplete() {
             Mock<IProfileService> profileMock = PlanMocks.GetMockProfileService(TestData.Pittsboro_NC);
             IProfile profile = profileMock.Object.ActiveProfile;

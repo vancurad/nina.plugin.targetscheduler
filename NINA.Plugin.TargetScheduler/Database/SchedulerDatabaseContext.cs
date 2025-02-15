@@ -173,6 +173,13 @@ namespace NINA.Plugin.TargetScheduler.Database {
                 .FirstOrDefault();
         }
 
+        public List<ExposurePlan> GetExposurePlans(int targetId) {
+            return ExposurePlanSet
+                .Include("exposuretemplate")
+                .Where(p => p.TargetId == targetId)
+                .ToList();
+        }
+
         public ExposureTemplate GetExposureTemplate(int id) {
             return ExposureTemplateSet.Where(e => e.Id == id).FirstOrDefault();
         }

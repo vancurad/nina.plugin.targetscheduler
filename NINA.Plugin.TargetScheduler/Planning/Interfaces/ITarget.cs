@@ -14,6 +14,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Interfaces {
         Epoch Epoch { get; set; }
         double Rotation { get; set; }
         double ROI { get; set; }
+        bool IsPreview { get; set; }
         List<IExposure> AllExposurePlans { get; set; }
         List<IExposure> ExposurePlans { get; set; }
         List<IExposure> CompletedExposurePlans { get; set; }
@@ -26,6 +27,7 @@ namespace NINA.Plugin.TargetScheduler.Planning.Interfaces {
         ScoringResults ScoringResults { get; set; }
         DateTime StartTime { get; set; }
         DateTime EndTime { get; set; }
+        DateTime MinimumTimeSpanEnd { get; set; }
         DateTime CulminationTime { get; set; }
         TimeInterval MeridianWindow { get; set; }
 
